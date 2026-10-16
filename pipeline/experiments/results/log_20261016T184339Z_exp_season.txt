@@ -1,0 +1,6 @@
+cum_rain                     logreg   mean2 PR 0.3340 Brier 0.1822  dPR +0.0055 dBrier -0.0007 | crop 0.607/0.291/0.1593(b0.204) no_g 0.591/0.377/0.2051(b0.287)
+cum_rain                     lgbm     mean2 PR 0.3330 Brier 0.1825  dPR +0.0070 dBrier -0.0008 | crop 0.571/0.257/0.1625(b0.204) no_g 0.608/0.409/0.2025(b0.287)
+cum_rain                     ensemble mean2 PR 0.3455 Brier 0.1812  dPR +0.0080 dBrier -0.0007 | crop 0.602/0.283/0.1603(b0.204) no_g 0.605/0.408/0.2021(b0.287)
+cum_dry_gated                logreg   mean2 PR 0.3345 Brier 0.1821  dPR +0.0060 dBrier -0.0008 | crop 0.605/0.289/0.1594(b0.204) no_g 0.59/0.38/0.2049(b0.287)
+cum_dry_gated                lgbm     mean2 PR 0.3315 Brier 0.1830  dPR +0.0055 dBrier -0.0003 | crop 0.572/0.26/0.1626(b0.204) no_g 0.605/0.403/0.2034(b0.287)
+cum_dry_gated                ensemble mean2 PR 0.3450 Brier 0.1816  dPR +0.0075 dBrier -0.0003 | crop 0.601/0.284/0.1603(b0.204) no_g 0.602/0.406/0.2029(b0.287)

@@ -180,3 +180,16 @@ def rule_stats(oof: pd.DataFrame) -> dict:
                 "f1": round(float(2 * tp / (2 * tp + fp + fn)), 3) if tp else 0.0}
     return {"cv_base_rate": round(float(y.mean()), 3), "watch": st(c["watch"]), "warn": st(c["warn"]),
             "note": "levels come from the spec family rule; p is information only (v1.1, audit B3)"}
+
+
+CLIMATE_REASON = "climate readiness (El Niño + dry forecast)"
+
+
+def climate_readiness(oni_x_south, sfc_pbn_m13) -> np.ndarray:
+    """Watch-only climate input for NGO / officer audiences (Ready-Set-Go 'ready'):
+    signed ONI (x +1 south of 8S, -1 north; trimester ending r-1) >= 1.0, or >= 0.5 with NMME
+    P(below normal, months r+1..r+3) >= 0.5. Never counts toward Warning; missing never fires.
+    Evidence: pipeline/experiments/report.md section C (CV years only)."""
+    o = np.asarray(oni_x_south, float)
+    pb = np.asarray(sfc_pbn_m13, float)
+    return _ge(o, 1.0) | (_ge(o, 0.5) & _ge(pb, 0.5))

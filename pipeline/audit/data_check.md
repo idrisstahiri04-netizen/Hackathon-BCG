@@ -1,6 +1,6 @@
 # Data check: pipeline/data/signals_ZWE.parquet
 
-Generated 2026-10-16 16:13 UTC by `pipeline/audit/verify_signals.py` (independent code path, not importing extract_signals.py).
+Generated 2026-10-16 18:54 UTC by `pipeline/audit/verify_signals.py` (independent code path, not importing extract_signals.py).
 
 Parquet mtime 2026-10-16 15:57 UTC, 3039915 bytes, 340886 rows.
 

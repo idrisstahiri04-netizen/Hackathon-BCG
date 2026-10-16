@@ -200,15 +200,23 @@ def build(iso3):
         polys = polygon_parts(f["geometry"])
         out, best, cx, cy = [], 0.0, 0.0, 0.0
         for poly in polys:
-            rings = [r for r in (simplify_ring(r, eps) for r in poly) if r]
+            # Sub-km urban units (Mogadishu districts, Windhoek suburbs) collapse
+            # under the country epsilon; keep them rounded-only instead of dropping.
+            rings = [r for r in (simplify_ring(r, eps) or simplify_ring(r, 0.0) for r in poly) if r]
             if not rings:
                 continue
             fixed = []
             for i, ring in enumerate(rings):
                 a, _, _ = ring_area_centroid(ring)
+                if abs(a) < 1e-9:                # collinear sliver after rounding
+                    if i == 0:
+                        break                    # no shell -> drop this part
+                    continue
                 if (a < 0) != (i == 0):          # shell clockwise, holes CCW
                     ring = ring[::-1]
                 fixed.append([list(p) for p in ring])
+            if not fixed:
+                continue
             out.append(fixed)
             a, rx, ry = ring_area_centroid(rings[0])
             if abs(a) > best:

@@ -34,6 +34,9 @@ def write_risk(dirpath, data, iso3="ZWE"):
 
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch, request):
+    if "/conv/" in str(request.node.fspath):  # live suite talks HTTP to a running backend: real .env token
+        yield tmp_path
+        return
     db.reset_connections()
     monkeypatch.setenv("DB_PATH", str(tmp_path / "test.db"))
     monkeypatch.setenv("GATEWAY", "sim")

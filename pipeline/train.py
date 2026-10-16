@@ -24,6 +24,7 @@ pipeline/out/thresholds_<tag>.json, pipeline/out/model_report.md, pipeline/out/o
 from __future__ import annotations
 
 import argparse
+import os
 import datetime as dt
 import json
 import warnings
@@ -44,7 +45,7 @@ from sklearn.preprocessing import StandardScaler
 import alert_engine as ae
 from common import (CV_FIRST, CV_LAST, DATA_DIR, EVENTS, LATENCY, OUT_DIR, apply_latency, is_test,
                     load_country, unit_seasons)
-from features import attach, make_xy, unit_month_features
+from features import SFC_COLS, attach, climate_features, make_xy, unit_month_features
 from labels import build_targets
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -54,6 +55,7 @@ MODELS = ["persistence", "rule", "logreg", "lgbm", "ensemble"]
 MODEL_EVENTS = ["crop_failure", "no_grass"]
 TRAIN_LEADS = [0, 1, 2, 3]
 EVAL_LEADS = [1, 2, 3]
+OUT_SUFFIX = ""          # set for non-default lead sets (e.g. the leads 4-6 model) so main outputs are not overwritten
 SEED = 7
 SIG_AT_R = ["spi_1m", "spi_3m", "ndvi_z_crop", "ndvi_z_grass", "vci_crop", "vci_grass", "sm1_z", "t2m_z"]
 LGB_PARAMS = dict(objective="binary", learning_rate=0.05, num_leaves=15, max_depth=5,
@@ -98,6 +100,7 @@ def prepare_country(iso3: str, data_dir) -> dict:
     ss = unit_seasons(c)
     targets = build_targets(c, ss)
     feat = apply_latency(unit_month_features(c))      # only data published by issue month r
+    feat = pd.concat([feat, climate_features(c, feat.index, data_dir)], axis=1)   # v2: NMME + ONIxsouth (issue-month public)
     display = apply_latency(display)                  # what an operator would see at month r
     plant = {u: v[0].planting[0] for u, v in ss.items()}
     bim = {u: len(v) > 1 for u, v in ss.items()}
@@ -166,6 +169,9 @@ class LogReg:
         self.m.fit(d[self.cols].values, y); return self
 
     def raw(self, d):
+        imp = self.m.steps[0][1]
+        if not hasattr(imp, "_fill_dtype") and hasattr(imp, "_fit_dtype"):   # model pickled by older sklearn (Kaggle)
+            imp._fill_dtype = imp._fit_dtype
         return self.m.predict_proba(d[self.cols].values)[:, 1]
 
 
@@ -228,26 +234,46 @@ def metrics(y, p, brier=True) -> dict:
 
 
 # ----------------------------------------------------------------------------- main
-def run(iso3s, data_dir, out_dir: Path, tag: str):
+def run(iso3s, data_dir, out_dir: Path, tag: str, pool=()):
     out_dir.mkdir(parents=True, exist_ok=True)
     preps = {i: prepare_country(i, data_dir) for i in iso3s}
     rows = pd.concat([build_rows(P) for P in preps.values()], ignore_index=True)
     cols = feature_cols(next(iter(preps.values()))["feat"])
+    # v2 (experiments report D2): ONIxsouth for crop_failure only; raw ONI never enters the trees
+    cols_by_event = {"crop_failure": cols, "no_grass": [c for c in cols if c != "oni_x_south"]}
     rows = rows.dropna(subset=["label"])
+    # v2 (D3): extra countries enter the TRAINING side only (never CV metrics, calibration or hold-out);
+    # their agyear >= 2023 rows are dropped entirely
+    pool_rows = []
+    for i in pool:
+        try:
+            pr = build_rows(prepare_country(i, data_dir)).dropna(subset=["label"])
+        except Exception as ex:                     # a country with broken inputs is skipped, not fatal
+            print(f"[{tag}] pool {i} skipped: {ex}")
+            continue
+        pool_rows.append(pr[pr.agyear.between(CV_FIRST, CV_LAST)])
+        del pr
+    poolr = pd.concat(pool_rows, ignore_index=True) if pool_rows else rows.iloc[:0]
+    print(f"[{tag}] pooled training rows: {len(poolr)} from {sorted(poolr.iso3.unique()) if len(poolr) else []}")
     cv = rows[~rows.test & rows.agyear.between(CV_FIRST, CV_LAST)].copy()
     te = rows[rows.test].copy()
     folds = sorted(cv.agyear.unique())
     print(f"[{tag}] rows cv={len(cv)} test={len(te)} folds={len(folds)} countries={iso3s}")
 
-    bundle = {"tag": tag, "iso3s": iso3s, "cols": cols, "events": {}, "train_leads": TRAIN_LEADS}
+    bundle = {"tag": tag, "iso3s": iso3s, "cols": cols, "cols_by_event": cols_by_event, "pool": list(pool),
+              "events": {}, "train_leads": list(TRAIN_LEADS), "eval_leads": list(EVAL_LEADS)}
     oof_all, report = [], {}
     for ev in MODEL_EVENTS:
         d = cv[cv.event == ev]
+        dp = poolr[poolr.event == ev]
+        ecols = cols_by_event[ev]
         raw = {m: np.full(len(d), np.nan) for m in MODELS}
         fold_models, best_iters = {}, []
         todo = [yv for yv in folds if (d.agyear == yv).any() and d.label.values[(d.agyear != yv).values].sum() > 0]
-        fitted = Parallel(n_jobs=min(11, len(todo)))(
-            delayed(fit_all)(d[(d.agyear != yv).values], cols) for yv in todo)
+        nj = max(1, min(len(todo), (os.cpu_count() or 2) - 1, 11 if not len(dp) else 4))
+        fitted = Parallel(n_jobs=nj)(
+            delayed(fit_all)(pd.concat([d[(d.agyear != yv).values], dp[(dp.agyear != yv).values]],
+                                       ignore_index=True), ecols) for yv in todo)
         for yv, ms in zip(todo, fitted):
             va = (d.agyear == yv).values
             best_iters.append(ms["lgbm"].best)
@@ -272,7 +298,7 @@ def run(iso3s, data_dir, out_dir: Path, tag: str):
             o[f"raw_{m}"], o[f"cal_{m}"] = raw[m], cal[m]
         oof_all.append(o)
         n_iter = int(np.median(best_iters)) if best_iters else 200
-        final = fit_all(d, cols, n_iter=n_iter)
+        final = fit_all(pd.concat([d, dp], ignore_index=True), ecols, n_iter=n_iter)
         bundle["events"][ev] = dict(fold_models=fold_models, fold_cal=fold_cal, final=final,
                                     final_cal=final_cal, lgbm_iter=n_iter)
         print(f"  {ev}: folds={len(fold_models)} lgbm_iter={n_iter}")
@@ -377,7 +403,7 @@ def run(iso3s, data_dir, out_dir: Path, tag: str):
               "cv_by_season": season_tabs.get(i),
               "dropped": "cant_plant model dropped: no CV skill (pre-latency run: ROC 0.485, PR-AUC 0.168 = base "
                          "0.168, Brier 0.146 > climatology 0.140). Kept only as a rule-based Watch reason."}
-        (out_dir / f"metrics_{i}.json").write_text(json.dumps(mj, indent=2, default=str))
+        (out_dir / f"metrics{OUT_SUFFIX}_{i}.json").write_text(json.dumps(mj, indent=2, default=str))
     write_report(out_dir, tag, iso3s, cv_tab, by_lead, winner, th, ho, cv, te, season_tabs)
     return bundle
 
@@ -431,7 +457,7 @@ def write_report(out_dir, tag, iso3s, cv_tab, by_lead, winner, th, ho, cv, te, s
             L.append("")
         L.append("Caveat: the ZWE/MWI/ZMB hold-out is a single season in which most units were in drought; "
                  "AUC there only measures which units the model ranks worst, not whether it sees the year coming.")
-    (out_dir / "model_report.md").write_text("\n".join(L) + "\n")
+    (out_dir / f"model_report{OUT_SUFFIX}.md").write_text("\n".join(L) + "\n")
 
 
 def main():
@@ -440,11 +466,20 @@ def main():
     ap.add_argument("--data-dir", default=str(DATA_DIR))
     ap.add_argument("--out-dir", default=str(OUT_DIR))
     ap.add_argument("--tag", default=None)
+    ap.add_argument("--pool", nargs="*", default=[], help="extra countries used for training only")
+    ap.add_argument("--train-leads", nargs="*", type=int, default=None)
+    ap.add_argument("--eval-leads", nargs="*", type=int, default=None)
     a = ap.parse_args()
     iso3s = [i.upper() for i in a.iso3]
     # call through the imported module so pickled model classes live in "train", not "__main__"
     import train as _self
-    _self.run(iso3s, a.data_dir, Path(a.out_dir), a.tag or "_".join(iso3s))
+    if a.tag and not a.train_leads:
+        _self.OUT_SUFFIX = f"_{a.tag}"
+    if a.train_leads:
+        _self.TRAIN_LEADS = a.train_leads
+        _self.EVAL_LEADS = a.eval_leads or a.train_leads
+        _self.OUT_SUFFIX = f"_{a.tag}" if a.tag else "_L" + "".join(map(str, a.train_leads))
+    _self.run(iso3s, a.data_dir, Path(a.out_dir), a.tag or "_".join(iso3s), [p.upper() for p in a.pool])
 
 
 if __name__ == "__main__":

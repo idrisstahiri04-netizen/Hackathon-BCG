@@ -149,7 +149,7 @@ def test_advice_question_is_data_and_schema_is_enum(fake_llm):
     assert f"<sms>{q}</sms>" == seen["user"]
     assert q not in seen["system"]
     ids = set(seen["schema"]["properties"]["id"]["enum"])
-    assert ids <= {e["id"] for e in router.load_advice()} and seen["schema"]["additionalProperties"] is False
+    assert ids <= {e["id"] for e in router.load_advice()} | {"none"} and seen["schema"]["additionalProperties"] is False
 
 
 def test_llm_down_still_only_templates(fake_llm):

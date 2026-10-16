@@ -4,27 +4,27 @@
     "before": [
       0,
       2,
-      63
+      6
     ],
     "fresh_client": [
       0,
       2,
-      63
+      6
     ],
     "after_backend_restart": [
       0,
       2,
-      63
+      6
     ],
     "note": "browser-side: live.js keeps nothing in memory that is not re-fetched; ?page= and ?country&t survive reload"
   },
   "latency": {
     "pass": true,
-    "free_text_p50_ms": 1460,
-    "free_text_p95_ms": 2913,
-    "free_text_max_ms": 5695,
-    "keyword_p50_ms": 24,
-    "keyword_p95_ms": 32,
+    "free_text_p50_ms": 1407,
+    "free_text_p95_ms": 2436,
+    "free_text_max_ms": 5928,
+    "keyword_p50_ms": 20,
+    "keyword_p95_ms": 31,
     "n": 15,
     "llm_used": true,
     "keyword_fallbacks": 0,
@@ -32,7 +32,7 @@
     "samples": [
       {
         "text": "Hello I am a farmer in Mbire and want th",
-        "ms": 5695,
+        "ms": 5928,
         "intent": "subscribe",
         "conf": 0.95,
         "source": "llm",
@@ -40,55 +40,7 @@
       },
       {
         "text": "Ndiri murimi ku Binga",
-        "ms": 915,
-        "intent": "subscribe",
-        "conf": 0.8,
-        "source": "llm",
-        "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Repl"
-      },
-      {
-        "text": "can you add me, I keep cattle near Gwand",
-        "ms": 1366,
-        "intent": "subscribe",
-        "conf": 0.9,
-        "source": "llm",
-        "reply": "Join drought alerts for Gwanda as herder? Max 6 SMS a month, free. Rep"
-      },
-      {
-        "text": "what should I plant this season?",
-        "ms": 1951,
-        "intent": "ask_advice",
-        "conf": 0.95,
-        "source": "llm",
-        "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before"
-      },
-      {
-        "text": "we have no food in our village, need hel",
-        "ms": 1660,
-        "intent": "ask_help",
-        "conf": 0.9,
-        "source": "llm",
-        "reply": "Thank you. An officer will contact you soon. If life is in danger call"
-      },
-      {
-        "text": "my crops are poor this month",
-        "ms": 960,
-        "intent": "report",
-        "conf": 0.9,
-        "source": "llm",
-        "reply": "Thank you for your report. Reply JOIN to get drought alerts for your d"
-      },
-      {
-        "text": "Hello I am a farmer in Mbire and want th",
-        "ms": 1456,
-        "intent": "subscribe",
-        "conf": 0.95,
-        "source": "llm",
-        "reply": "Join drought alerts for Mbire as farmer? Max 6 SMS a month, free. Repl"
-      },
-      {
-        "text": "Ndiri murimi ku Binga",
-        "ms": 946,
+        "ms": 1104,
         "intent": "subscribe",
         "conf": 0.85,
         "source": "llm",
@@ -96,7 +48,7 @@
       },
       {
         "text": "can you add me, I keep cattle near Gwand",
-        "ms": 967,
+        "ms": 1040,
         "intent": "subscribe",
         "conf": 0.9,
         "source": "llm",
@@ -104,15 +56,15 @@
       },
       {
         "text": "what should I plant this season?",
-        "ms": 2913,
+        "ms": 1922,
         "intent": "ask_advice",
         "conf": 0.95,
         "source": "llm",
-        "reply": "Late rains: choose short-season or drought-tolerant maize, or sorghum "
+        "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before"
       },
       {
         "text": "we have no food in our village, need hel",
-        "ms": 1714,
+        "ms": 1664,
         "intent": "ask_help",
         "conf": 0.93,
         "source": "llm",
@@ -120,7 +72,7 @@
       },
       {
         "text": "my crops are poor this month",
-        "ms": 1065,
+        "ms": 967,
         "intent": "report",
         "conf": 0.9,
         "source": "llm",
@@ -128,7 +80,7 @@
       },
       {
         "text": "Hello I am a farmer in Mbire and want th",
-        "ms": 1460,
+        "ms": 1444,
         "intent": "subscribe",
         "conf": 0.95,
         "source": "llm",
@@ -136,7 +88,7 @@
       },
       {
         "text": "Ndiri murimi ku Binga",
-        "ms": 1607,
+        "ms": 1005,
         "intent": "subscribe",
         "conf": 0.8,
         "source": "llm",
@@ -144,7 +96,55 @@
       },
       {
         "text": "can you add me, I keep cattle near Gwand",
-        "ms": 1535,
+        "ms": 1184,
+        "intent": "subscribe",
+        "conf": 0.9,
+        "source": "llm",
+        "reply": "Join drought alerts for Gwanda as herder? Max 6 SMS a month, free. Rep"
+      },
+      {
+        "text": "what should I plant this season?",
+        "ms": 1874,
+        "intent": "ask_advice",
+        "conf": 0.95,
+        "source": "llm",
+        "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before"
+      },
+      {
+        "text": "we have no food in our village, need hel",
+        "ms": 1694,
+        "intent": "ask_help",
+        "conf": 0.93,
+        "source": "llm",
+        "reply": "Thank you. An officer will contact you soon. If life is in danger call"
+      },
+      {
+        "text": "my crops are poor this month",
+        "ms": 988,
+        "intent": "report",
+        "conf": 0.9,
+        "source": "llm",
+        "reply": "Thank you for your report. Reply JOIN to get drought alerts for your d"
+      },
+      {
+        "text": "Hello I am a farmer in Mbire and want th",
+        "ms": 1407,
+        "intent": "subscribe",
+        "conf": 0.95,
+        "source": "llm",
+        "reply": "Join drought alerts for Mbire as farmer? Max 6 SMS a month, free. Repl"
+      },
+      {
+        "text": "Ndiri murimi ku Binga",
+        "ms": 959,
+        "intent": "subscribe",
+        "conf": 0.85,
+        "source": "llm",
+        "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Repl"
+      },
+      {
+        "text": "can you add me, I keep cattle near Gwand",
+        "ms": 2436,
         "intent": "subscribe",
         "conf": 0.85,
         "source": "llm",
@@ -156,30 +156,30 @@
   "burst": {
     "pass": true,
     "n": 50,
-    "wall_s": 9.92,
-    "p50_s": 6.67,
-    "p95_s": 9.0,
-    "max_s": 9.88,
+    "wall_s": 13.53,
+    "p50_s": 9.39,
+    "p95_s": 11.5,
+    "max_s": 13.1,
     "non200": [],
     "errors": [],
     "alive": true,
-    "health_ms_after": 35,
+    "health_ms_after": 32,
     "log": "INFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 200 OK\"\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 200 OK\"\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 200 OK\"\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 200 OK\"\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 200 OK\""
   },
   "claude_blackhole": {
     "pass": true,
-    "free_text_ms": 7591,
-    "keyword_ms": 120,
+    "free_text_ms": 19212,
+    "keyword_ms": 167,
     "intent": "subscribe",
     "reply": "Welcome to drought alerts. Which district do you live in? Reply with the distric",
     "alive": true,
     "note": "UI fetch timeout is 4000 ms (js/live.js api()); anything above shows 'Send failed' on stage",
-    "log": "INFO:anthropic._base_client:Retrying request to /v1/messages in 0.459467 seconds\nINFO:anthropic._base_client:Retrying request to /v1/messages in 0.485705 seconds\nWARNING:llm:Claude warm-up failed: Request timed out or interrupted. This could be due to a network timeout, dropped connection, or request cancellation. See https://docs.anthropic.com/en/api/errors#long-requests for more details.\nWARNING:llm:Claude call failed (claude-haiku-5-5): Request timed out or interrupted. This could be due to a network timeout, dropped connection, or request cancellation. See https://docs.anthropic.com/en/api/errors#long-requests for more details."
+    "log": "INFO:anthropic._base_client:Retrying request to /v1/messages in 0.458599 seconds\nINFO:anthropic._base_client:Retrying request to /v1/messages in 0.398573 seconds\nWARNING:llm:Claude warm-up failed: Request timed out or interrupted. This could be due to a network timeout, dropped connection, or request cancellation. See https://docs.anthropic.com/en/api/errors#long-requests for more details.\nWARNING:llm:Claude call failed (claude-haiku-5-5): Request timed out or interrupted. This could be due to a network timeout, dropped connection, or request cancellation. See https://docs.anthropic.com/en/api/errors#long-requests for more details."
   },
   "health_during_llm": {
     "pass": true,
-    "sms_ms": 1131,
-    "health_probes": 9,
+    "sms_ms": 1032,
+    "health_probes": 8,
     "health_worst_ms": 33,
     "note": ""
   },
@@ -199,14 +199,14 @@
   "gateway_down": {
     "pass": true,
     "approve_status": 200,
-    "approve_ms": 202,
+    "approve_ms": 236,
     "out_messages": 3,
     "statuses": [
       "failed:ConnectError"
     ],
     "event_status_after": "approved",
     "sim_still_works": true,
-    "approve_body": "{\"ok\":true,\"event\":{\"id\":63,\"created_at\":\"2026-10-16T17:06:50+00:00\",\"iso3\":\"ZWE\",\"unit_id\":\"62879985B32453879798080\",\"unit_name\":\"Zvishavane Urban\",\"t\":17,\"month_label\":\"Jun 2020\",\"level\":2,\"event\":\"",
+    "approve_body": "{\"ok\":true,\"event\":{\"id\":3,\"created_at\":\"2026-10-16T18:54:13+00:00\",\"iso3\":\"ZWE\",\"unit_id\":\"62879985B53444954846030\",\"unit_name\":\"Kadoma Urban\",\"t\":1,\"month_label\":\"Feb 2019\",\"level\":2,\"event\":\"no_gra",
     "note": ""
   },
   "claude_badkey": {
@@ -215,7 +215,7 @@
       {
         "text": "Hello I am a farmer in Mbire and want the drought alerts please",
         "status": 200,
-        "ms": 2155,
+        "ms": 6035,
         "intent": "subscribe",
         "source": "keywords",
         "reply": "Welcome to drought alerts. Which district do you live in? Reply with the distric"
@@ -223,7 +223,7 @@
       {
         "text": "Ndiri murimi ku Binga",
         "status": 200,
-        "ms": 236,
+        "ms": 347,
         "intent": "unknown",
         "source": "keywords",
         "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP "
@@ -231,7 +231,7 @@
       {
         "text": "can you add me, I keep cattle near Gwanda",
         "status": 200,
-        "ms": 247,
+        "ms": 272,
         "intent": "unknown",
         "source": "keywords",
         "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP "
@@ -239,7 +239,7 @@
       {
         "text": "what should I plant this season?",
         "status": 200,
-        "ms": 532,
+        "ms": 568,
         "intent": "ask_advice",
         "source": "keywords",
         "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting."
@@ -247,7 +247,7 @@
       {
         "text": "we have no food in our village, need help",
         "status": 200,
-        "ms": 241,
+        "ms": 252,
         "intent": "ask_help",
         "source": "keywords",
         "reply": "Thank you. An officer will contact you soon. If life is in danger call your loca"
@@ -263,7 +263,7 @@
       {
         "text": "JOIN Mbire farmer",
         "status": 200,
-        "ms": 74,
+        "ms": 135,
         "intent": "subscribe",
         "source": "keyword",
         "reply": "Join drought alerts for Mbire as farmer? Max 6 SMS a month, free. Reply YES to c"
@@ -271,7 +271,7 @@
       {
         "text": "2",
         "status": 200,
-        "ms": 39,
+        "ms": 50,
         "intent": "report",
         "source": "keyword",
         "reply": "Thank you for your report. Reply JOIN to get drought alerts for your district."
@@ -279,15 +279,15 @@
       {
         "text": "STOP",
         "status": 200,
-        "ms": 35,
+        "ms": 41,
         "intent": "stop",
         "source": "keyword",
         "reply": "You will get no more alerts. Reply JOIN to come back."
       }
     ],
     "alive": true,
-    "max_ms": 2155,
-    "log": "INFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6HHihvfDcNy7yVEugAW'}\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6HHjiSaVGTqQXsiT5NW'}\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6HHkzLdrbxPpSfnUX78'}\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6HHmzsC8R4EfzNsLkQy'}"
+    "max_ms": 6035,
+    "log": "INFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6RTXF4cqCKh3DYN46NW'}\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6RTYXwrndVHoLqznTqY'}\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6RTZeRd2fRrXEJKqhB3'}\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6RTafw1FnjMVWb9Gvdd'}"
   },
   "claude_refused": {
     "pass": true,
@@ -295,34 +295,34 @@
       {
         "text": "Hello I am a farmer in Mbire and want the drought alerts please",
         "status": 200,
-        "ms": 2213,
+        "ms": 6422,
         "intent": "subscribe",
         "reply": "Welcome to drought alerts. Which district do you live in? Reply with the distric"
       },
       {
         "text": "Ndiri murimi ku Binga",
         "status": 200,
-        "ms": 431,
+        "ms": 529,
         "intent": "unknown",
         "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP "
       },
       {
         "text": "can you add me, I keep cattle near Gwanda",
         "status": 200,
-        "ms": 409,
+        "ms": 535,
         "intent": "unknown",
         "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP "
       },
       {
         "text": "JOIN Gwanda herder",
         "status": 200,
-        "ms": 59,
+        "ms": 97,
         "intent": "subscribe",
         "reply": "Join drought alerts for Gwanda as herder? Max 6 SMS a month, free. Reply YES to "
       }
     ],
-    "max_ms": 2213,
-    "log": "WARNING:llm:Claude warm-up failed: Connection error.\nWARNING:llm:Claude call failed (claude-haiku-5-5): Connection error.\nINFO:anthropic._base_client:Retrying request to /v1/messages in 0.404666 seconds\nWARNING:llm:Claude call failed (claude-haiku-5-5): Connection error.\nINFO:anthropic._base_client:Retrying request to /v1/messages in 0.384053 seconds\nWARNING:llm:Claude call failed (claude-haiku-5-5): Connection error."
+    "max_ms": 6422,
+    "log": "WARNING:llm:Claude call failed (claude-haiku-5-5): Connection error.\nWARNING:llm:Claude warm-up failed: Connection error.\nINFO:anthropic._base_client:Retrying request to /v1/messages in 0.441991 seconds\nWARNING:llm:Claude call failed (claude-haiku-5-5): Connection error.\nINFO:anthropic._base_client:Retrying request to /v1/messages in 0.469428 seconds\nWARNING:llm:Claude call failed (claude-haiku-5-5): Connection error."
   },
   "backend_down": {
     "pass": true,

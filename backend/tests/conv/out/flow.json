@@ -1,0 +1,86 @@
+{
+ "phone": "+263780600001",
+ "steps": [
+  {
+   "step": "signup free text",
+   "ok": true,
+   "detail": "1.499s 'Join drought alerts for Bulawayo as herder? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel.'"
+  },
+  {
+   "step": "confirm YES",
+   "ok": true,
+   "detail": "You are registered for Bulawayo (herder). Reply 1 ok 2 poor 3 bad for grazing and animals, HELP for an officer, STOP to quit."
+  },
+  {
+   "step": "alerts/run t=63",
+   "ok": true,
+   "detail": "http=200 created=44 0.31s"
+  },
+  {
+   "step": "Bulawayo level-2 event at t=63",
+   "ok": true,
+   "detail": "{\"id\": 5, \"level\": 2, \"event\": \"no_grass\", \"status\": \"pending_approval\"}"
+  },
+  {
+   "step": "approve event 5",
+   "ok": true,
+   "detail": "http=200 sent to 1 users 0.02s"
+  },
+  {
+   "step": "herder received alert",
+   "ok": true,
+   "detail": "n=1 'WARNING Bulawayo: grazing drying fast. Sell weak animals early while prices hold, plan herd moves. Reply 1 ok 2 poor 3 bad. STOP to quit'"
+  },
+  {
+   "step": "alert one segment GSM-7",
+   "ok": true,
+   "detail": "chars=136 gsm7=True"
+  },
+  {
+   "step": "advice",
+   "ok": true,
+   "detail": "2.634s 'Sell old, weak and male animals early while prices are still fair. Keep your best breeding females.'"
+  },
+  {
+   "step": "help request",
+   "ok": true,
+   "detail": "0.014s 'Thank you. An officer will contact you soon. If life is in danger call your local emergency number.'"
+  },
+  {
+   "step": "STOP",
+   "ok": true,
+   "detail": "You will get no more alerts. Reply JOIN to come back."
+  },
+  {
+   "step": "alerts/run t=64",
+   "ok": true,
+   "detail": "http=200 created=46 0.19s"
+  },
+  {
+   "step": "Bulawayo level-3 event at t=64",
+   "ok": true,
+   "detail": "{\"id\": 48, \"level\": 3, \"event\": \"no_grass\", \"status\": \"pending_approval\"}"
+  },
+  {
+   "step": "approve event 48",
+   "ok": true,
+   "detail": "http=200 sent to 0 users 0.01s"
+  },
+  {
+   "step": "no alert after STOP",
+   "ok": true,
+   "detail": "alerts before=1 after=1"
+  },
+  {
+   "step": "inbound after STOP answered",
+   "ok": true,
+   "detail": "'Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP for an officer, or STOP to quit.'"
+  },
+  {
+   "step": "JOIN after STOP",
+   "ok": true,
+   "detail": "'Welcome to drought alerts. Which district do you live in? Reply with the district name, e.g. Binga.'"
+  }
+ ],
+ "ok": true
+}

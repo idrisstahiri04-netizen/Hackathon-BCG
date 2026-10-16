@@ -1,0 +1,337 @@
+{
+ "startedAt": "2026-10-16T20:34:07.053Z",
+ "countries": {
+  "ZWE": {
+   "searchable": true,
+   "tag": "Live",
+   "disk": {
+    "geo": true,
+    "risk": true,
+    "expectLive": true
+   },
+   "pass": true,
+   "hud": "91 districts · disaster declared 3 Apr 2024",
+   "loaded": {
+    "geo": true,
+    "risk": true,
+    "polys": 91,
+    "decl": {
+     "t": 63,
+     "date": "2024-04-03",
+     "label": "National state of disaster declared (drought)"
+    }
+   },
+   "live": true
+  },
+  "KEN": {
+   "searchable": true,
+   "tag": "Live",
+   "disk": {
+    "geo": true,
+    "risk": true,
+    "expectLive": true
+   },
+   "pass": true,
+   "hud": "47 counties · disaster declared 8 Sep 2021",
+   "loaded": {
+    "geo": true,
+    "risk": true,
+    "polys": 47,
+    "decl": {
+     "t": 32,
+     "date": "2021-09-08",
+     "label": "Drought declared a national disaster"
+    }
+   },
+   "live": true
+  },
+  "MWI": {
+   "searchable": true,
+   "tag": "Live",
+   "disk": {
+    "geo": true,
+    "risk": true,
+    "expectLive": true
+   },
+   "pass": true,
+   "hud": "28 districts · disaster declared 23 Mar 2024",
+   "loaded": {
+    "geo": true,
+    "risk": true,
+    "polys": 28,
+    "decl": {
+     "t": 62,
+     "date": "2024-03-23",
+     "label": "State of disaster declared in 23 of 28 districts"
+    }
+   },
+   "live": true
+  },
+  "ZMB": {
+   "searchable": true,
+   "tag": "Live",
+   "disk": {
+    "geo": true,
+    "risk": true,
+    "expectLive": true
+   },
+   "pass": true,
+   "hud": "116 districts · disaster declared 29 Feb 2024",
+   "loaded": {
+    "geo": true,
+    "risk": true,
+    "polys": 116,
+    "decl": {
+     "t": 61,
+     "date": "2024-02-29",
+     "label": "Drought declared a national disaster and emergency"
+    }
+   },
+   "live": true
+  },
+  "MOZ": {
+   "searchable": true,
+   "tag": "Data in progress",
+   "disk": {
+    "geo": true,
+    "risk": true,
+    "expectLive": true
+   },
+   "pass": false,
+   "hud": "data in progress",
+   "loaded": {
+    "geo": true,
+    "risk": false,
+    "polys": 0,
+    "decl": null
+   },
+   "live": false
+  },
+  "TZA": {
+   "searchable": true,
+   "tag": "Data in progress",
+   "disk": {
+    "geo": true,
+    "risk": false,
+    "expectLive": false
+   },
+   "pass": true,
+   "hud": "data in progress",
+   "loaded": {
+    "geo": true,
+    "risk": false,
+    "polys": 0,
+    "decl": null
+   },
+   "live": false
+  },
+  "ETH": {
+   "searchable": true,
+   "tag": "Data in progress",
+   "disk": {
+    "geo": true,
+    "risk": false,
+    "expectLive": false
+   },
+   "pass": true,
+   "hud": "data in progress",
+   "loaded": {
+    "geo": true,
+    "risk": false,
+    "polys": 0,
+    "decl": null
+   },
+   "live": false
+  },
+  "SOM": {
+   "searchable": true,
+   "tag": "Data in progress",
+   "disk": {
+    "geo": true,
+    "risk": false,
+    "expectLive": false
+   },
+   "pass": true,
+   "hud": "data in progress",
+   "loaded": {
+    "geo": true,
+    "risk": false,
+    "polys": 0,
+    "decl": null
+   },
+   "live": false
+  },
+  "NAM": {
+   "searchable": true,
+   "tag": "Data in progress",
+   "disk": {
+    "geo": true,
+    "risk": false,
+    "expectLive": false
+   },
+   "pass": true,
+   "hud": "data in progress",
+   "loaded": {
+    "geo": true,
+    "risk": false,
+    "polys": 0,
+    "decl": null
+   },
+   "live": false
+  },
+  "BWA": {
+   "searchable": true,
+   "tag": "Data in progress",
+   "disk": {
+    "geo": true,
+    "risk": false,
+    "expectLive": false
+   },
+   "pass": true,
+   "hud": "data in progress",
+   "loaded": {
+    "geo": true,
+    "risk": false,
+    "polys": 0,
+    "decl": null
+   },
+   "live": false
+  },
+  "ZAF": {
+   "searchable": true,
+   "tag": "Data in progress",
+   "disk": {
+    "geo": true,
+    "risk": false,
+    "expectLive": false
+   },
+   "pass": true,
+   "hud": "data in progress",
+   "loaded": {
+    "geo": true,
+    "risk": false,
+    "polys": 0,
+    "decl": null
+   },
+   "live": false
+  },
+  "MDG": {
+   "searchable": true,
+   "tag": "Data in progress",
+   "disk": {
+    "geo": true,
+    "risk": false,
+    "expectLive": false
+   },
+   "pass": true,
+   "hud": "data in progress",
+   "loaded": {
+    "geo": true,
+    "risk": false,
+    "polys": 0,
+    "decl": null
+   },
+   "live": false
+  },
+  "AGO": {
+   "searchable": true,
+   "tag": "Data in progress",
+   "disk": {
+    "geo": true,
+    "risk": false,
+    "expectLive": false
+   },
+   "pass": true,
+   "hud": "data in progress",
+   "loaded": {
+    "geo": true,
+    "risk": false,
+    "polys": 0,
+    "decl": null
+   },
+   "live": false
+  },
+  "UGA": {
+   "searchable": true,
+   "tag": "Data in progress",
+   "disk": {
+    "geo": true,
+    "risk": false,
+    "expectLive": false
+   },
+   "pass": true,
+   "hud": "data in progress",
+   "loaded": {
+    "geo": true,
+    "risk": false,
+    "polys": 0,
+    "decl": null
+   },
+   "live": false
+  }
+ },
+ "pageErrors": [],
+ "consoleErrors": [],
+ "resourceErrors": [
+  "Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8701/data/risk/MOZ.js",
+  "Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8701/data/risk/TZA.js",
+  "Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8701/data/risk/ETH.js",
+  "Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8701/data/risk/SOM.js",
+  "Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8701/data/risk/NAM.js",
+  "Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8701/data/risk/BWA.js",
+  "Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8701/data/risk/ZAF.js",
+  "Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8701/data/risk/MDG.js",
+  "Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8701/data/risk/AGO.js",
+  "Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8701/data/risk/UGA.js"
+ ],
+ "liveCount": 4,
+ "allSearchable": true,
+ "mainLive": true,
+ "allPass": false,
+ "history": [
+  {
+   "at": "2026-10-16T19:56:26.509Z",
+   "live": [
+    "ZWE",
+    "KEN",
+    "MWI",
+    "ZMB"
+   ],
+   "pass": true,
+   "pageErrors": 0
+  },
+  {
+   "at": "2026-10-16T20:09:11.847Z",
+   "live": [
+    "ZWE",
+    "KEN",
+    "MWI",
+    "ZMB"
+   ],
+   "pass": true,
+   "pageErrors": 0
+  },
+  {
+   "at": "2026-10-16T20:21:38.513Z",
+   "live": [
+    "ZWE",
+    "KEN",
+    "MWI",
+    "ZMB"
+   ],
+   "pass": true,
+   "pageErrors": 0
+  },
+  {
+   "at": "2026-10-16T20:34:07.053Z",
+   "live": [
+    "ZWE",
+    "KEN",
+    "MWI",
+    "ZMB"
+   ],
+   "pass": false,
+   "pageErrors": 0
+  }
+ ]
+}

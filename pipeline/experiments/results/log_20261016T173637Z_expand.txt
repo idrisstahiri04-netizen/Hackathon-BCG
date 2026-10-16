@@ -1,0 +1,44 @@
+available: ['MOZ', 'TZA', 'ETH', 'SOM', 'NAM', 'BWA', 'ZAF', 'MDG', 'AGO', 'UGA'] missing: []
+  MOZ: units=156 rows=74256 label rate: {'cant_plant': 0.174, 'crop_failure': 0.208, 'no_grass': 0.228}
+  TZA: units=170 rows=102823 label rate: {'cant_plant': 0.167, 'crop_failure': 0.213, 'no_grass': 0.304}
+  ETH: units=74 rows=45199 label rate: {'cant_plant': 0.162, 'crop_failure': 0.275, 'no_grass': 0.385}
+  SOM: units=118 rows=100695 label rate: {'cant_plant': 0.163, 'crop_failure': 0.45, 'no_grass': 0.545}
+  NAM: units=103 rows=49133 label rate: {'cant_plant': 0.174, 'crop_failure': 0.25, 'no_grass': 0.38}
+  BWA: units=25 rows=11900 label rate: {'cant_plant': 0.129, 'crop_failure': 0.286, 'no_grass': 0.384}
+  ZAF: units=52 rows=24654 label rate: {'cant_plant': 0.159, 'crop_failure': 0.165, 'no_grass': 0.292}
+  MDG: units=119 rows=56679 label rate: {'cant_plant': 0.172, 'crop_failure': 0.206, 'no_grass': 0.304}
+  AGO: units=157 rows=74970 label rate: {'cant_plant': 0.153, 'crop_failure': 0.213, 'no_grass': 0.271}
+  UGA: units=151 rows=116312 label rate: {'cant_plant': 0.134, 'crop_failure': 0.194, 'no_grass': 0.234}
+Traceback (most recent call last):
+  File "/kaggle/working/pipeline/experiments/expand.py", line 72, in <module>
+    main([a.upper() for a in sys.argv[1:]] or ["MOZ", "TZA", "ETH", "SOM", "NAM", "BWA", "ZAF", "MDG", "AGO", "UGA"])
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/working/pipeline/experiments/expand.py", line 63, in main
+    c0 = pd.read_parquet(OUT / "unit_centroids.parquet")
+  File "/usr/local/lib/python3.13/dist-packages/pandas/io/parquet.py", line 669, in read_parquet
+    return impl.read(
+           ~~~~~~~~~^
+        path,
+        ^^^^^
+    ...<6 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/pandas/io/parquet.py", line 258, in read
+    path_or_handle, handles, filesystem = _get_path_or_handle(
+                                          ~~~~~~~~~~~~~~~~~~~^
+        path,
+        ^^^^^
+    ...<2 lines>...
+        mode="rb",
+        ^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/pandas/io/parquet.py", line 141, in _get_path_or_handle
+    handles = get_handle(
+        path_or_handle, mode, is_text=False, storage_options=storage_options
+    )
+  File "/usr/local/lib/python3.13/dist-packages/pandas/io/common.py", line 882, in get_handle
+    handle = open(handle, ioargs.mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/kaggle/working/pipeline/out/experiments/unit_centroids.parquet'

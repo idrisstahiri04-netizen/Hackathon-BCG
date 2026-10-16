@@ -41,3 +41,17 @@ def test_live_sonnet_advice_goats():
     print("\nAdvice (farmer, goats):", txt)
     livestock = {e["text"] for e in router.load_advice() if e["id"].startswith("grass_")}
     assert txt in livestock
+
+
+@pytest.mark.live
+def test_live_help_unsure_phrasing():
+    """Rehearsal regression: free-text distress that is NOT in the keyword list still reaches a human."""
+    if not llm.available():
+        pytest.skip("no ANTHROPIC_API_KEY")
+    from backend import db
+    for i, text in enumerate(["We can't manage", "things are really bad, the children are weak",
+                              "Zvinhu zvakaoma, hatichakwanisi"]):
+        r = router.handle_inbound(f"+2637790000{i:02d}", text)
+        print(f"\n{r['parsed'].get('source'):8} {r['intent']:10} conf={r['confidence']} | {text} -> {r['reply'][:50]}")
+        assert r["intent"] == "ask_help", (text, r["parsed"])
+    assert db.q1("SELECT COUNT(*) n FROM help_requests")["n"] == 3

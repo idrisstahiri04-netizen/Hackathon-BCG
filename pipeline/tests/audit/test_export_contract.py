@@ -11,10 +11,10 @@ import pytest
 from conftest import PIPE, make_long
 
 ROOT = PIPE.parent
-META_KEYS = {"iso3", "country", "start_year", "n_months", "declaration", "model_version", "metrics", "generated_at"}
+META_KEYS = {"iso3", "country", "start_year", "n_months", "live_t", "declaration", "model_version", "metrics", "generated_at"}
 DECL_KEYS = {"t", "date", "label"}
 UNIT_KEYS = {"id", "name", "series"}
-ROW_KEYS = {"t", "level", "held", "p", "p_crisis", "confidence", "agreeing", "families", "event", "horizon", "drivers", "signals"}
+ROW_KEYS = {"t", "level", "held", "p", "p_crisis", "confidence", "agreeing", "families", "event", "horizon", "drivers", "signals", "forecast"}
 FAM_KEYS = {"rain", "vegetation", "soil", "heat"}
 SIG_KEYS = {"spi_1m", "spi_3m", "ndvi_z_crop", "ndvi_z_grass", "vci_crop", "vci_grass", "sm1_z", "t2m_z"}
 EVENTS = {"none", "cant_plant", "crop_failure", "no_grass"}
@@ -39,7 +39,8 @@ def validate(doc, iso3):
         E(f"meta keys: extra {sorted(set(m) - META_KEYS)} missing {sorted(META_KEYS - set(m))}")
     if m.get("iso3") != iso3: E("meta.iso3")
     if m.get("start_year") != 2019: E("meta.start_year != 2019")
-    if m.get("n_months") != 72: E("meta.n_months != 72")
+    if not (isint(m.get("n_months")) and m["n_months"] >= 72): E("meta.n_months < 72")
+    if not (m.get("live_t") is None or (isint(m["live_t"]) and 0 <= m["live_t"] < m["n_months"])): E(f"meta.live_t {m.get('live_t')}")
     d = m.get("declaration", {})
     if set(d) != DECL_KEYS: E(f"declaration keys {sorted(d)}")
     if d.get("date") != DECL[iso3]: E(f"declaration.date {d.get('date')}")
@@ -89,6 +90,15 @@ def validate(doc, iso3):
             sg = r["signals"]
             if set(sg) != SIG_KEYS: E(f"{tag} signal keys {sorted(sg)}")
             elif not all(v is None or isnum(v) for v in sg.values()): E(f"{tag} signal values {sg}")
+            fc = r["forecast"]                 # CONTRACT section 4
+            if not ({"1", "2", "3"} <= set(fc) <= {str(x) for x in range(1, 9)}): E(f"{tag} forecast keys {sorted(fc)}")
+            else:
+                for L, v in fc.items():
+                    if not ({"p", "p_crisis", "target_label"} <= set(v) <= {"p", "p_crisis", "target_label", "fews_phase",
+                            "fews_scenario", "fews_published", "source"}) or not isinstance(v["target_label"], str):
+                        E(f"{tag} forecast[{L}] {v}"); break
+                    for pk in ("p", "p_crisis"):
+                        if not (v[pk] is None or (isnum(v[pk]) and 0 <= v[pk] <= 1)): E(f"{tag} forecast[{L}].{pk} {v[pk]}")
             if r["level"] == 3 and not (d_t <= i <= ag_end_t):
                 E(f"{tag} Emergency outside declaration season (t {d_t}..{ag_end_t}), held={r['held']}")
             # a rise to Warning+ needs this month's raw level >= 2, so the 2-family rule must hold now

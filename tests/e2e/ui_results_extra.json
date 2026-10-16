@@ -1,0 +1,135 @@
+{
+ "tabOrderOnAlertsPage": [
+  {
+   "el": "button \"Users joining\"",
+   "coveredByOverlay": false
+  },
+  {
+   "el": "button \"Phone\"",
+   "coveredByOverlay": false
+  },
+  {
+   "el": "input#search \"Zimbabwe\"",
+   "coveredByOverlay": true
+  },
+  {
+   "el": "ol#feed \"OFFICIALZimbabwe3 Ap\"",
+   "coveredByOverlay": true
+  },
+  {
+   "el": "button#play \"\"",
+   "coveredByOverlay": true
+  },
+  {
+   "el": "input#scrub \"63\"",
+   "coveredByOverlay": true
+  },
+  {
+   "el": "button#run-alerts \"Run alerts for this \"",
+   "coveredByOverlay": true
+  },
+  {
+   "el": "button \"1×\"",
+   "coveredByOverlay": true
+  },
+  {
+   "el": "button \"2×\"",
+   "coveredByOverlay": true
+  },
+  {
+   "el": "button \"4×\"",
+   "coveredByOverlay": true
+  },
+  {
+   "el": "button \"Approve & send\"",
+   "coveredByOverlay": false
+  },
+  {
+   "el": "button \"Approve & send\"",
+   "coveredByOverlay": false
+  },
+  {
+   "el": "button \"Approve & send\"",
+   "coveredByOverlay": false
+  },
+  {
+   "el": "button \"Approve & send\"",
+   "coveredByOverlay": false
+  }
+ ],
+ "hiddenMapControlsFocusable": [
+  "input#search \"Zimbabwe\"",
+  "ol#feed \"OFFICIALZimbabwe3 Ap\"",
+  "button#play \"\"",
+  "input#scrub \"63\"",
+  "button#run-alerts \"Run alerts for this \"",
+  "button \"1×\"",
+  "button \"2×\"",
+  "button \"4×\""
+ ],
+ "unitPanelKeyboard": {
+  "canvasTabIndex": -1,
+  "feedNotesFocusable": 0,
+  "feedNotes": 120,
+  "verdict": "no keyboard path to open a unit panel except the ?county= deep link"
+ },
+ "crowdBadges": {
+  "n": 1,
+  "overlapping": []
+ },
+ "errors": {
+  "js": [],
+  "console": [],
+  "net": []
+ },
+ "phoneTabs": {
+  "scrollW": 390,
+  "clientW": 390,
+  "tabs": [
+   {
+    "t": "Map",
+    "l": 6,
+    "r": 52
+   },
+   {
+    "t": "Alert feed 61",
+    "l": 54,
+    "r": 163
+   },
+   {
+    "t": "Users joining",
+    "l": 165,
+    "r": 263
+   },
+   {
+    "t": "Phone",
+    "l": 265,
+    "r": 323
+   }
+  ],
+  "beStatus": {
+   "l": 367,
+   "r": 384,
+   "w": 17
+  }
+ },
+ "phoneSheet": {
+  "sheetTop": 166,
+  "sheetBottom": 740,
+  "sheetH": 574,
+  "legendTop": 348,
+  "legendBottom": 398,
+  "hudBottom": 192,
+  "feedTop": 436,
+  "timelineTop": 740,
+  "coversLegend": true,
+  "coversHud": true,
+  "coversFeed": true,
+  "panelScrollable": true
+ },
+ "phoneErrors": {
+  "js": [],
+  "console": [],
+  "net": []
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "iso3": "ZMB",
+ "our_units": 116,
+ "units_park_frac_gt_0.3": [],
+ "units_outside_frac_gt_0.3": [],
+ "fews_polygons": 161,
+ "fews_polygons_with_ipc_rows": 161,
+ "units_with_cs_label": 116,
+ "units_without_cs_label": [],
+ "cs_snapshots": {
+  "2016-02": 116,
+  "2016-06": 116,
+  "2016-10": 116,
+  "2017-02": 116,
+  "2017-06": 116,
+  "2017-10": 116
+ },
+ "cs_snapshots_dropped_small": {},
+ "median_cover": 1.0,
+ "share3_mean_cs": 0.0,
+ "frac_units_cs_phase_w50_ge3": 0.0,
+ "frac_units_cs_phase_w20_ge3": 0.0,
+ "frac_units_cs_phase_max_ge3": 0.0,
+ "rows": 2201
+}

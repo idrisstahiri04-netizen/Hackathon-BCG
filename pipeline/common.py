@@ -27,11 +27,19 @@ COUNTRIES = {
     "KEN": ("Kenya", "2021-09-08", "Drought declared a national disaster", [2020, 2021, 2022]),
     "MWI": ("Malawi", "2024-03-23", "State of disaster declared in 23 of 28 districts", []),
     "ZMB": ("Zambia", "2024-02-29", "Drought declared a national disaster and emergency", []),
+    # pooled countries shown on the globe; declaration None unless CONTRACT.md lists a date (export reads it)
+    "MOZ": ("Mozambique", None, None, []), "TZA": ("Tanzania", None, None, []),
+    "ETH": ("Ethiopia", None, None, []), "SOM": ("Somalia", None, None, []),
+    "NAM": ("Namibia", None, None, []), "BWA": ("Botswana", None, None, []),
+    "ZAF": ("South Africa", None, None, []), "MDG": ("Madagascar", None, None, []),
+    "AGO": ("Angola", None, None, []), "UGA": ("Uganda", None, None, []),
 }
 TEST_FROM_AGYEAR = 2023                  # agyear 2023 = the 2023/24 season: never in CV
 
+# dry-spell / season-timing signals (CHIRPS v3 pentad; pipeline/dryspell, dryspell_<ISO3>.parquet)
+DRY_SIGNALS = ["dry_spell_max", "days_since_rain", "onset_anom", "season_rain_pct"]
 DYNAMIC = ["precip_mm", "spi_1m", "spi_3m", "spi_6m", "ndvi_crop", "ndvi_grass",
-           "ndvi_z_crop", "ndvi_z_grass", "vci_crop", "vci_grass", "sm1_z", "sm2_z", "t2m_z"]
+           "ndvi_z_crop", "ndvi_z_grass", "vci_crop", "vci_grass", "sm1_z", "sm2_z", "t2m_z"] + DRY_SIGNALS
 STATIC = ["crop_frac", "grass_frac"]
 # Data latency (months). A risk value for month t is issued at the end of month t and may only use
 # signals published by then. Month-m products become available: CHIRPS final ~3 weeks after m
@@ -44,6 +52,9 @@ SOURCE = {"precip_mm": "chirps", "spi_1m": "chirps", "spi_3m": "chirps", "spi_6m
           "rain_pct3": "chirps", "ndvi_crop": "modis", "ndvi_grass": "modis", "ndvi_z_crop": "modis",
           "ndvi_z_grass": "modis", "vci_crop": "modis", "vci_grass": "modis",
           "sm1_z": "era5", "sm2_z": "era5", "t2m_z": "era5"}
+
+
+SOURCE.update({s: "chirps" for s in DRY_SIGNALS})
 
 
 def source_of(col: str):
@@ -81,6 +92,9 @@ def is_test(iso3: str, ag: int) -> bool:
 # ----------------------------------------------------------------------------- loading
 def load_signals(iso3: str, data_dir: Path = DATA_DIR) -> pd.DataFrame:
     df = pd.read_parquet(Path(data_dir) / f"signals_{iso3}.parquet")
+    extra = Path(data_dir) / f"dryspell_{iso3}.parquet"
+    if extra.exists():                      # absent file = missing features (NaN), not an error
+        df = pd.concat([df, pd.read_parquet(extra)], ignore_index=True)
     df["month"] = pd.to_datetime(df["month"])
     df["value"] = pd.to_numeric(df["value"], errors="coerce")
     return df

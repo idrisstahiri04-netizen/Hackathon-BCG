@@ -26,6 +26,11 @@ from common import (DATA_DIR, EVENTS, WINDOW_LEN, Country, load_country,
 VCI_T = 35.0
 MIN_LOW = 2        # v1.1 (audit M1): >= 2 of the 3 window months below VCI_T (was: minimum month < 35)
 MIN_VALID = 2      # need >= 2 valid months, else the label is missing
+# ML-expert label fix (docs/experts/ml.md): a VCI-only positive must be confirmed by season rainfall
+# (min spi_3m from the start of the rainy season to the window end < SPI_CONFIRM). Off unless enabled.
+import os as _os
+SPI_CONFIRM_ON = _os.environ.get("LABEL_SPI_CONFIRM", "0") == "1"
+SPI_CONFIRM = -0.5
 
 
 def window_months(start: pd.Timestamp, n: int) -> list:
@@ -67,7 +72,8 @@ def build_targets(c: Country, seasons: dict | None = None) -> pd.DataFrame:
     for u, ss in seasons.items():
         w = c.wide.loc[u]
         w = w[~w.index.duplicated()].reindex(full)
-        a = {k: w[k].to_numpy(dtype=float) for k in ("vci_crop", "vci_grass", "spi_1m", "sm1_z")}
+        a = {k: w[k].to_numpy(dtype=float) for k in ("vci_crop", "vci_grass", "spi_1m", "sm1_z", "spi_3m")}
+        soff = {s_.idx: (s_.rainy[0] - s_.core_start + 6) % 12 - 6 for s_ in ss}   # rainy start vs core start
         inst = season_instances(ss, y0, y1)
         for r in inst.itertuples(index=False):
             for e in EVENTS:
@@ -76,8 +82,14 @@ def build_targets(c: Country, seasons: dict | None = None) -> pd.DataFrame:
                 i0 = (W0.year - m0.year) * 12 + W0.month - m0.month
                 if i0 < 0 or i0 + n > nm:
                     continue
+                lab = _outcome_np(a, e, i0, n)
+                if SPI_CONFIRM_ON and e in ("crop_failure", "no_grass") and lab == 1.0:
+                    s0 = max(0, (r.anchor.year - m0.year) * 12 + r.anchor.month - m0.month + soff[int(r.season)])
+                    sp = a["spi_3m"][s0:i0 + n]
+                    sp = sp[~np.isnan(sp)]
+                    lab = np.nan if sp.size == 0 else float(sp.min() < SPI_CONFIRM)
                 rows.append(dict(unit_id=u, iso3=c.iso3, season=int(r.season), anchor=r.anchor,
-                                 agyear=int(r.agyear), event=e, W0=W0, label=_outcome_np(a, e, i0, n)))
+                                 agyear=int(r.agyear), event=e, W0=W0, label=lab))
     t = pd.DataFrame(rows)
     # previous instance of the same event in the same unit (for the persistence baseline)
     t = t.sort_values(["unit_id", "event", "W0"])

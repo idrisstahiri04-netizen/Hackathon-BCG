@@ -1,0 +1,6 @@
+mono                         logreg   mean2 PR 0.3285 Brier 0.1829  dPR +0.0000 dBrier +0.0000 | crop 0.59/0.278/0.1607(b0.204) no_g 0.593/0.379/0.2051(b0.287)
+mono                         lgbm     mean2 PR 0.3285 Brier 0.1836  dPR +0.0025 dBrier +0.0003 | crop 0.557/0.254/0.1623(b0.204) no_g 0.582/0.403/0.2049(b0.287)
+mono                         ensemble mean2 PR 0.3435 Brier 0.1819  dPR +0.0060 dBrier +0.0000 | crop 0.591/0.282/0.1604(b0.204) no_g 0.597/0.405/0.2033(b0.287)
+ens_w_lr70                   logreg   mean2 PR 0.3285 Brier 0.1829  dPR +0.0000 dBrier +0.0000 | crop 0.59/0.278/0.1607(b0.204) no_g 0.593/0.379/0.2051(b0.287)
+ens_w_lr70                   lgbm     mean2 PR 0.3260 Brier 0.1833  dPR +0.0000 dBrier -0.0000 | crop 0.568/0.252/0.1628(b0.204) no_g 0.601/0.4/0.2038(b0.287)
+ens_w_lr70                   ensemble mean2 PR 0.3380 Brier 0.1819  dPR +0.0005 dBrier +0.0000 | crop 0.59/0.278/0.1608(b0.204) no_g 0.6/0.398/0.203(b0.287)

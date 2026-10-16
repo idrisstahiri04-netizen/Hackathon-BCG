@@ -21,8 +21,16 @@ for c in "$@"; do
 done
 [ ${#have[@]} -ge 1 ] || { echo "no signals available"; exit 1; }
 
+if [ "${SKIP_DRYSPELL:-0}" != 1 ]; then
+  echo "== dry-spell signals (cached; re-runnable)"
+  "$PY" "$HERE/dryspell/extract_dryspell.py" || echo "!! dry-spell extraction failed; model uses NaN for those features"
+fi
+
 echo "== train (pooled: ${have[*]})"
 cd "$HERE"
-"$PY" train.py --iso3 "${have[@]}"
+# v2: extra countries enter training only (set POOL="" to disable)
+POOL="${POOL-MOZ TZA ETH SOM NAM BWA ZAF MDG AGO UGA}"
+pool=(); for p in $POOL; do [ -f "$HERE/data/signals_${p}.parquet" ] && pool+=("$p"); done
+"$PY" train.py --iso3 "${have[@]}" --pool "${pool[@]}"
 echo "== export"
 "$PY" export_risk.py --iso3 "${have[@]}"

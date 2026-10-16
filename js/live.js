@@ -369,8 +369,13 @@
     const body = $('#join-body');
     const inbound = [...messages.values()].filter(m => m.direction === 'in').sort((a, b) => a.id - b.id);
     for (const m of inbound) {
-      const u = (m.user_id != null && users.get(m.user_id)) || null;
-      const key = `${m.id}|${u ? u.id : ''}|${m.intent || ''}`;
+      // The first sign-up SMS often has no user_id yet (user is only saved
+      // after YES), so also match the user by phone. Masked numbers
+      // (+263****001, no admin key) are not unique, so they never match.
+      const byPhone = m.phone && !/\*/.test(m.phone) ? usersByPhone.get(m.phone) : null;
+      const u = (m.user_id != null && users.get(m.user_id)) || byPhone || null;
+      const saved = !!(u && (!('consent_at' in u) || u.consent_at) && !u.opted_out_at);
+      const key = `${m.id}|${u ? u.id : ''}|${saved}|${u ? u.district_name + u.role + u.language : ''}|${m.intent || ''}`;
       const prev = body.querySelector(`tr[data-id="${m.id}"]`);
       if (prev && prev.dataset.key === key) continue;
       const tr = el('tr');
@@ -395,16 +400,20 @@
         }
       } else tdI.append(el('span', 'muted', '…'));
       const tdU = el('td', 'c-saved');
-      if (u && (m.intent === 'subscribe' || m.intent === 'change_info' || !m.intent)) {
+      if (saved && (m.intent === 'subscribe' || m.intent === 'change_info' || !m.intent)) {
         tdU.append(el('b', null, u.district_name || u.district_id || '?'),
           el('span', null, ` · ${u.role || '?'} · ${LANG[u.language] || u.language || '?'}`));
+      } else if (u && u.opted_out_at && m.intent === 'subscribe') {
+        tdU.append(el('span', 'muted', 'opted out since'));
       } else if (m.intent === 'subscribe') {
         tdU.append(el('span', 'muted', 'not saved yet (asked to confirm)'));
       } else tdU.append(el('span', 'muted', '—'));
       tr.append(tdT, tdS, tdI, tdU);
 
-      if (prev) prev.replaceWith(tr);
-      else {
+      if (prev) {
+        prev.replaceWith(tr);
+        if (saved && !prev.dataset.key.split('|')[2].startsWith('true')) tr.classList.add('is-new');
+      } else {
         if (joinLoaded) tr.classList.add('is-new');
         body.prepend(tr);
       }
@@ -517,6 +526,168 @@
   // Keys typed in the phone or pages must not drive the globe timeline.
   $$('.live-page').forEach(p => p.addEventListener('keydown', ev => ev.stopPropagation()));
 
+  // ---- Crowd signal (spec crowd_crop_status) --------------------------------
+  // GET /feed/crowd?iso3=.. every CROWD_MS: per district, share of inbound
+  // 1/2/3 reports saying 2 or 3 (consented users, one per user per 7 days).
+  // Display-level only: the model's exported levels are untouched. A unit is
+  // shown +1 (max Warning, never Emergency) ONLY if share_bad >= 0.6 with
+  // >= 3 reports AND the exported row has a satellite family in alarm.
+  // Same rule as backend/crowd.py apply_rule; /feed/crowd?t= returns it too.
+  const CROWD_MS = 5000;
+  const CROWD_RULE = { minReports: 3, minShareBad: 0.6, maxLevel: 2, sat: ['vegetation', 'rain', 'soil'] };
+  let crowd = new Map();          // unit_id -> stats from the backend
+  let crowdSig = '';
+  let crowdBusy = false, crowdLoaded = false;
+  const crowdRows = new Map();    // unit_id -> {li, sig}  (Alert feed rows)
+
+  const crowdAlarm = s => !!s && (+s.n_reports || 0) >= CROWD_RULE.minReports &&
+    s.share_bad != null && +s.share_bad >= CROWD_RULE.minShareBad;
+  const satAlarm = row => !!row && CROWD_RULE.sat.some(k => row.families && row.families[k]);
+  const crowdState = (unitId, row) => {
+    const s = crowd.get(unitId);
+    if (!s || !row || row.level == null || row.missing) return 'none';
+    if (!crowdAlarm(s)) return 'below';
+    if (!satAlarm(row)) return 'nosat';
+    return row.level >= CROWD_RULE.maxLevel ? 'confirms' : 'raised';
+  };
+  function displayLevel(unitId, row) {
+    const st = crowdState(unitId, row);
+    return st === 'raised' ? row.level + 1 : row.level;
+  }
+  const sevClass = s => (s.share_bad == null ? 'sev-0' : +s.share_bad >= 0.6 ? 'sev-3' : +s.share_bad >= 0.3 ? 'sev-2' : 'sev-1');
+  const crowdLine = s => {
+    const n = +s.n_reports || 0, nf = +s.n_failed || 0, nb = +s.n_bad || 0;
+    if (nf > 0) return `${nf} of ${n} say failed${nb > nf ? `, ${nb - nf} poor` : ''}`;
+    if (nb > 0) return `${nb} of ${n} say poor`;
+    return `${n} of ${n} say ok`;
+  };
+  const RULE_TXT = {
+    raised: 'crowd-confirmed · level shown +1',
+    confirms: 'crowd-confirmed · already at Warning',
+    nosat: 'not used: no satellite family in alarm',
+    below: `below threshold (needs ≥${CROWD_RULE.minReports} reports, ≥${Math.round(CROWD_RULE.minShareBad * 100)}% poor or failed)`,
+    none: '',
+  };
+  // The exported row of a unit for the month on the globe (RISK_DATA is global).
+  function rowAt(unitId, t) {
+    const R = (window.RISK_DATA || {})[mapState.iso3];
+    const u = R && R.units && R.units.find(x => x.id === unitId);
+    return u && u.series ? u.series[t] || null : null;
+  }
+
+  // Unit panel section (called by app.js renderDetail through window.CROWD).
+  function detailSection(unit, row) {
+    const s = crowd.get(unit.id);
+    const sect = el('div', 'd-sect crowd-sect');
+    sect.append(el('span', 'd-lab', 'Crowd reports · SMS, last 30 days'));
+    if (online === false) {
+      sect.append(el('div', 'crowd-none', 'SMS backend offline — no live reports.'));
+      return sect;
+    }
+    if (!s || !s.n_reports) {
+      sect.append(el('div', 'crowd-none', 'No reports yet. Subscribers reply 1 ok · 2 poor · 3 failed.'));
+      return sect;
+    }
+    const st = crowdState(unit.id, row);
+    const line = el('div', `crowd-line ${sevClass(s)}`);
+    line.append(el('span', 'crowd-ico', '💬'), el('b', null, crowdLine(s)),
+      el('span', 'crowd-meta', ` · ${s.n_users || s.n_reports} people · last ${fmtTime(s.last_report_at)}`));
+    if (s.n_demo > 0) line.append(el('span', 'tag demo', `${s.n_demo} demo`));
+    sect.append(line);
+    const rule = el('div', `crowd-rule st-${st}`);
+    if (st === 'raised' || st === 'confirms') rule.append(el('span', 'crowd-mark', '✔'));
+    rule.append(el('span', null, RULE_TXT[st]));
+    if (st === 'raised') rule.append(el('span', 'crowd-meta', ` (model L${row.level} → shown L${row.level + 1})`));
+    sect.append(rule);
+    return sect;
+  }
+
+  // Globe badges: one small 💬 n marker per district with reports.
+  function renderBadges() {
+    const app = window.APP;
+    if (!app || !app.world || typeof app.world.htmlElementsData !== 'function') return;
+    if (!mapState.live || !mapState.iso3 || !crowd.size) { app.world.htmlElementsData([]); return; }
+    const G = (window.GEO_DATA || {})[mapState.iso3];
+    const feats = new Map(G ? G.features.map(f => [f.properties.id, f.properties]) : []);
+    const data = [];
+    for (const s of crowd.values()) {
+      const p = feats.get(s.unit_id);
+      if (!p || p.lat == null) continue;
+      data.push({ ...s, lat: p.lat, lng: p.lng, state: crowdState(s.unit_id, rowAt(s.unit_id, mapState.t)) });
+    }
+    app.world
+      .htmlLat(d => d.lat).htmlLng(d => d.lng).htmlAltitude(0.03)
+      .htmlElement(d => {
+        const b = el('div', `crowd-badge ${sevClass(d)}${d.state === 'raised' || d.state === 'confirms' ? ' confirmed' : ''}`);
+        b.append(el('span', 'ico', '💬'), el('span', 'n', String(d.n_reports)));
+        if (d.state === 'raised') b.append(el('span', 'up', '+1'));
+        b.title = `${d.unit_name}: ${crowdLine(d)}${d.n_demo ? ` (${d.n_demo} demo)` : ''} — ${RULE_TXT[d.state] || 'no model level'}`;
+        return b;
+      })
+      .htmlElementsData(data);
+  }
+
+  // Alert feed rows: "crowd report: Binga 3 of 4 say failed".
+  function renderCrowdAlerts() {
+    const list = $('#alerts-list');
+    for (const s of crowd.values()) {
+      if (!s.n_reports) continue;
+      const st = mapState.live ? crowdState(s.unit_id, rowAt(s.unit_id, mapState.t)) : 'none';
+      const sig = `${s.n_reports}|${s.n_bad}|${s.n_failed}|${s.last_report_at}|${st}|${s.n_demo}`;
+      const old = crowdRows.get(s.unit_id);
+      if (old && old.sig === sig) continue;
+      const li = el('li', `al-row crowd ${sevClass(s)}`);
+      li.dataset.crowd = s.unit_id;
+      const top = el('div', 'al-top');
+      top.append(el('span', 'al-time', fmtTime(s.last_report_at)), el('span', 'chip crowd-chip', '💬 CROWD'),
+        el('span', 'al-unit', `crowd report: ${s.unit_name || s.unit_id} ${crowdLine(s)}`));
+      if (s.n_demo > 0) top.append(el('span', 'tag demo', `${s.n_demo} demo`));
+      top.append(el('span', 'al-month', `${s.n_users || s.n_reports} people · 30 days`));
+      li.append(top);
+      const foot = el('div', 'al-foot');
+      foot.append(el('span', `crowd-rule st-${st}`, st === 'none'
+        ? 'reports only — shown on the map, no level change'
+        : RULE_TXT[st] + (st === 'raised' || st === 'confirms' ? ` at ${mapState.label}` : '')));
+      li.append(foot);
+      if (old) { old.li.replaceWith(li); li.classList.add('is-changed'); }
+      else { if (alertsLoaded) li.classList.add('is-new'); list.prepend(li); }
+      crowdRows.set(s.unit_id, { li, sig });
+    }
+    for (const [id, r] of crowdRows) if (!crowd.has(id)) { r.li.remove(); crowdRows.delete(id); }
+    $('#alerts-count').textContent = String(alertRows.size + crowdRows.size);
+    $('#alerts-empty').hidden = alertRows.size + crowdRows.size > 0;
+  }
+
+  function applyCrowd(units) {
+    const next = new Map();
+    for (const u of units) if (u && u.unit_id) next.set(u.unit_id, u);
+    const sig = [...next.values()].map(u => `${u.unit_id}:${u.n_reports}:${u.n_bad}:${u.n_failed}:${u.last_report_at}`).sort().join(';');
+    crowd = next;
+    if (sig !== crowdSig) {
+      crowdSig = sig;
+      if (window.APP && typeof APP.repaint === 'function') APP.repaint();
+    }
+    renderBadges();
+    renderCrowdAlerts();
+  }
+
+  async function pollCrowd() {
+    if (crowdBusy) return;
+    if (online === false) { if (crowd.size) applyCrowd([]); return; }
+    crowdBusy = true;
+    try {
+      const iso3 = mapState.iso3 || 'ZWE';
+      const d = await api(`/feed/crowd?iso3=${encodeURIComponent(iso3)}`);
+      crowdLoaded = true;
+      applyCrowd(rowsOf(d, 'units'));
+    } catch (_) {
+      if (crowd.size) applyCrowd([]);   // offline: crowd disappears, model levels stay
+    } finally { crowdBusy = false; }
+  }
+  // Month or country changed on the globe: badges and feed rows re-evaluate the rule.
+  window.addEventListener('app:state', () => { renderBadges(); renderCrowdAlerts(); });
+  window.CROWD = { displayLevel, detailSection, state: crowdState, stats: id => crowd.get(id) || null };
+
   // ---- Polling loop ---------------------------------------------------------
   // While offline, retry /health every 10 s instead of every 2 s: Chrome logs
   // each refused connection as a console error and that cannot be silenced.
@@ -531,14 +702,16 @@
         // Alerts are always polled so the tab badge counts pending approvals.
         const jobs = [pollAlerts()];
         if (page === 'users' || page === 'phone') jobs.push(pollUsers());
+        if (!crowdLoaded) jobs.push(pollCrowd());   // first load right away, then every CROWD_MS
         await Promise.all(jobs);
-      }
+      } else if (crowd.size) applyCrowd([]);
     } catch (_) {
       setOnline(false);
     } finally {
       busy = false;
     }
   }
+  setInterval(() => { if (online) pollCrowd(); }, CROWD_MS);
 
   const start = new URLSearchParams(location.search).get('page');
   if (start && ['alerts', 'users', 'phone'].includes(start)) show(start);

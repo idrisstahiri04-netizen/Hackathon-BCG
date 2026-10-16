@@ -16,7 +16,20 @@ FastAPI app `backend/app.py`, SQLite `backend/demo.db`. Runs on http://localhost
 - GET  /feed/alerts?since=id   latest events + "sent to N users"
 - GET  /feed/users?since=id    latest users + counters by role
 - GET  /feed/messages?since=id latest in/out messages with intent shown
+- GET  /feed/crowd?iso3=ZWE[&t=63][&days=30]  crowd signal (spec `crowd_crop_status`): per unit n_reports, n_bad (2 or 3),
+                               n_failed (3), share_bad, share_failed, last_report_at, n_users, n_demo. Last 30 days,
+                               only users with consent and not opted out, one report per user per 7 days (anti-gaming).
+                               Aggregated counts only (no phones/names) → no auth. With `t`: model_level, display_level,
+                               crowd_confirmed, reason from backend/crowd.py apply_rule (see below)
 - GET  /health
+
+## Crowd rule (display level only — exported model levels are never changed)
+A unit is shown +1 (max Warning, never Emergency; Normal→Watch, Watch→Warning) ONLY if `share_bad >= 0.6` with
+`n_reports >= 3` AND the unit's exported row for that month has at least one satellite family in alarm
+(vegetation, rain or soil; heat alone never counts). Otherwise reports are shown but change nothing.
+Same rule in `js/live.js` (window.CROWD) for the globe badge (💬 n, colour by share_bad, ring + ✔ when
+crowd-confirmed), the unit panel row "Crowd reports" and the Alert feed rows ("crowd report: Binga 3 of 4 say failed").
+Demo helper: `python -m backend.seed_crowd` (4 demo-marked reports in Hurungwe, share_bad 0.50; one live "3" tips it).
 
 ## Router (Claude Haiku `claude-haiku-5-5`, key from /home/looooo/bcg/.env ANTHROPIC_API_KEY)
 Intents are a registry list (name, description, examples, handler): subscribe, report (1/2/3), ask_advice, ask_help, stop, change_info, unknown. STOP/1/2/3/JOIN keyword fast-path without LLM. Low confidence → clarify question. District must match a known unit name (fuzzy, from data/geo/<iso3>.js); ambiguous → ask back. Confirm sign-up ("Reply YES"). Response text blocks only (Haiku may return thinking blocks first).

@@ -1,0 +1,370 @@
+{
+ "load": [
+  {
+   "run": 1,
+   "dcl_ms": 654,
+   "appReady_ms": 1135,
+   "canvas_ms": 1646,
+   "loadEvent_ms": 1650,
+   "nav": {
+    "domContentLoaded": 643,
+    "loadEvent": 1318,
+    "resources": 20,
+    "transferKB": 11237,
+    "biggest": [
+     {
+      "name": "risk/ZMB.js",
+      "kb": 3056,
+      "ms": 142
+     },
+     {
+      "name": "risk/ZWE.js",
+      "kb": 2427,
+      "ms": 122
+     },
+     {
+      "name": "vendor/globe.gl.min.js",
+      "kb": 1443,
+      "ms": 50
+     },
+     {
+      "name": "vendor/earth-blue-marble.jpg",
+      "kb": 1428,
+      "ms": 34
+     },
+     {
+      "name": "risk/KEN.js",
+      "kb": 1232,
+      "ms": 102
+     },
+     {
+      "name": "risk/MWI.js",
+      "kb": 725,
+      "ms": 86
+     },
+     {
+      "name": "vendor/earth-topology.png",
+      "kb": 370,
+      "ms": 25
+     },
+     {
+      "name": "geo/ZMB.js",
+      "kb": 206,
+      "ms": 75
+     }
+    ],
+    "fcp": 340
+   }
+  },
+  {
+   "run": 2,
+   "dcl_ms": 488,
+   "appReady_ms": 975,
+   "canvas_ms": 1404,
+   "loadEvent_ms": 1405,
+   "nav": {
+    "domContentLoaded": 483,
+    "loadEvent": 1130,
+    "resources": 20,
+    "transferKB": 11237,
+    "biggest": [
+     {
+      "name": "risk/ZMB.js",
+      "kb": 3056,
+      "ms": 107
+     },
+     {
+      "name": "risk/ZWE.js",
+      "kb": 2427,
+      "ms": 94
+     },
+     {
+      "name": "vendor/globe.gl.min.js",
+      "kb": 1443,
+      "ms": 60
+     },
+     {
+      "name": "vendor/earth-blue-marble.jpg",
+      "kb": 1428,
+      "ms": 27
+     },
+     {
+      "name": "risk/KEN.js",
+      "kb": 1232,
+      "ms": 71
+     },
+     {
+      "name": "risk/MWI.js",
+      "kb": 725,
+      "ms": 50
+     },
+     {
+      "name": "vendor/earth-topology.png",
+      "kb": 370,
+      "ms": 17
+     },
+     {
+      "name": "geo/ZMB.js",
+      "kb": 206,
+      "ms": 46
+     }
+    ],
+    "fcp": 224
+   }
+  },
+  {
+   "run": 3,
+   "dcl_ms": 550,
+   "appReady_ms": 1053,
+   "canvas_ms": 1513,
+   "loadEvent_ms": 1514,
+   "nav": {
+    "domContentLoaded": 542,
+    "loadEvent": 1204,
+    "resources": 20,
+    "transferKB": 11237,
+    "biggest": [
+     {
+      "name": "risk/ZMB.js",
+      "kb": 3056,
+      "ms": 128
+     },
+     {
+      "name": "risk/ZWE.js",
+      "kb": 2427,
+      "ms": 121
+     },
+     {
+      "name": "vendor/globe.gl.min.js",
+      "kb": 1443,
+      "ms": 83
+     },
+     {
+      "name": "vendor/earth-blue-marble.jpg",
+      "kb": 1428,
+      "ms": 26
+     },
+     {
+      "name": "risk/KEN.js",
+      "kb": 1232,
+      "ms": 91
+     },
+     {
+      "name": "risk/MWI.js",
+      "kb": 725,
+      "ms": 78
+     },
+     {
+      "name": "vendor/earth-topology.png",
+      "kb": 370,
+      "ms": 19
+     },
+     {
+      "name": "geo/ZMB.js",
+      "kb": 206,
+      "ms": 74
+     }
+    ],
+    "fcp": 276
+   }
+  }
+ ],
+ "frames": {
+  "idle_autoRotateOff": {
+   "frames": 7,
+   "seconds": 3,
+   "fps": 2.3,
+   "gapP50": 522.5,
+   "gapP95": 628.6,
+   "gapMax": 628.6,
+   "longTasks": 6,
+   "longTaskMs": 3195
+  },
+  "play_1x": {
+   "frames": 9,
+   "seconds": 5,
+   "fps": 1.8,
+   "gapP50": 555.8,
+   "gapP95": 940.2,
+   "gapMax": 940.2,
+   "longTasks": 8,
+   "longTaskMs": 4375
+  },
+  "play_4x": {
+   "frames": 16,
+   "seconds": 5,
+   "fps": 3.2,
+   "gapP50": 324.3,
+   "gapP95": 404.4,
+   "gapMax": 404.4,
+   "longTasks": 15,
+   "longTaskMs": 4856
+  },
+  "play_4x_panelOpen": {
+   "frames": 16,
+   "seconds": 5,
+   "fps": 3.2,
+   "gapP50": 329.5,
+   "gapP95": 429.4,
+   "gapMax": 429.4,
+   "longTasks": 15,
+   "longTaskMs": 4857
+  },
+  "after3Playbacks_idle": {
+   "frames": 15,
+   "seconds": 3,
+   "fps": 5,
+   "gapP50": 217.7,
+   "gapP95": 237.3,
+   "gapMax": 237.3,
+   "longTasks": 14,
+   "longTaskMs": 3011
+  }
+ },
+ "memory": {
+  "baseline": {
+   "usedMB": 19.1,
+   "totalMB": 22.1,
+   "nodes": 3207,
+   "listeners": 161,
+   "documents": 1
+  },
+  "pass1_ms": 39307,
+  "afterPass1": {
+   "usedMB": 20.3,
+   "totalMB": 25.3,
+   "nodes": 4674,
+   "listeners": 281,
+   "documents": 1
+  },
+  "feedItemsAfterPass1": 122,
+  "pass2_ms": 48777,
+  "afterPass2": {
+   "usedMB": 22.3,
+   "totalMB": 27.1,
+   "nodes": 4674,
+   "listeners": 281,
+   "documents": 1
+  },
+  "pass3_ms": 45067,
+  "afterPass3": {
+   "usedMB": 25.2,
+   "totalMB": 30.3,
+   "nodes": 4674,
+   "listeners": 281,
+   "documents": 1
+  },
+  "growthPass1to3_MB": 4.9,
+  "perfMemory": {
+   "usedMB": 70,
+   "limitMB": 4192
+  }
+ },
+ "switchCountry": [
+  {
+   "to": "Kenya",
+   "sync_ms": 13.8,
+   "toSecondFrame_ms": 453.9,
+   "hud": "Kenya",
+   "units": "47 counties · disaster declared 8 Sep 2021",
+   "fpsAfter": 4.7,
+   "heap": 26.3
+  },
+  {
+   "to": "Malawi",
+   "sync_ms": 23.8,
+   "toSecondFrame_ms": 558.2,
+   "hud": "Malawi",
+   "units": "28 districts · disaster declared 23 Mar 2024",
+   "fpsAfter": 4,
+   "heap": 25.4
+  },
+  {
+   "to": "Zambia",
+   "sync_ms": 24.5,
+   "toSecondFrame_ms": 717.8,
+   "hud": "Zambia",
+   "units": "116 districts · disaster declared 29 Feb 2024",
+   "fpsAfter": 2.7,
+   "heap": 28.6
+  },
+  {
+   "to": "Zimbabwe",
+   "sync_ms": 12.4,
+   "toSecondFrame_ms": 1227.2,
+   "hud": "Zimbabwe",
+   "units": "91 districts · disaster declared 3 Apr 2024",
+   "fpsAfter": 2.7,
+   "heap": 30.4
+  },
+  {
+   "to": "Kenya",
+   "sync_ms": 27.6,
+   "toSecondFrame_ms": 899,
+   "hud": "Kenya",
+   "units": "47 counties · disaster declared 8 Sep 2021",
+   "fpsAfter": 4,
+   "heap": 31
+  },
+  {
+   "to": "Zimbabwe",
+   "sync_ms": 12.5,
+   "toSecondFrame_ms": 770.7,
+   "hud": "Zimbabwe",
+   "units": "91 districts · disaster declared 3 Apr 2024",
+   "fpsAfter": 4.7,
+   "heap": 32.9
+  }
+ ],
+ "monthStep": [
+  {
+   "sync_ms": 109,
+   "toSecondFrame_ms": 945.5,
+   "month": "Apr 2024"
+  },
+  {
+   "sync_ms": 26.4,
+   "toSecondFrame_ms": 718.8,
+   "month": "May 2024"
+  },
+  {
+   "sync_ms": 18.6,
+   "toSecondFrame_ms": 735.3,
+   "month": "Jun 2024"
+  },
+  {
+   "sync_ms": 30,
+   "toSecondFrame_ms": 718,
+   "month": "Jul 2024"
+  },
+  {
+   "sync_ms": 37.5,
+   "toSecondFrame_ms": 673.3,
+   "month": "Aug 2024"
+  }
+ ],
+ "errors": {
+  "load1": {
+   "js": [],
+   "console": [],
+   "net": []
+  },
+  "load2": {
+   "js": [],
+   "console": [],
+   "net": []
+  },
+  "load3": {
+   "js": [],
+   "console": [],
+   "net": []
+  },
+  "main": {
+   "js": [],
+   "console": [],
+   "net": [
+    "net::ERR_ABORTED http://localhost:8402/health"
+   ]
+  }
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "cmd": "bash pipeline/dryspell/kaggle_job.sh 4",
+ "pip": [],
+ "data": "/kaggle/input/datasets/omarserghini/drought-signals",
+ "code": "/kaggle/input/datasets/omarserghini/drought-code",
+ "pushed_at": "2026-10-16T18:48:37+00:00",
+ "exit_code": 0,
+ "seconds": 870.1,
+ "pipeline_files": [
+  "dryspell",
+  "timesfm_ZWE.parquet"
+ ]
+}

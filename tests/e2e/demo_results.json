@@ -1,0 +1,528 @@
+{
+  "started_at": "2026-10-16T19:31:22.512Z",
+  "api": "http://localhost:8201",
+  "ui": "http://localhost:8202",
+  "runs": [
+    {
+      "steps": [
+        {
+          "step": "globe loads",
+          "pass": true,
+          "ms": 6362,
+          "note": "backend online",
+          "shot": "tests/e2e/screens/demo_r1_01_globe_loads.png"
+        },
+        {
+          "step": "search Zimbabwe",
+          "pass": true,
+          "ms": 4842,
+          "note": "Live · 91 districts · disaster declared 3 Apr 2024",
+          "shot": "tests/e2e/screens/demo_r1_02_search_zimbabwe.png"
+        },
+        {
+          "step": "slider to Oct 2023 (t=57)",
+          "pass": true,
+          "ms": 940,
+          "note": "{\"clock\":\"Oct 2023\",\"warnPlus\":0,\"L0\":91,\"L1\":0,\"L2\":0,\"L3\":0}",
+          "scriptSays": "13 Watch, 0 Warning",
+          "matchesScript": false,
+          "shot": "tests/e2e/screens/demo_r1_03_slider_to_oct_2023_t_57_.png"
+        },
+        {
+          "step": "play 2x to Mar 2024 (t=62), pause",
+          "pass": true,
+          "ms": 5299,
+          "note": "play 2475 ms (495 ms/month, nominal 475) · paused at t=62 · {\"clock\":\"Mar 2024\",\"warnPlus\":7,\"L0\":30,\"L1\":54,\"L2\":7,\"L3\":0}",
+          "ms_per_month": 495,
+          "landed_t": 62,
+          "scriptSays": "22 Watch, 4 Warning (Mbire, Karoi, Rushinga at Watch)",
+          "matchesScript": false,
+          "shot": "tests/e2e/screens/demo_r1_04_play_2x_to_mar_2024_t_62_pause.png"
+        },
+        {
+          "step": "arrow right to Apr 2024 (t=63)",
+          "pass": true,
+          "ms": 678,
+          "note": "{\"clock\":\"Apr 2024\",\"warnPlus\":22,\"L0\":1,\"L1\":68,\"L2\":22,\"L3\":0}",
+          "scriptSays": "26 Warning",
+          "matchesScript": false,
+          "shot": "tests/e2e/screens/demo_r1_05_arrow_right_to_apr_2024_t_63_.png"
+        },
+        {
+          "step": "click Hwange on the globe",
+          "pass": true,
+          "ms": 1725,
+          "note": "hit at (533,372)",
+          "clickedOnGlobe": true,
+          "shot": "tests/e2e/screens/demo_r1_06_click_hwange_on_the_globe.png"
+        },
+        {
+          "step": "district panel: drivers, families, held, p, p_crisis",
+          "pass": true,
+          "ms": 18,
+          "note": "▲ L2 WARNING · No grass · p 56% · 3/3 · drivers 3 · p_crisis 0.935",
+          "drivers": [
+            "cropland greenness 9/100 (VCI, poor)",
+            "grazing land greenness 15/100 (VCI, poor)",
+            "topsoil moisture -1.9 SD below normal"
+          ],
+          "p": 0.556,
+          "p_crisis": 0.935,
+          "shot": "tests/e2e/screens/demo_r1_07_district_panel_drivers_families_held_p_p_crisis.png"
+        },
+        {
+          "step": "Herders tab: SMS preview one segment",
+          "pass": true,
+          "ms": 4651,
+          "note": "134 septets · 134 septets · GSM-71 segment",
+          "sms": "WARNING Hwange: grazing drying fast. Sell weak animals early while prices hold, plan herd moves. Reply 1 ok 2 poor 3 bad. STOP to quit",
+          "ngo_sms": "WARNING Hwange: chance of Crisis within 3 months 94%. cropland greenness 9/100 (VCI, poor). 3/3 families agree, conf high. [link]",
+          "shot": "tests/e2e/screens/demo_r1_08_herders_tab_sms_preview_one_segment.png"
+        },
+        {
+          "step": "Phone tab: JOIN Hwange herder",
+          "pass": true,
+          "ms": 3357,
+          "note": "1236 ms (backend 1119 ms, keyword)",
+          "latency_ms": 1236,
+          "api_ms": 1119,
+          "reply": "Join drought alerts for Hwange as herder? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel.",
+          "shot": "tests/e2e/screens/demo_r1_09_phone_tab_join_hwange_herder.png"
+        },
+        {
+          "step": "Phone: YES confirms sign-up",
+          "pass": true,
+          "ms": 858,
+          "note": "723 ms (backend 541 ms, session)",
+          "latency_ms": 723,
+          "api_ms": 541,
+          "reply": "You are registered for Hwange (herder). Reply 1 ok 2 poor 3 bad for grazing and animals, HELP for an officer, STOP to quit.",
+          "shot": "tests/e2e/screens/demo_r1_10_phone_yes_confirms_sign_up.png"
+        },
+        {
+          "step": "Map: Run alerts for Apr 2024",
+          "pass": true,
+          "ms": 2943,
+          "note": "2007 ms · 44 alert events for Apr 2024. See Alert feed.",
+          "pending_badge": 15,
+          "shot": "tests/e2e/screens/demo_r1_11_map_run_alerts_for_apr_2024.png"
+        },
+        {
+          "step": "Alert feed: Hwange Warning pending approval",
+          "pass": true,
+          "ms": 1364,
+          "note": "▲ L2 WARNING · No grass · Apr 2024 · Waiting for approval · not sent yet",
+          "n_rows": 45,
+          "crowd_rows": 1,
+          "shot": "tests/e2e/screens/demo_r1_12_alert_feed_hwange_warning_pending_approval.png"
+        },
+        {
+          "step": "Approve & send Hwange only",
+          "pass": true,
+          "ms": 1251,
+          "note": "1240 ms · Sentsent to 3 usersby operator",
+          "still_pending": 14,
+          "shot": "tests/e2e/screens/demo_r1_13_approve_send_hwange_only.png"
+        },
+        {
+          "step": "Phone receives Warning SMS",
+          "pass": true,
+          "ms": 1756,
+          "note": "3683 ms after approve · 134 septets · 19:32:41 · sent (simulator)",
+          "sms": "WARNING Hwange: grazing drying fast. Sell weak animals early while prices hold, plan herd moves. Reply 1 ok 2 poor 3 bad. STOP to quit",
+          "latency_from_approve_ms": 3683,
+          "shot": "tests/e2e/screens/demo_r1_14_phone_receives_warning_sms.png"
+        },
+        {
+          "step": "Reply: how do I save my cattle? -> livestock advice",
+          "pass": true,
+          "ms": 3466,
+          "note": "3332 ms (backend 3101 ms) · 99 septets · intent ask_advice conf 0.85",
+          "latency_ms": 3332,
+          "api_ms": 3101,
+          "reply": "Sell old, weak and male animals early while prices are still fair. Keep your best breeding females.",
+          "confidence": 0.85,
+          "shot": "tests/e2e/screens/demo_r1_15_reply_how_do_i_save_my_cattle_livestock_advice.png"
+        },
+        {
+          "step": "Reply: 3 -> grazing report saved",
+          "pass": true,
+          "ms": 1845,
+          "note": "1732 ms (backend 1580 ms, keyword)",
+          "latency_ms": 1732,
+          "api_ms": 1580,
+          "reply": "Thank you. Grazing and animals report 'bad' saved for Hwange. It helps us check our alerts.",
+          "shot": "tests/e2e/screens/demo_r1_16_reply_3_grazing_report_saved.png"
+        },
+        {
+          "step": "Map: crowd badge + crowd-confirmed in panel",
+          "pass": true,
+          "ms": 6042,
+          "note": "410 ms · badge \"Hwange: 3 of 5 say failed (4 demo) — crowd-confirmed · already at Warning\" · panel \"✔crowd-confirmed · already at Warning\"",
+          "crowd_row": "19:32:53💬 CROWDcrowd report: Hwange 3 of 5 say failed4 demo5 people · 30 dayscrowd-confirmed · already at Warning at Apr 2024",
+          "shot": "tests/e2e/screens/demo_r1_17_map_crowd_badge_crowd_confirmed_in_panel.png"
+        },
+        {
+          "step": "Reply: We can't manage -> ask_help",
+          "pass": true,
+          "ms": 2718,
+          "note": "1295 ms (backend 1156 ms) · intent ask_help conf 1",
+          "latency_ms": 1295,
+          "api_ms": 1156,
+          "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number.",
+          "confidence": 1,
+          "shot": "tests/e2e/screens/demo_r1_18_reply_we_can_t_manage_ask_help.png"
+        },
+        {
+          "step": "Users joining shows sign-up with Claude understood",
+          "pass": true,
+          "ms": 1864,
+          "note": "JOIN row: subscribe 100% saved \"Hwange · herder · English\" · YES row: saved \"Hwange · herder · English\" · +26377 ••• 001 · subscribers 14, today 14, herders 4",
+          "join_row": {
+            "intent": "subscribe",
+            "conf": "100%",
+            "saved": "Hwange · herder · English",
+            "phone": "+26377 ••• 001"
+          },
+          "yes_row": {
+            "intent": "subscribe",
+            "conf": "100%",
+            "saved": "Hwange · herder · English",
+            "phone": "+26377 ••• 001"
+          },
+          "shot": "tests/e2e/screens/demo_r1_19_users_joining_shows_sign_up_with_claude_understood.png"
+        },
+        {
+          "step": "close: scrub to Jul 2024 (t=66)",
+          "pass": true,
+          "ms": 1968,
+          "note": "{\"clock\":\"Jul 2024\",\"warnPlus\":46,\"L0\":0,\"L1\":45,\"L2\":46,\"L3\":0} · Hwange L2",
+          "scriptSays": "Hwange back to Normal at t=66; 33 Warning+",
+          "matchesScript": false,
+          "shot": "tests/e2e/screens/demo_r1_20_close_scrub_to_jul_2024_t_66_.png"
+        },
+        {
+          "step": "deep link ?country=Zimbabwe&t=57",
+          "pass": true,
+          "ms": 6232,
+          "note": "{\"clock\":\"Oct 2023\",\"warnPlus\":0,\"L0\":91,\"L1\":0,\"L2\":0,\"L3\":0}",
+          "shot": "tests/e2e/screens/demo_r1_21_deep_link_country_zimbabwe_t_57.png"
+        },
+        {
+          "step": "deep link ?country=Zimbabwe&t=62",
+          "pass": true,
+          "ms": 5845,
+          "note": "{\"clock\":\"Mar 2024\",\"warnPlus\":7,\"L0\":30,\"L1\":54,\"L2\":7,\"L3\":0}",
+          "shot": "tests/e2e/screens/demo_r1_22_deep_link_country_zimbabwe_t_62.png"
+        },
+        {
+          "step": "deep link ?country=Zimbabwe&t=63",
+          "pass": true,
+          "ms": 6071,
+          "note": "{\"clock\":\"Apr 2024\",\"warnPlus\":22,\"L0\":1,\"L1\":68,\"L2\":22,\"L3\":0}",
+          "shot": "tests/e2e/screens/demo_r1_23_deep_link_country_zimbabwe_t_63.png"
+        },
+        {
+          "step": "deep link ?country=Zimbabwe&t=63&county=Hwange",
+          "pass": true,
+          "ms": 6807,
+          "note": "{\"clock\":\"Apr 2024\",\"warnPlus\":22,\"L0\":1,\"L1\":68,\"L2\":22,\"L3\":0} · panel Hwange ▲ L2 WARNING 56% 3/3 tabs[Herders,Cooperatives,Extension officers,Food banks,NGOs & funds,Government]",
+          "shot": "tests/e2e/screens/demo_r1_24_deep_link_country_zimbabwe_t_63_county_hwange.png"
+        },
+        {
+          "step": "deep link ?country=Zimbabwe&t=62&county=Mbire",
+          "pass": true,
+          "ms": 5424,
+          "note": "{\"clock\":\"Mar 2024\",\"warnPlus\":7,\"L0\":30,\"L1\":54,\"L2\":7,\"L3\":0} · panel Mbire ▲ L1 WATCH 36% 3/3 tabs[Extension officers,Food banks,NGOs & funds]",
+          "shot": "tests/e2e/screens/demo_r1_25_deep_link_country_zimbabwe_t_62_county_mbire.png"
+        },
+        {
+          "step": "deep link ?country=Zimbabwe&t=66",
+          "pass": true,
+          "ms": 6241,
+          "note": "{\"clock\":\"Jul 2024\",\"warnPlus\":46,\"L0\":0,\"L1\":45,\"L2\":46,\"L3\":0}",
+          "shot": "tests/e2e/screens/demo_r1_26_deep_link_country_zimbabwe_t_66.png"
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "counts": {
+        "t57": {
+          "clock": "Oct 2023",
+          "warnPlus": 0,
+          "L0": 91,
+          "L1": 0,
+          "L2": 0,
+          "L3": 0
+        },
+        "t62": {
+          "clock": "Mar 2024",
+          "warnPlus": 7,
+          "L0": 30,
+          "L1": 54,
+          "L2": 7,
+          "L3": 0
+        },
+        "t63": {
+          "clock": "Apr 2024",
+          "warnPlus": 22,
+          "L0": 1,
+          "L1": 68,
+          "L2": 22,
+          "L3": 0
+        },
+        "t66": {
+          "clock": "Jul 2024",
+          "warnPlus": 46,
+          "L0": 0,
+          "L1": 45,
+          "L2": 46,
+          "L3": 0
+        }
+      },
+      "created": 44,
+      "run": 1,
+      "total_ms": 178105,
+      "db": "/tmp/e2e_demo_r1_655913.db",
+      "backend_log": "/tmp/e2e_demo_r1_backend.log",
+      "js_errors": 0
+    }
+  ],
+  "browser": "chrome 154.0.8037.57",
+  "summary": [
+    {
+      "step": "globe loads",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 6362,
+      "ms_max": 6362,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "search Zimbabwe",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 4842,
+      "ms_max": 4842,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "slider to Oct 2023 (t=57)",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 940,
+      "ms_max": 940,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "play 2x to Mar 2024 (t=62), pause",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 5299,
+      "ms_max": 5299,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "arrow right to Apr 2024 (t=63)",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 678,
+      "ms_max": 678,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "click Hwange on the globe",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 1725,
+      "ms_max": 1725,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "district panel: drivers, families, held, p, p_crisis",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 18,
+      "ms_max": 18,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Herders tab: SMS preview one segment",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 4651,
+      "ms_max": 4651,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Phone tab: JOIN Hwange herder",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 3357,
+      "ms_max": 3357,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Phone: YES confirms sign-up",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 858,
+      "ms_max": 858,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Map: Run alerts for Apr 2024",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 2943,
+      "ms_max": 2943,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Alert feed: Hwange Warning pending approval",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 1364,
+      "ms_max": 1364,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Approve & send Hwange only",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 1251,
+      "ms_max": 1251,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Phone receives Warning SMS",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 1756,
+      "ms_max": 1756,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Reply: how do I save my cattle? -> livestock advice",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 3466,
+      "ms_max": 3466,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Reply: 3 -> grazing report saved",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 1845,
+      "ms_max": 1845,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Map: crowd badge + crowd-confirmed in panel",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 6042,
+      "ms_max": 6042,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Reply: We can't manage -> ask_help",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 2718,
+      "ms_max": 2718,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "Users joining shows sign-up with Claude understood",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 1864,
+      "ms_max": 1864,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "close: scrub to Jul 2024 (t=66)",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 1968,
+      "ms_max": 1968,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "deep link ?country=Zimbabwe&t=57",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 6232,
+      "ms_max": 6232,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "deep link ?country=Zimbabwe&t=62",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 5845,
+      "ms_max": 5845,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "deep link ?country=Zimbabwe&t=63",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 6071,
+      "ms_max": 6071,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "deep link ?country=Zimbabwe&t=63&county=Hwange",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 6807,
+      "ms_max": 6807,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "deep link ?country=Zimbabwe&t=62&county=Mbire",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 5424,
+      "ms_max": 5424,
+      "flaky": false,
+      "errors": []
+    },
+    {
+      "step": "deep link ?country=Zimbabwe&t=66",
+      "pass": 1,
+      "of": 1,
+      "ms_min": 6241,
+      "ms_max": 6241,
+      "flaky": false,
+      "errors": []
+    }
+  ]
+}

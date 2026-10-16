@@ -1,0 +1,29 @@
+== oof_baseline cal_ensemble: Warning rule at tuned p_warn=0.5
+               n_pos   n_neg  hit_rate  ...  mean_lead_h  hit_rate_h  lead3_share
+cant_plant    1127.0  5579.0     0.000  ...          NaN       0.000          NaN
+crop_failure  1373.0  5355.0     0.002  ...          2.0       0.001        0.667
+no_grass      1930.0  4798.0     0.108  ...          0.6       0.073        0.163
+
+[3 rows x 9 columns]
+
+== lowest threshold meeting FPR budget (instance level, any of leads 1-3)
+ budget   cond        event    t  hit_rate   fpr   far  mean_lead  hit_rate_h  mean_lead_h  lead3_share
+    0.1 p_only   cant_plant 0.20     0.004 0.005 0.871       3.00       0.000          NaN        1.000
+    0.1 p_only crop_failure 0.40     0.014 0.007 0.678       2.74       0.007         1.78        0.789
+    0.1 p_only     no_grass 0.45     0.211 0.097 0.534       2.23       0.169         1.20        0.512
+    0.1   warn   cant_plant 0.05     0.072 0.068 0.825       2.46       0.030         1.50        0.580
+    0.1   warn crop_failure 0.20     0.181 0.097 0.677       1.54       0.102         0.41        0.221
+    0.1   warn     no_grass 0.40     0.134 0.067 0.553       1.68       0.096         0.64        0.158
+    0.2 p_only   cant_plant 0.20     0.004 0.005 0.871       3.00       0.000          NaN        1.000
+    0.2 p_only crop_failure 0.30     0.330 0.195 0.697       2.31       0.209         1.33        0.552
+    0.2 p_only     no_grass 0.40     0.233 0.123 0.568       2.27       0.188         1.23        0.526
+    0.2   warn   cant_plant 0.05     0.072 0.068 0.825       2.46       0.030         1.50        0.580
+    0.2   warn crop_failure 0.05     0.250 0.159 0.712       1.49       0.151         0.33        0.207
+    0.2   warn     no_grass 0.35     0.210 0.200 0.703       1.82       0.131         0.68        0.235
+    0.3 p_only   cant_plant 0.20     0.004 0.005 0.871       3.00       0.000          NaN        1.000
+    0.3 p_only crop_failure 0.25     0.412 0.262 0.713       2.37       0.299         1.35        0.578
+    0.3 p_only     no_grass 0.40     0.233 0.123 0.568       2.27       0.188         1.23        0.526
+    0.3   warn   cant_plant 0.05     0.072 0.068 0.825       2.46       0.030         1.50        0.580
+    0.3   warn crop_failure 0.05     0.250 0.159 0.712       1.49       0.151         0.33        0.207
+    0.3   warn     no_grass 0.20     0.388 0.299 0.657       1.94       0.239         0.67        0.332
+    0.3  watch   cant_plant 0.20     0.315 0.264 0.806       2.46       0.124         1.38        0.575

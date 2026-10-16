@@ -308,3 +308,51 @@
 .ph-msg.thinking .ph-txt { color: var(--text-muted); font-style: italic; animation: think 1.2s ease-in-out infinite; }
 @keyframes think { 50% { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { .ph-msg.thinking .ph-txt { animation: none; } }
+
+/* --- Crowd signal (js/live.js CROWD): globe badges, panel row, feed rows --- */
+.crowd-badge {
+  pointer-events: none; user-select: none;
+  transform: translate(-50%, -100%);
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 7px 2px 5px; border-radius: 999px;
+  background: rgba(14,14,13,.82); color: #fff;
+  border: 1.5px solid var(--crowd, #8a8a8a);
+  font: 650 11px var(--mono); white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,.45);
+}
+.crowd-badge .ico { font-size: 11px; line-height: 1; }
+.crowd-badge .up { margin-left: 2px; padding: 0 4px; border-radius: 6px; background: var(--crowd); color: #0e0e0d; font-size: 10px; }
+.crowd-badge.confirmed { border-width: 2px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--crowd) 35%, transparent), 0 1px 4px rgba(0,0,0,.45); }
+.crowd-badge.confirmed::after {
+  content: "✔"; margin-left: 2px; font-size: 10px; color: var(--crowd);
+}
+.sev-0 { --crowd: #8a8a8a; }
+.sev-1 { --crowd: var(--lvl-0); }
+.sev-2 { --crowd: var(--lvl-1); }
+.sev-3 { --crowd: var(--lvl-2); }
+
+/* Panel chip when the shown level is +1 from the crowd rule. */
+.chip.crowd-up { outline: 2px dashed #fff; outline-offset: 2px; }
+.chip.crowd-up::after { content: " 💬"; }
+
+.crowd-sect .crowd-none { font-size: 13px; color: var(--text-muted); }
+.crowd-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 14px; }
+.crowd-line b { color: var(--crowd); }
+.crowd-ico { font-size: 14px; }
+.crowd-meta { font: 12px var(--mono); color: var(--text-muted); }
+.crowd-rule { margin-top: 5px; font-size: 12.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.crowd-rule.st-raised, .crowd-rule.st-confirms { color: var(--text-primary); font-weight: 600; }
+.crowd-mark {
+  display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 50%;
+  background: var(--lvl-2); color: #0e0e0d; font-size: 11px;
+}
+.crowd-rule.st-nosat { color: var(--text-muted); }
+.tag.demo {
+  font: 650 10px var(--mono); letter-spacing: .04em; text-transform: uppercase;
+  padding: 1px 6px; border-radius: 6px; border: 1px dashed var(--text-muted); color: var(--text-muted);
+}
+
+/* Alert feed rows from crowd reports */
+.al-row.crowd { --lvl: var(--crowd); border-style: dashed; }
+.al-row.crowd .al-unit { font-size: 15.5px; }
+.chip.crowd-chip { background: var(--crowd); color: #0e0e0d; }

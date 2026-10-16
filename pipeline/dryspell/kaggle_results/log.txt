@@ -1,0 +1,26 @@
+rows=159271 cv=141288 test=13496 cols=58
+[18:49:46] core rows 159271 cols 58 (7s)
+available: ['MOZ', 'TZA', 'ETH', 'SOM', 'NAM', 'BWA', 'ZAF', 'MDG', 'AGO', 'UGA'] missing: []
+  MOZ: units=156 rows=74256 label rate: {'cant_plant': 0.174, 'crop_failure': 0.208, 'no_grass': 0.228}
+  TZA: units=170 rows=102823 label rate: {'cant_plant': 0.167, 'crop_failure': 0.213, 'no_grass': 0.304}
+  ETH: units=74 rows=45199 label rate: {'cant_plant': 0.162, 'crop_failure': 0.275, 'no_grass': 0.385}
+  SOM: units=118 rows=100695 label rate: {'cant_plant': 0.163, 'crop_failure': 0.45, 'no_grass': 0.545}
+  NAM: units=103 rows=49133 label rate: {'cant_plant': 0.174, 'crop_failure': 0.25, 'no_grass': 0.38}
+  BWA: units=25 rows=11900 label rate: {'cant_plant': 0.129, 'crop_failure': 0.286, 'no_grass': 0.384}
+  ZAF: units=52 rows=24654 label rate: {'cant_plant': 0.159, 'crop_failure': 0.165, 'no_grass': 0.292}
+  MDG: units=119 rows=56679 label rate: {'cant_plant': 0.172, 'crop_failure': 0.206, 'no_grass': 0.304}
+  AGO: units=157 rows=74970 label rate: {'cant_plant': 0.153, 'crop_failure': 0.213, 'no_grass': 0.271}
+  UGA: units=151 rows=116312 label rate: {'cant_plant': 0.134, 'crop_failure': 0.194, 'no_grass': 0.234}
+rows_extra: 656621 rows, 1125 units, countries ['AGO', 'BWA', 'ETH', 'MDG', 'MOZ', 'NAM', 'SOM', 'TZA', 'UGA', 'ZAF']
+[18:50:11] extra rows 656621 countries ['AGO', 'BWA', 'ETH', 'MDG', 'MOZ', 'NAM', 'SOM', 'TZA', 'UGA', 'ZAF'] (32s)
+[18:50:14] coverage: {"core4": {"crop_failure": {"dry_spell_max": 0.297, "days_since_rain": 1.0, "onset_anom": 0.633, "season_rain_pct": 0.3, "n": 20184}, "no_grass": {"dry_spell_max": 0.928, "days_since_rain": 1.0, "onset_anom": 1.0, "season_rain_pct": 0.932, "n": 20184}}, "all14": {"crop_failure": {"dry_spell_max": 0.365, "days_since_rain": 1.0, "onset_anom": 0.688, "season_rain_pct": 0.38, "n": 110742}, "no_grass": {"dry_spell_max": 0.857, "days_since_rain": 1.0, "onset_anom": 1.0, "season_rain_pct": 0.891, "n": 110700}}}
+[18:50:14] cv core4 base ...
+[18:51:15] cv core4 base done rows=53824 (96s)
+[18:51:15] cv core4 dry ...
+[18:52:12] cv core4 dry done rows=53824 (153s)
+[18:52:16] cv all14 base ...
+[18:57:48] cv all14 base done rows=295256 (489s)
+[18:57:48] cv all14 dry ...
+[19:03:21] cv all14 dry done rows=295256 (822s)
+[19:03:31] replay ZWE 2023/24 ...
+[19:03:51] done (852s) -> /kaggle/working/pipeline/out/dryspell

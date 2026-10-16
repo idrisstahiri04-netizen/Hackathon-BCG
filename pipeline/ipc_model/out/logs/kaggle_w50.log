@@ -1,0 +1,195 @@
+[19:06:24] staged 86 files (76M)
+[19:06:27] drought-signals unchanged (1a22be12f49bf672), skipping upload
+[19:06:28] code bundle: 43 files
+[19:06:31] drought-code unchanged (1335ac12d81b73f7), skipping upload
+[19:06:31] pushing kernel omarserghini/drought-ipc2 (gpu=false): python pipeline/ipc_model/ipc_data_v2.py && python pipeline/ipc_model/train_ipc_v2.py
+Kernel version 1 successfully pushed.  Please check progress at https://www.kaggle.com/code/omarserghini/drought-ipc2
+[19:06:34] polling omarserghini/drought-ipc2 (output -> pipeline/out/kaggle/20261016T190634Z)
+[19:06:52] status: running (+3s)
+[19:27:39] status: complete (+1250s)
+[19:27:39] downloading output
+----- log tail (drought-ipc2.log) -----
+  "sfc_p46": 2646.7,
+  "spi_6m_l2": 2628.2,
+  "t2m_z_l2": 2514.0
+ },
+ "full": {
+  "fdw_ml1": 175611.2,
+  "fdw_ml1_share3": 151328.1,
+  "fdw_ml2": 108258.2,
+  "st_share3": 20998.8,
+  "st_phase": 18560.6,
+  "st_snap_age": 16734.0,
+  "oni_x_south": 12906.1,
+  "st_m_since3": 9829.4,
+  "oni": 8525.4,
+  "oni_d3": 8172.3,
+  "rain_pct3": 6296.2,
+  "price_price_anom": 5057.7,
+  "fdw_age": 4959.8,
+  "sfc_z46": 4731.6,
+  "crop_frac": 4017.3,
+  "spi_6m": 3881.1,
+  "t2m_z": 3305.3,
+  "st_delta4": 2769.4,
+  "grass_frac": 2728.4,
+  "spi_6m_l1": 2659.1
+ }
+}
+```
+
+thresholds {"h13": {"eo": ["eo:lgbm", 0.35, 0.257, 0.396], "eo_p": ["eo_p:lgbm", 0.33, 0.254, 0.455], "eo_fews": ["eo_fews:lgbm", 0.28, 0.459, 0.596], "eo_fews_p": ["eo_fews_p:lgbm", 0.21, 0.416, 0.674], "full": ["full:logreg", 0.25, 0.454, 0.572]}, "h46": {"eo": ["eo:lgbm", 0.3, 0.305, 0.49], "eo_p": ["eo_p:lgbm", 0.29, 0.31, 0.524], "eo_fews": ["eo_fews:lgbm", 0.3, 0.507, 0.569], "eo_fews_p": ["eo_fews_p:lgbm", 0.26, 0.485, 0.607], "full": ["full:lgbm", 0.24, 0.498, 0.599]}}
+== done rc=0 in 18.3 min; outputs:
+          4,096  ipc_model_v2
+            383  kaggle_run.json
+      1,357,250  timesfm_ZWE.parquet
+/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+  cells[i][c] = re.sub('\\\\\|', '|', cell)
+/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+  text = re.sub(r'_', '\_', text) # Escape underscores in display text
+[NbConvertApp] Converting notebook __script__.ipynb to html
+[NbConvertApp] Writing 294474 bytes to __results__.html
+----- end log -----
+[19:27:57] kernel command exit_code=0, seconds=1096.8
+[19:27:57] outputs in /home/looooo/bcg/Hackathon-BCG/pipeline/out/kaggle/20261016T190634Z
+total 144
+drwxr-xr-x. 1 looooo looooo     60 Oct 16 19:27 .
+drwxr-xr-x. 1 looooo looooo   1488 Oct 16 19:23 ..
+-rw-r--r--. 1 looooo looooo     86 Oct 16 19:06 command.txt
+-rw-r--r--. 1 looooo looooo 141556 Oct 16 19:27 drought-ipc2.log
+drwxr-xr-x. 1 looooo looooo     92 Oct 16 19:27 out
+LAUNCH_RETRY 1 rc=0 (dir=pipeline/out/kaggle/20261016T192327Z/)
+[19:29:58] staged 86 files (77M)
+[19:30:00] versioning omarserghini/drought-signals (3c802d8f513cd2e5)
+Dataset version is being created. Please check progress at https://www.kaggle.com/datasets/omarserghini/drought-signals
+[19:32:38] code bundle: 44 files
+[19:32:39] versioning omarserghini/drought-code (cf05bbf40756ba8d)
+Dataset version is being created. Please check progress at https://www.kaggle.com/datasets/omarserghini/drought-code
+[19:33:32] pushing kernel omarserghini/drought-ipc2 (gpu=false): python pipeline/ipc_model/ipc_data_v2.py && python pipeline/ipc_model/train_ipc_v2.py
+Kernel version 2 successfully pushed.  Please check progress at https://www.kaggle.com/code/omarserghini/drought-ipc2
+[19:33:35] polling omarserghini/drought-ipc2 (output -> pipeline/out/kaggle/20261016T193335Z)
+[19:33:52] status: running (+2s)
+[19:51:48] status: complete (+1078s)
+[19:51:48] downloading output
+----- log tail (drought-ipc2.log) -----
+  "month_cos": 2645.7,
+  "spi_6m_l2": 2643.3,
+  "phase_m": 2633.3
+ },
+ "full": {
+  "fdw_ml1": 200810.7,
+  "fdw_ml2": 116264.3,
+  "fdw_ml1_share3": 102640.5,
+  "st_phase": 31665.6,
+  "st_share3": 19962.8,
+  "st_snap_age": 17836.3,
+  "st_m_since3": 12413.5,
+  "oni_x_south": 12262.2,
+  "oni": 8278.2,
+  "oni_d3": 8256.8,
+  "price_price_anom": 4816.3,
+  "crop_frac": 4639.4,
+  "sfc_z46": 4465.8,
+  "rain_pct3": 4438.9,
+  "spi_6m": 3822.0,
+  "fdw_age": 3772.2,
+  "st_delta4": 3393.3,
+  "t2m_z": 3121.7,
+  "season_rain_pct": 3064.0,
+  "spi_6m_l1": 2592.3
+ }
+}
+```
+
+thresholds {"h13": {"eo": ["eo:ensemble", 0.32, 0.241, 0.429], "eo_p": ["eo_p:lgbm", 0.34, 0.253, 0.459], "eo_fews": ["eo_fews:lgbm", 0.3, 0.471, 0.575], "eo_fews_p": ["eo_fews_p:lgbm", 0.25, 0.45, 0.611], "full": ["full:ensemble", 0.25, 0.473, 0.606]}, "h46": {"eo": ["eo:lgbm", 0.28, 0.292, 0.575], "eo_p": ["eo_p:lgbm", 0.28, 0.309, 0.574], "eo_fews": ["eo_fews:lgbm", 0.27, 0.489, 0.606], "eo_fews_p": ["eo_fews_p:lgbm", 0.35, 0.533, 0.56], "full": ["full:lgbm", 0.35, 0.552, 0.539]}}
+== done rc=0 in 17.6 min; outputs:
+          4,096  ipc_model_v2
+            383  kaggle_run.json
+      1,357,250  timesfm_ZWE.parquet
+/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+  cells[i][c] = re.sub('\\\\\|', '|', cell)
+/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+  text = re.sub(r'_', '\_', text) # Escape underscores in display text
+[NbConvertApp] Converting notebook __script__.ipynb to html
+[NbConvertApp] Writing 294474 bytes to __results__.html
+----- end log -----
+[19:52:10] kernel command exit_code=0, seconds=1058.5
+[19:52:10] outputs in /home/looooo/bcg/Hackathon-BCG/pipeline/out/kaggle/20261016T193335Z
+total 144
+drwxr-xr-x. 1 looooo looooo     60 Oct 16 19:52 .
+drwxr-xr-x. 1 looooo looooo   1648 Oct 16 19:46 ..
+-rw-r--r--. 1 looooo looooo     86 Oct 16 19:33 command.txt
+-rw-r--r--. 1 looooo looooo 141497 Oct 16 19:52 drought-ipc2.log
+drwxr-xr-x. 1 looooo looooo     92 Oct 16 19:52 out
+LAUNCH_RETRY 2 rc=0 (dir=pipeline/out/kaggle/20261016T194614Z/)
+[19:54:10] staged 96 files (77M)
+[19:54:11] versioning omarserghini/drought-signals (246cb3d7a1e0da70)
+Dataset version is being created. Please check progress at https://www.kaggle.com/datasets/omarserghini/drought-signals
+[19:56:59] code bundle: 44 files
+[19:57:01] versioning omarserghini/drought-code (330b2b28a7864d00)
+Dataset version is being created. Please check progress at https://www.kaggle.com/datasets/omarserghini/drought-code
+[19:57:54] pushing kernel omarserghini/drought-ipc2 (gpu=false): python pipeline/ipc_model/ipc_data_v2.py && python pipeline/ipc_model/train_ipc_v2.py
+Kernel version 3 successfully pushed.  Please check progress at https://www.kaggle.com/code/omarserghini/drought-ipc2
+[19:57:58] polling omarserghini/drought-ipc2 (output -> pipeline/out/kaggle/20261016T195758Z)
+[19:58:15] status: running (+2s)
+[20:17:55] status: complete (+1182s)
+[20:17:55] downloading output
+----- log tail (drought-ipc2.log) -----
+  "month_cos": 2645.7,
+  "spi_6m_l2": 2643.3,
+  "phase_m": 2633.3
+ },
+ "full": {
+  "fdw_ml1": 200810.7,
+  "fdw_ml2": 116264.3,
+  "fdw_ml1_share3": 102640.5,
+  "st_phase": 31665.6,
+  "st_share3": 19962.8,
+  "st_snap_age": 17836.3,
+  "st_m_since3": 12413.5,
+  "oni_x_south": 12262.2,
+  "oni": 8278.2,
+  "oni_d3": 8256.8,
+  "price_price_anom": 4816.3,
+  "crop_frac": 4639.4,
+  "sfc_z46": 4465.8,
+  "rain_pct3": 4438.9,
+  "spi_6m": 3822.0,
+  "fdw_age": 3772.2,
+  "st_delta4": 3393.3,
+  "t2m_z": 3121.7,
+  "season_rain_pct": 3064.0,
+  "spi_6m_l1": 2592.3
+ }
+}
+```
+
+thresholds {"h13": {"eo": ["eo:ensemble", 0.32, 0.241, 0.429], "eo_p": ["eo_p:lgbm", 0.34, 0.253, 0.459], "eo_fews": ["eo_fews:lgbm", 0.3, 0.471, 0.575], "eo_fews_p": ["eo_fews_p:lgbm", 0.25, 0.45, 0.611], "full": ["full:ensemble", 0.25, 0.473, 0.606]}, "h46": {"eo": ["eo:lgbm", 0.28, 0.292, 0.575], "eo_p": ["eo_p:lgbm", 0.28, 0.309, 0.574], "eo_fews": ["eo_fews:lgbm", 0.27, 0.489, 0.606], "eo_fews_p": ["eo_fews_p:lgbm", 0.35, 0.533, 0.56], "full": ["full:lgbm", 0.35, 0.552, 0.539]}}
+== done rc=0 in 19.4 min; outputs:
+          4,096  ipc_model_v2
+            383  kaggle_run.json
+      1,357,250  timesfm_ZWE.parquet
+/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+  cells[i][c] = re.sub('\\\\\|', '|', cell)
+/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+  text = re.sub(r'_', '\_', text) # Escape underscores in display text
+[NbConvertApp] Converting notebook __script__.ipynb to html
+[NbConvertApp] Writing 294474 bytes to __results__.html
+----- end log -----
+[20:18:09] kernel command exit_code=0, seconds=1164.3
+[20:18:09] outputs in /home/looooo/bcg/Hackathon-BCG/pipeline/out/kaggle/20261016T195758Z
+total 144
+drwxr-xr-x. 1 looooo looooo     60 Oct 16 20:18 .
+drwxr-xr-x. 1 looooo looooo   1808 Oct 16 20:15 ..
+-rw-r--r--. 1 looooo looooo     86 Oct 16 19:57 command.txt
+-rw-r--r--. 1 looooo looooo 142038 Oct 16 20:18 drought-ipc2.log
+drwxr-xr-x. 1 looooo looooo     92 Oct 16 20:18 out
+LAUNCH_RETRY 3 rc=0 (dir=pipeline/out/kaggle/20261016T201541Z/)
+[20:20:10] staged 96 files (77M)
+[20:20:12] drought-signals unchanged (246cb3d7a1e0da70), skipping upload
+[20:20:12] code bundle: 46 files
+[20:20:14] drought-code unchanged (d3fefe41d0177e5c), skipping upload
+[20:20:14] pushing kernel omarserghini/drought-ipc2 (gpu=false): python pipeline/ipc_model/ipc_data_v2.py && python pipeline/ipc_model/train_ipc_v2.py
+Kernel version 4 successfully pushed.  Please check progress at https://www.kaggle.com/code/omarserghini/drought-ipc2
+[20:20:17] polling omarserghini/drought-ipc2 (output -> pipeline/out/kaggle/20261016T202017Z)
+[20:20:34] status: running (+2s)

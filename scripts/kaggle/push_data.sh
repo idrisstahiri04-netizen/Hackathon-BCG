@@ -10,7 +10,8 @@ n=0
 for f in "$REPO"/pipeline/data/signals_*.parquet "$REPO"/pipeline/data/units_*.geojson \
          "$REPO"/pipeline/data/pop_*.csv "$REPO"/pipeline/data/ipc_*.parquet \
          "$REPO"/pipeline/data/seasonal_fc_*.parquet "$REPO"/pipeline/out/timesfm_*.parquet \
-         "$REPO"/pipeline/data/outlook_*.parquet "$REPO"/pipeline/data/prices_*.parquet; do
+         "$REPO"/pipeline/data/outlook_*.parquet "$REPO"/pipeline/data/prices_*.parquet \
+         "$REPO"/pipeline/data/dryspell_*.parquet; do
   [ -f "$f" ] || continue
   cp -p "$f" "$ST/"; n=$((n+1))
 done

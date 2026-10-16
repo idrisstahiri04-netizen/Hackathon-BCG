@@ -17,6 +17,8 @@ cp -p "$SRC"/*.py "$ST/"
 for f in requirements.txt run_all.sh; do [ -f "$SRC/$f" ] && cp -p "$SRC/$f" "$ST/"; done
 [ -d "$SRC/experiments" ] && find "$SRC/experiments" -maxdepth 1 -type f \( -name '*.py' -o -name '*.json' -o -name '*.yaml' -o -name '*.md' -o -name '*.sh' \) \
   -size -2M -exec cp -p {} "$ST/experiments/" \;
+# dryspell/ (dry-spell feature experiment): scripts only, same size rule
+[ -d "$SRC/dryspell" ] && { mkdir -p "$ST/dryspell"; find "$SRC/dryspell" -maxdepth 1 -type f \( -name '*.py' -o -name '*.sh' \) -size -2M -exec cp -p {} "$ST/dryspell/" \; ; }
 # ipc_model/ (IPC-target model helper): scripts only, same size rule
 [ -d "$SRC/ipc_model" ] && { mkdir -p "$ST/ipc_model"; find "$SRC/ipc_model" -maxdepth 1 -type f -name '*.py' -size -2M -exec cp -p {} "$ST/ipc_model/" \; ; }
 log "code bundle: $(find "$ST" -type f | wc -l) files"

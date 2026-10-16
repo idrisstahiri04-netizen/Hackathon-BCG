@@ -1,0 +1,337 @@
+[19:07:42] staged 86 files (76M)
+[19:07:45] drought-signals unchanged (1a22be12f49bf672), skipping upload
+[19:07:45] code bundle: 43 files
+[19:07:47] drought-code unchanged (1335ac12d81b73f7), skipping upload
+[19:07:48] pushing kernel omarserghini/drought-ipc2b (gpu=false): python pipeline/ipc_model/ipc_data_v2.py --label w20 --out pipeline/out/ipc_model_v2_w20 && python pipeline/ipc_model/train_ipc_v2.py --out pipeline/out/ipc_model_v2_w20 --cv-only --no-ablation
+Kernel push error: Maximum batch CPU session count of 5 reached.
+[19:07:51] polling omarserghini/drought-ipc2b (output -> pipeline/out/kaggle/20261016T190751Z)
+[19:08:08] status: error (+2s)
+[19:08:08] downloading output
+404 Client Error: Not Found for url: https://api.kaggle.com/v1/kernels.KernelsApiService/ListKernelSessionOutput
+[19:08:11] !! output download failed
+[19:08:11] !! no kaggle_run.json in output (kernel crashed before/while running)
+[19:08:11] !! kernel status: error
+[19:08:11] outputs in /home/looooo/bcg/Hackathon-BCG/pipeline/out/kaggle/20261016T190751Z
+total 4
+drwxr-xr-x. 1 looooo looooo   22 Oct 16 19:07 .
+drwxr-xr-x. 1 looooo looooo 1360 Oct 16 19:07 ..
+-rw-r--r--. 1 looooo looooo  194 Oct 16 19:07 command.txt
+LAUNCH_RETRY 1 rc=1 (dir=pipeline/out/kaggle/20261016T190751Z/)
+[19:10:13] staged 86 files (76M)
+[19:10:16] drought-signals unchanged (1a22be12f49bf672), skipping upload
+[19:10:17] code bundle: 43 files
+[19:10:19] versioning omarserghini/drought-code (3abd1b7ce7555ce1)
+Dataset version is being created. Please check progress at https://www.kaggle.com/datasets/omarserghini/drought-code
+[19:11:14] pushing kernel omarserghini/drought-ipc2b (gpu=false): python pipeline/ipc_model/ipc_data_v2.py --label w20 --out pipeline/out/ipc_model_v2_w20 && python pipeline/ipc_model/train_ipc_v2.py --out pipeline/out/ipc_model_v2_w20 --cv-only --no-ablation
+Kernel version 1 successfully pushed.  Please check progress at https://www.kaggle.com/code/omarserghini/drought-ipc2b
+[19:11:18] polling omarserghini/drought-ipc2b (output -> pipeline/out/kaggle/20261016T191118Z)
+[19:11:35] status: running (+2s)
+[19:26:31] status: complete (+898s)
+[19:26:31] downloading output
+----- log tail (drought-ipc2b.log) -----
+  ],
+  "roc_5_95": [
+   0.9,
+   0.935
+  ]
+ },
+ "eo_fews_p:ensemble": {
+  "pr_5_95": [
+   0.433,
+   0.594
+  ],
+  "roc_5_95": [
+   0.901,
+   0.938
+  ]
+ },
+ "full:ensemble": {
+  "pr_5_95": [
+   0.423,
+   0.569
+  ],
+  "roc_5_95": [
+   0.883,
+   0.935
+  ]
+ }
+}
+```
+
+thresholds {"h13": {"eo": ["eo:lgbm", 0.41, 0.286, 0.444], "eo_p": ["eo_p:lgbm", 0.34, 0.264, 0.564], "eo_fews": ["eo_fews:lgbm", 0.25, 0.46, 0.703], "eo_fews_p": ["eo_fews_p:lgbm", 0.24, 0.465, 0.726], "full": ["full:ensemble", 0.3, 0.518, 0.654]}, "h46": {"eo": ["eo:lgbm", 0.36, 0.365, 0.527], "eo_p": ["eo_p:lgbm", 0.34, 0.352, 0.572], "eo_fews": ["eo_fews:lgbm", 0.29, 0.533, 0.632], "eo_fews_p": ["eo_fews_p:lgbm", 0.34, 0.567, 0.606], "full": ["full:lgbm", 0.34, 0.572, 0.594]}}
+== done rc=0 in 14.4 min; outputs:
+          4,096  ipc_model_v2_w20
+            450  kaggle_run.json
+      1,357,250  timesfm_ZWE.parquet
+/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+  cells[i][c] = re.sub('\\\\\|', '|', cell)
+/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+  text = re.sub(r'_', '\_', text) # Escape underscores in display text
+[NbConvertApp] Converting notebook __script__.ipynb to html
+[NbConvertApp] Writing 294582 bytes to __results__.html
+----- end log -----
+[19:26:47] kernel command exit_code=0, seconds=865.5
+[19:26:47] outputs in /home/looooo/bcg/Hackathon-BCG/pipeline/out/kaggle/20261016T191118Z
+total 72
+drwxr-xr-x. 1 looooo looooo    62 Oct 16 19:26 .
+drwxr-xr-x. 1 looooo looooo  1488 Oct 16 19:23 ..
+-rw-r--r--. 1 looooo looooo   194 Oct 16 19:11 command.txt
+-rw-r--r--. 1 looooo looooo 67047 Oct 16 19:26 drought-ipc2b.log
+drwxr-xr-x. 1 looooo looooo   100 Oct 16 19:26 out
+LAUNCH_RETRY 2 rc=0 (dir=pipeline/out/kaggle/20261016T192327Z/)
+[19:28:48] staged 86 files (76M)
+[19:28:50] drought-signals unchanged (1a22be12f49bf672), skipping upload
+[19:28:50] code bundle: 44 files
+[19:28:52] versioning omarserghini/drought-code (48b6a21b174babd2)
+Dataset version is being created. Please check progress at https://www.kaggle.com/datasets/omarserghini/drought-code
+[19:29:45] pushing kernel omarserghini/drought-ipc2b (gpu=false): python pipeline/ipc_model/ipc_data_v2.py --label w20 --out pipeline/out/ipc_model_v2_w20 && python pipeline/ipc_model/train_ipc_v2.py --out pipeline/out/ipc_model_v2_w20 --cv-only --no-ablation
+Kernel version 2 successfully pushed.  Please check progress at https://www.kaggle.com/code/omarserghini/drought-ipc2b
+[19:29:48] polling omarserghini/drought-ipc2b (output -> pipeline/out/kaggle/20261016T192948Z)
+[19:30:04] status: running (+1s)
+[19:41:18] status: complete (+675s)
+[19:41:18] downloading output
+----- log tail (drought-ipc2b.log) -----
+  ],
+  "roc_5_95": [
+   0.9,
+   0.935
+  ]
+ },
+ "eo_fews_p:ensemble": {
+  "pr_5_95": [
+   0.433,
+   0.594
+  ],
+  "roc_5_95": [
+   0.901,
+   0.938
+  ]
+ },
+ "full:ensemble": {
+  "pr_5_95": [
+   0.423,
+   0.569
+  ],
+  "roc_5_95": [
+   0.883,
+   0.935
+  ]
+ }
+}
+```
+
+thresholds {"h13": {"eo": ["eo:lgbm", 0.41, 0.286, 0.444], "eo_p": ["eo_p:lgbm", 0.34, 0.264, 0.564], "eo_fews": ["eo_fews:lgbm", 0.25, 0.46, 0.703], "eo_fews_p": ["eo_fews_p:lgbm", 0.24, 0.465, 0.726], "full": ["full:ensemble", 0.3, 0.518, 0.654]}, "h46": {"eo": ["eo:lgbm", 0.36, 0.365, 0.527], "eo_p": ["eo_p:lgbm", 0.34, 0.352, 0.572], "eo_fews": ["eo_fews:lgbm", 0.29, 0.533, 0.632], "eo_fews_p": ["eo_fews_p:lgbm", 0.34, 0.567, 0.606], "full": ["full:lgbm", 0.34, 0.572, 0.594]}}
+== done rc=0 in 10.6 min; outputs:
+          4,096  ipc_model_v2_w20
+            450  kaggle_run.json
+      1,357,250  timesfm_ZWE.parquet
+/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+  cells[i][c] = re.sub('\\\\\|', '|', cell)
+/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+  text = re.sub(r'_', '\_', text) # Escape underscores in display text
+[NbConvertApp] Converting notebook __script__.ipynb to html
+[NbConvertApp] Writing 294582 bytes to __results__.html
+----- end log -----
+[19:41:32] kernel command exit_code=0, seconds=637.9
+[19:41:32] outputs in /home/looooo/bcg/Hackathon-BCG/pipeline/out/kaggle/20261016T192948Z
+total 72
+drwxr-xr-x. 1 looooo looooo    62 Oct 16 19:41 .
+drwxr-xr-x. 1 looooo looooo  1584 Oct 16 19:33 ..
+-rw-r--r--. 1 looooo looooo   194 Oct 16 19:29 command.txt
+-rw-r--r--. 1 looooo looooo 67087 Oct 16 19:41 drought-ipc2b.log
+drwxr-xr-x. 1 looooo looooo   100 Oct 16 19:41 out
+LAUNCH_RETRY 3 rc=0 (dir=pipeline/out/kaggle/20261016T193335Z/)
+[19:43:33] staged 86 files (77M)
+[19:43:34] versioning omarserghini/drought-signals (8cd4054b46dd061c)
+Dataset version is being created. Please check progress at https://www.kaggle.com/datasets/omarserghini/drought-signals
+[19:46:11] code bundle: 44 files
+[19:46:12] drought-code unchanged (cf05bbf40756ba8d), skipping upload
+[19:46:12] pushing kernel omarserghini/drought-ipc2b (gpu=false): python pipeline/ipc_model/ipc_data_v2.py --label w20 --out pipeline/out/ipc_model_v2_w20 && python pipeline/ipc_model/train_ipc_v2.py --out pipeline/out/ipc_model_v2_w20 --cv-only --no-ablation
+Kernel version 3 successfully pushed.  Please check progress at https://www.kaggle.com/code/omarserghini/drought-ipc2b
+[19:46:14] polling omarserghini/drought-ipc2b (output -> pipeline/out/kaggle/20261016T194614Z)
+[19:46:31] status: running (+2s)
+[19:57:56] status: complete (+687s)
+[19:57:56] downloading output
+----- log tail (drought-ipc2b.log) -----
+  ],
+  "roc_5_95": [
+   0.9,
+   0.935
+  ]
+ },
+ "eo_fews_p:ensemble": {
+  "pr_5_95": [
+   0.433,
+   0.594
+  ],
+  "roc_5_95": [
+   0.901,
+   0.938
+  ]
+ },
+ "full:ensemble": {
+  "pr_5_95": [
+   0.423,
+   0.569
+  ],
+  "roc_5_95": [
+   0.883,
+   0.935
+  ]
+ }
+}
+```
+
+thresholds {"h13": {"eo": ["eo:lgbm", 0.41, 0.286, 0.444], "eo_p": ["eo_p:lgbm", 0.34, 0.264, 0.564], "eo_fews": ["eo_fews:lgbm", 0.25, 0.46, 0.703], "eo_fews_p": ["eo_fews_p:lgbm", 0.24, 0.465, 0.726], "full": ["full:ensemble", 0.3, 0.518, 0.654]}, "h46": {"eo": ["eo:lgbm", 0.36, 0.365, 0.527], "eo_p": ["eo_p:lgbm", 0.34, 0.352, 0.572], "eo_fews": ["eo_fews:lgbm", 0.29, 0.533, 0.632], "eo_fews_p": ["eo_fews_p:lgbm", 0.34, 0.567, 0.606], "full": ["full:lgbm", 0.34, 0.572, 0.594]}}
+== done rc=0 in 10.9 min; outputs:
+          4,096  ipc_model_v2_w20
+            450  kaggle_run.json
+      1,357,250  timesfm_ZWE.parquet
+/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+  cells[i][c] = re.sub('\\\\\|', '|', cell)
+/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+  text = re.sub(r'_', '\_', text) # Escape underscores in display text
+[NbConvertApp] Converting notebook __script__.ipynb to html
+[NbConvertApp] Writing 294582 bytes to __results__.html
+----- end log -----
+[19:58:11] kernel command exit_code=0, seconds=651.9
+[19:58:11] outputs in /home/looooo/bcg/Hackathon-BCG/pipeline/out/kaggle/20261016T194614Z
+total 72
+drwxr-xr-x. 1 looooo looooo    62 Oct 16 19:58 .
+drwxr-xr-x. 1 looooo looooo  1680 Oct 16 19:57 ..
+-rw-r--r--. 1 looooo looooo   194 Oct 16 19:46 command.txt
+-rw-r--r--. 1 looooo looooo 66509 Oct 16 19:58 drought-ipc2b.log
+drwxr-xr-x. 1 looooo looooo   100 Oct 16 19:58 out
+LAUNCH_RETRY 4 rc=0 (dir=pipeline/out/kaggle/20261016T195758Z/)
+[20:00:11] staged 96 files (77M)
+[20:00:13] drought-signals unchanged (246cb3d7a1e0da70), skipping upload
+[20:00:13] code bundle: 44 files
+[20:00:15] versioning omarserghini/drought-code (c6ef403a25b1f066)
+Dataset version is being created. Please check progress at https://www.kaggle.com/datasets/omarserghini/drought-code
+[20:01:07] pushing kernel omarserghini/drought-ipc2b (gpu=false): python pipeline/ipc_model/ipc_data_v2.py --label w20 --out pipeline/out/ipc_model_v2_w20 && python pipeline/ipc_model/train_ipc_v2.py --out pipeline/out/ipc_model_v2_w20 --cv-only --no-ablation
+Kernel version 4 successfully pushed.  Please check progress at https://www.kaggle.com/code/omarserghini/drought-ipc2b
+[20:01:10] polling omarserghini/drought-ipc2b (output -> pipeline/out/kaggle/20261016T200110Z)
+[20:01:26] status: running (+1s)
+[20:12:31] status: complete (+666s)
+[20:12:31] downloading output
+----- log tail (drought-ipc2b.log) -----
+  ],
+  "roc_5_95": [
+   0.9,
+   0.935
+  ]
+ },
+ "eo_fews_p:ensemble": {
+  "pr_5_95": [
+   0.433,
+   0.594
+  ],
+  "roc_5_95": [
+   0.901,
+   0.938
+  ]
+ },
+ "full:ensemble": {
+  "pr_5_95": [
+   0.423,
+   0.569
+  ],
+  "roc_5_95": [
+   0.883,
+   0.935
+  ]
+ }
+}
+```
+
+thresholds {"h13": {"eo": ["eo:lgbm", 0.41, 0.286, 0.444], "eo_p": ["eo_p:lgbm", 0.34, 0.264, 0.564], "eo_fews": ["eo_fews:lgbm", 0.25, 0.46, 0.703], "eo_fews_p": ["eo_fews_p:lgbm", 0.24, 0.465, 0.726], "full": ["full:ensemble", 0.3, 0.518, 0.654]}, "h46": {"eo": ["eo:lgbm", 0.36, 0.365, 0.527], "eo_p": ["eo_p:lgbm", 0.34, 0.352, 0.572], "eo_fews": ["eo_fews:lgbm", 0.29, 0.533, 0.632], "eo_fews_p": ["eo_fews_p:lgbm", 0.34, 0.567, 0.606], "full": ["full:lgbm", 0.34, 0.572, 0.594]}}
+== done rc=0 in 10.7 min; outputs:
+          4,096  ipc_model_v2_w20
+            450  kaggle_run.json
+      1,357,250  timesfm_ZWE.parquet
+/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+  cells[i][c] = re.sub('\\\\\|', '|', cell)
+/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+  text = re.sub(r'_', '\_', text) # Escape underscores in display text
+[NbConvertApp] Converting notebook __script__.ipynb to html
+[NbConvertApp] Writing 294582 bytes to __results__.html
+----- end log -----
+[20:12:42] kernel command exit_code=0, seconds=639.4
+[20:12:42] outputs in /home/looooo/bcg/Hackathon-BCG/pipeline/out/kaggle/20261016T200110Z
+total 72
+drwxr-xr-x. 1 looooo looooo    62 Oct 16 20:12 .
+drwxr-xr-x. 1 looooo looooo  1776 Oct 16 20:09 ..
+-rw-r--r--. 1 looooo looooo   194 Oct 16 20:01 command.txt
+-rw-r--r--. 1 looooo looooo 66423 Oct 16 20:12 drought-ipc2b.log
+drwxr-xr-x. 1 looooo looooo   100 Oct 16 20:12 out
+LAUNCH_RETRY 5 rc=0 (dir=pipeline/out/kaggle/20261016T200915Z/)
+[20:14:42] staged 96 files (77M)
+[20:14:44] drought-signals unchanged (246cb3d7a1e0da70), skipping upload
+[20:14:44] code bundle: 46 files
+[20:14:45] versioning omarserghini/drought-code (d3fefe41d0177e5c)
+Dataset version is being created. Please check progress at https://www.kaggle.com/datasets/omarserghini/drought-code
+[20:15:38] pushing kernel omarserghini/drought-ipc2b (gpu=false): python pipeline/ipc_model/ipc_data_v2.py --label w20 --out pipeline/out/ipc_model_v2_w20 && python pipeline/ipc_model/train_ipc_v2.py --out pipeline/out/ipc_model_v2_w20 --cv-only --no-ablation
+Kernel version 5 successfully pushed.  Please check progress at https://www.kaggle.com/code/omarserghini/drought-ipc2b
+[20:15:41] polling omarserghini/drought-ipc2b (output -> pipeline/out/kaggle/20261016T201541Z)
+[20:15:57] status: running (+1s)
+[20:30:22] status: complete (+866s)
+[20:30:22] downloading output
+----- log tail (drought-ipc2b.log) -----
+  ],
+  "roc_5_95": [
+   0.9,
+   0.935
+  ]
+ },
+ "eo_fews_p:ensemble": {
+  "pr_5_95": [
+   0.433,
+   0.594
+  ],
+  "roc_5_95": [
+   0.901,
+   0.938
+  ]
+ },
+ "full:ensemble": {
+  "pr_5_95": [
+   0.423,
+   0.569
+  ],
+  "roc_5_95": [
+   0.883,
+   0.935
+  ]
+ }
+}
+```
+
+thresholds {"h13": {"eo": ["eo:lgbm", 0.41, 0.286, 0.444], "eo_p": ["eo_p:lgbm", 0.34, 0.264, 0.564], "eo_fews": ["eo_fews:lgbm", 0.25, 0.46, 0.703], "eo_fews_p": ["eo_fews_p:lgbm", 0.24, 0.465, 0.726], "full": ["full:ensemble", 0.3, 0.518, 0.654]}, "h46": {"eo": ["eo:lgbm", 0.36, 0.365, 0.527], "eo_p": ["eo_p:lgbm", 0.34, 0.352, 0.572], "eo_fews": ["eo_fews:lgbm", 0.29, 0.533, 0.632], "eo_fews_p": ["eo_fews_p:lgbm", 0.34, 0.567, 0.606], "full": ["full:lgbm", 0.34, 0.572, 0.594]}}
+== done rc=0 in 14.3 min; outputs:
+          4,096  ipc_model_v2_w20
+            450  kaggle_run.json
+      1,357,250  timesfm_ZWE.parquet
+/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+  cells[i][c] = re.sub('\\\\\|', '|', cell)
+/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+  text = re.sub(r'_', '\_', text) # Escape underscores in display text
+[NbConvertApp] Converting notebook __script__.ipynb to html
+[NbConvertApp] Writing 294582 bytes to __results__.html
+----- end log -----
+[20:30:33] kernel command exit_code=0, seconds=856.9
+[20:30:33] outputs in /home/looooo/bcg/Hackathon-BCG/pipeline/out/kaggle/20261016T201541Z
+total 72
+drwxr-xr-x. 1 looooo looooo    62 Oct 16 20:30 .
+drwxr-xr-x. 1 looooo looooo  1840 Oct 16 20:20 ..
+-rw-r--r--. 1 looooo looooo   194 Oct 16 20:15 command.txt
+-rw-r--r--. 1 looooo looooo 67038 Oct 16 20:30 drought-ipc2b.log
+drwxr-xr-x. 1 looooo looooo   100 Oct 16 20:30 out
+LAUNCH_RETRY 6 rc=0 (dir=pipeline/out/kaggle/20261016T202017Z/)
+[20:32:33] staged 96 files (77M)
+[20:32:35] drought-signals unchanged (246cb3d7a1e0da70), skipping upload
+[20:32:35] code bundle: 46 files
+[20:32:37] drought-code unchanged (d3fefe41d0177e5c), skipping upload
+[20:32:37] pushing kernel omarserghini/drought-ipc2b (gpu=false): python pipeline/ipc_model/ipc_data_v2.py --label w20 --out pipeline/out/ipc_model_v2_w20 && python pipeline/ipc_model/train_ipc_v2.py --out pipeline/out/ipc_model_v2_w20 --cv-only --no-ablation
+Kernel version 6 successfully pushed.  Please check progress at https://www.kaggle.com/code/omarserghini/drought-ipc2b
+[20:32:40] polling omarserghini/drought-ipc2b (output -> pipeline/out/kaggle/20261016T203240Z)
+[20:32:56] status: running (+1s)

@@ -1,0 +1,924 @@
+{
+ "axe": [
+  {
+   "label": "map (ZWE Apr 2024, panel open, online)",
+   "violations": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "help": "Elements must meet minimum color contrast ratio thresholds",
+     "n": 24,
+     "nodes": [
+      {
+       "target": ".decl > .n-top > .chip",
+       "html": "<span class=\"chip\" style=\"background: rgb(208, 59, 59);\">OFFICIAL</span>",
+       "msg": "Element has insufficient color contrast of 4.01 (foreground color: #0e0e0d, background color: #d03b3b, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-top > .n-date",
+       "html": "<span class=\"n-date\">Apr 2024</span>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-move",
+       "html": "<div class=\"n-move\">escalated from L0 Normal</div>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-drivers > li:nth-child(1)",
+       "html": "<li>cropland greenness 6/100 (VCI, poor)</li>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 8.6pt (11.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+      }
+     ]
+    },
+    {
+     "id": "heading-order",
+     "impact": "moderate",
+     "help": "Heading levels should only increase by one",
+     "n": 1,
+     "nodes": [
+      {
+       "target": "h3",
+       "html": "<h3>Bulilima</h3>",
+       "msg": "Heading order invalid"
+      }
+     ]
+    },
+    {
+     "id": "region",
+     "impact": "moderate",
+     "help": "All page content should be contained by landmarks",
+     "n": 2,
+     "nodes": [
+      {
+       "target": "#tabs",
+       "html": "<nav id=\"tabs\" role=\"tablist\" aria-label=\"Views\">",
+       "msg": "Some page content is not contained by landmarks"
+      },
+      {
+       "target": "#disclaimer",
+       "html": "<div id=\"disclaimer\">Real satellite + weather data (CHIRPS, MODIS, ERA5). Risk levels from our model.</div>",
+       "msg": "Some page content is not contained by landmarks"
+      }
+     ]
+    },
+    {
+     "id": "scrollable-region-focusable",
+     "impact": "serious",
+     "help": "Scrollable region must have keyboard access",
+     "n": 1,
+     "nodes": [
+      {
+       "target": "#feed",
+       "html": "<ol id=\"feed\" aria-live=\"polite\">",
+       "msg": "Element should have focusable content"
+      }
+     ]
+    }
+   ],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "help": "Elements must meet minimum color contrast ratio thresholds",
+     "n": 69,
+     "nodes": [
+      {
+       "target": ".crowd-badge > .n",
+       "html": "<span class=\"n\">4</span>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#search",
+       "html": "<input id=\"search\" type=\"text\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"Search a country…\" aria-label=\"Search ",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#hud-name",
+       "html": "<h1 id=\"hud-name\">Zimbabwe</h1>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#hud-sub",
+       "html": "<span id=\"hud-sub\">91 districts · disaster declared 3 Apr 2024</span>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      }
+     ]
+    },
+    {
+     "id": "label-content-name-mismatch",
+     "impact": "serious",
+     "help": "Elements must have their visible text as part of their accessible name",
+     "n": 1,
+     "nodes": [
+      {
+       "target": ".d-close",
+       "html": "<button class=\"d-close\" aria-label=\"Close\">×</button>",
+       "msg": "Unable to determine if the visible text is part of the accessible name"
+      }
+     ]
+    }
+   ],
+   "passes": 41
+  },
+  {
+   "label": "alerts tab (online)",
+   "violations": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "help": "Elements must meet minimum color contrast ratio thresholds",
+     "n": 36,
+     "nodes": [
+      {
+       "target": ".decl > .n-top > .chip",
+       "html": "<span class=\"chip\" style=\"background: rgb(208, 59, 59);\">OFFICIAL</span>",
+       "msg": "Element has insufficient color contrast of 4.01 (foreground color: #0e0e0d, background color: #d03b3b, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-top > .n-date",
+       "html": "<span class=\"n-date\">Apr 2024</span>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-move",
+       "html": "<div class=\"n-move\">escalated from L0 Normal</div>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-drivers > li:nth-child(1)",
+       "html": "<li>cropland greenness 6/100 (VCI, poor)</li>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 8.6pt (11.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+      }
+     ]
+    },
+    {
+     "id": "heading-order",
+     "impact": "moderate",
+     "help": "Heading levels should only increase by one",
+     "n": 1,
+     "nodes": [
+      {
+       "target": "h3",
+       "html": "<h3>Bulilima</h3>",
+       "msg": "Heading order invalid"
+      }
+     ]
+    },
+    {
+     "id": "region",
+     "impact": "moderate",
+     "help": "All page content should be contained by landmarks",
+     "n": 1,
+     "nodes": [
+      {
+       "target": "#tabs",
+       "html": "<nav id=\"tabs\" role=\"tablist\" aria-label=\"Views\">",
+       "msg": "Some page content is not contained by landmarks"
+      }
+     ]
+    },
+    {
+     "id": "scrollable-region-focusable",
+     "impact": "serious",
+     "help": "Scrollable region must have keyboard access",
+     "n": 1,
+     "nodes": [
+      {
+       "target": "#feed",
+       "html": "<ol id=\"feed\" aria-live=\"polite\">",
+       "msg": "Element should have focusable content"
+      }
+     ]
+    }
+   ],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "help": "Elements must meet minimum color contrast ratio thresholds",
+     "n": 68,
+     "nodes": [
+      {
+       "target": ".crowd-badge > .n",
+       "html": "<span class=\"n\">4</span>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#search",
+       "html": "<input id=\"search\" type=\"text\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"Search a country…\" aria-label=\"Search ",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#hud-name",
+       "html": "<h1 id=\"hud-name\">Zimbabwe</h1>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#hud-sub",
+       "html": "<span id=\"hud-sub\">91 districts · disaster declared 3 Apr 2024</span>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      }
+     ]
+    },
+    {
+     "id": "label-content-name-mismatch",
+     "impact": "serious",
+     "help": "Elements must have their visible text as part of their accessible name",
+     "n": 1,
+     "nodes": [
+      {
+       "target": ".d-close",
+       "html": "<button class=\"d-close\" aria-label=\"Close\">×</button>",
+       "msg": "Unable to determine if the visible text is part of the accessible name"
+      }
+     ]
+    }
+   ],
+   "passes": 41
+  },
+  {
+   "label": "users tab (online)",
+   "violations": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "help": "Elements must meet minimum color contrast ratio thresholds",
+     "n": 30,
+     "nodes": [
+      {
+       "target": ".decl > .n-top > .chip",
+       "html": "<span class=\"chip\" style=\"background: rgb(208, 59, 59);\">OFFICIAL</span>",
+       "msg": "Element has insufficient color contrast of 4.01 (foreground color: #0e0e0d, background color: #d03b3b, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-top > .n-date",
+       "html": "<span class=\"n-date\">Apr 2024</span>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-move",
+       "html": "<div class=\"n-move\">escalated from L0 Normal</div>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-drivers > li:nth-child(1)",
+       "html": "<li>cropland greenness 6/100 (VCI, poor)</li>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 8.6pt (11.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+      }
+     ]
+    },
+    {
+     "id": "heading-order",
+     "impact": "moderate",
+     "help": "Heading levels should only increase by one",
+     "n": 1,
+     "nodes": [
+      {
+       "target": "h3",
+       "html": "<h3>Bulilima</h3>",
+       "msg": "Heading order invalid"
+      }
+     ]
+    },
+    {
+     "id": "region",
+     "impact": "moderate",
+     "help": "All page content should be contained by landmarks",
+     "n": 3,
+     "nodes": [
+      {
+       "target": "#tabs",
+       "html": "<nav id=\"tabs\" role=\"tablist\" aria-label=\"Views\">",
+       "msg": "Some page content is not contained by landmarks"
+      },
+      {
+       "target": "#counters",
+       "html": "<div id=\"counters\">",
+       "msg": "Some page content is not contained by landmarks"
+      },
+      {
+       "target": "#join-table",
+       "html": "<table id=\"join-table\">",
+       "msg": "Some page content is not contained by landmarks"
+      }
+     ]
+    },
+    {
+     "id": "scrollable-region-focusable",
+     "impact": "serious",
+     "help": "Scrollable region must have keyboard access",
+     "n": 1,
+     "nodes": [
+      {
+       "target": "#feed",
+       "html": "<ol id=\"feed\" aria-live=\"polite\">",
+       "msg": "Element should have focusable content"
+      }
+     ]
+    }
+   ],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "help": "Elements must meet minimum color contrast ratio thresholds",
+     "n": 68,
+     "nodes": [
+      {
+       "target": ".crowd-badge > .n",
+       "html": "<span class=\"n\">4</span>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#search",
+       "html": "<input id=\"search\" type=\"text\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"Search a country…\" aria-label=\"Search ",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#hud-name",
+       "html": "<h1 id=\"hud-name\">Zimbabwe</h1>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#hud-sub",
+       "html": "<span id=\"hud-sub\">91 districts · disaster declared 3 Apr 2024</span>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      }
+     ]
+    },
+    {
+     "id": "label-content-name-mismatch",
+     "impact": "serious",
+     "help": "Elements must have their visible text as part of their accessible name",
+     "n": 1,
+     "nodes": [
+      {
+       "target": ".d-close",
+       "html": "<button class=\"d-close\" aria-label=\"Close\">×</button>",
+       "msg": "Unable to determine if the visible text is part of the accessible name"
+      }
+     ]
+    }
+   ],
+   "passes": 45
+  },
+  {
+   "label": "phone tab (online)",
+   "violations": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "help": "Elements must meet minimum color contrast ratio thresholds",
+     "n": 25,
+     "nodes": [
+      {
+       "target": ".decl > .n-top > .chip",
+       "html": "<span class=\"chip\" style=\"background: rgb(208, 59, 59);\">OFFICIAL</span>",
+       "msg": "Element has insufficient color contrast of 4.01 (foreground color: #0e0e0d, background color: #d03b3b, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-top > .n-date",
+       "html": "<span class=\"n-date\">Apr 2024</span>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-move",
+       "html": "<div class=\"n-move\">escalated from L0 Normal</div>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-drivers > li:nth-child(1)",
+       "html": "<li>cropland greenness 6/100 (VCI, poor)</li>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 8.6pt (11.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+      }
+     ]
+    },
+    {
+     "id": "heading-order",
+     "impact": "moderate",
+     "help": "Heading levels should only increase by one",
+     "n": 1,
+     "nodes": [
+      {
+       "target": "h3",
+       "html": "<h3>Bulilima</h3>",
+       "msg": "Heading order invalid"
+      }
+     ]
+    },
+    {
+     "id": "region",
+     "impact": "moderate",
+     "help": "All page content should be contained by landmarks",
+     "n": 6,
+     "nodes": [
+      {
+       "target": "#tabs",
+       "html": "<nav id=\"tabs\" role=\"tablist\" aria-label=\"Views\">",
+       "msg": "Some page content is not contained by landmarks"
+      },
+      {
+       "target": "label",
+       "html": "<label for=\"ph-number\">From</label>",
+       "msg": "Some page content is not contained by landmarks"
+      },
+      {
+       "target": "#ph-number",
+       "html": "<input id=\"ph-number\" type=\"tel\" value=\"+263770000001\" autocomplete=\"off\" spellcheck=\"false\">",
+       "msg": "Some page content is not contained by landmarks"
+      },
+      {
+       "target": "#ph-text",
+       "html": "<input id=\"ph-text\" type=\"text\" maxlength=\"160\" autocomplete=\"off\" placeholder=\"Type an SMS…\" aria-label=\"SMS text\">",
+       "msg": "Some page content is not contained by landmarks"
+      }
+     ]
+    },
+    {
+     "id": "scrollable-region-focusable",
+     "impact": "serious",
+     "help": "Scrollable region must have keyboard access",
+     "n": 1,
+     "nodes": [
+      {
+       "target": "#feed",
+       "html": "<ol id=\"feed\" aria-live=\"polite\">",
+       "msg": "Element should have focusable content"
+      }
+     ]
+    }
+   ],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "help": "Elements must meet minimum color contrast ratio thresholds",
+     "n": 68,
+     "nodes": [
+      {
+       "target": ".crowd-badge > .n",
+       "html": "<span class=\"n\">4</span>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#search",
+       "html": "<input id=\"search\" type=\"text\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"Search a country…\" aria-label=\"Search ",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#hud-name",
+       "html": "<h1 id=\"hud-name\">Zimbabwe</h1>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#hud-sub",
+       "html": "<span id=\"hud-sub\">91 districts · disaster declared 3 Apr 2024</span>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      }
+     ]
+    },
+    {
+     "id": "label-content-name-mismatch",
+     "impact": "serious",
+     "help": "Elements must have their visible text as part of their accessible name",
+     "n": 1,
+     "nodes": [
+      {
+       "target": ".d-close",
+       "html": "<button class=\"d-close\" aria-label=\"Close\">×</button>",
+       "msg": "Unable to determine if the visible text is part of the accessible name"
+      }
+     ]
+    }
+   ],
+   "passes": 41
+  },
+  {
+   "label": "alerts tab (backend offline)",
+   "violations": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "help": "Elements must meet minimum color contrast ratio thresholds",
+     "n": 23,
+     "nodes": [
+      {
+       "target": ".decl > .n-top > .chip",
+       "html": "<span class=\"chip\" style=\"background: rgb(208, 59, 59);\">OFFICIAL</span>",
+       "msg": "Element has insufficient color contrast of 4.01 (foreground color: #0e0e0d, background color: #d03b3b, font size: 7.5pt (10px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-top > .n-date",
+       "html": "<span class=\"n-date\">Apr 2024</span>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-move",
+       "html": "<div class=\"n-move\">escalated from L0 Normal</div>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+       "target": ".note[data-county=\"Zvishavane Urban\"][data-t=\"63\"] > .n-drivers > li:nth-child(1)",
+       "html": "<li>cropland greenness 6/100 (VCI, poor)</li>",
+       "msg": "Element has insufficient color contrast of 4.47 (foreground color: #8a8980, background color: #232322, font size: 8.6pt (11.5px), font weight: normal). Expected contrast ratio of 4.5:1"
+      }
+     ]
+    },
+    {
+     "id": "region",
+     "impact": "moderate",
+     "help": "All page content should be contained by landmarks",
+     "n": 3,
+     "nodes": [
+      {
+       "target": "#tabs",
+       "html": "<nav id=\"tabs\" role=\"tablist\" aria-label=\"Views\">",
+       "msg": "Some page content is not contained by landmarks"
+      },
+      {
+       "target": "#page-alerts > .lp-offline",
+       "html": "<div class=\"lp-offline\">Backend offline. Start it on localhost:8000; the map still works.</div>",
+       "msg": "Some page content is not contained by landmarks"
+      },
+      {
+       "target": "#alerts-empty",
+       "html": "<div class=\"lp-empty\" id=\"alerts-empty\">No alert events yet. On the Map, open a live country, pick a month and press <b>",
+       "msg": "Some page content is not contained by landmarks"
+      }
+     ]
+    },
+    {
+     "id": "scrollable-region-focusable",
+     "impact": "serious",
+     "help": "Scrollable region must have keyboard access",
+     "n": 1,
+     "nodes": [
+      {
+       "target": "#feed",
+       "html": "<ol id=\"feed\" aria-live=\"polite\">",
+       "msg": "Element should have focusable content"
+      }
+     ]
+    }
+   ],
+   "incomplete": [
+    {
+     "id": "color-contrast",
+     "impact": "serious",
+     "help": "Elements must meet minimum color contrast ratio thresholds",
+     "n": 32,
+     "nodes": [
+      {
+       "target": "#search",
+       "html": "<input id=\"search\" type=\"text\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"Search a country…\" aria-label=\"Search ",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#hud-name",
+       "html": "<h1 id=\"hud-name\">Zimbabwe</h1>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#hud-sub",
+       "html": "<span id=\"hud-sub\">91 districts · disaster declared 3 Apr 2024</span>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      },
+      {
+       "target": "#stat-units",
+       "html": "<span class=\"stat-val\" id=\"stat-units\" style=\"color: var(--lvl-3);\">22</span>",
+       "msg": "Element's background color could not be determined due to a pseudo element"
+      }
+     ]
+    }
+   ],
+   "passes": 40
+  }
+ ],
+ "contrast": {
+  "palette": {
+   "lvl": [
+    "#0ca30c",
+    "#ffd43b",
+    "#ec833a",
+    "#d03b3b"
+   ],
+   "s0": "#0e0e0d",
+   "s1": "#1a1a19",
+   "s2": "#232322",
+   "s3": "#2e2e2c",
+   "muted": "#8a8980",
+   "secondary": "#c3c2b7",
+   "accent": "#3987e5",
+   "chipText": "rgb(14, 14, 13)",
+   "chipFont": "10px",
+   "swGlyph": "rgba(0, 0, 0, 0.72)",
+   "swFont": "8px"
+  },
+  "chipTextOnLevel": [
+   {
+    "level": "L0 Normal",
+    "bg": "#0ca30c",
+    "text": "#0e0e0d",
+    "ratio": 5.76,
+    "font": "10px",
+    "pass_AA_small": true
+   },
+   {
+    "level": "L1 Watch",
+    "bg": "#ffd43b",
+    "text": "#0e0e0d",
+    "ratio": 13.55,
+    "font": "10px",
+    "pass_AA_small": true
+   },
+   {
+    "level": "L2 Warning",
+    "bg": "#ec833a",
+    "text": "#0e0e0d",
+    "ratio": 7.24,
+    "font": "10px",
+    "pass_AA_small": true
+   },
+   {
+    "level": "L3 Emergency",
+    "bg": "#d03b3b",
+    "text": "#0e0e0d",
+    "ratio": 4.02,
+    "font": "10px",
+    "pass_AA_small": false
+   }
+  ],
+  "chipOnSurface": [
+   {
+    "level": "L0",
+    "bg": "#0ca30c",
+    "surface": "#232322",
+    "ratio": 4.69,
+    "pass_nonText_3": true
+   },
+   {
+    "level": "L1",
+    "bg": "#ffd43b",
+    "surface": "#232322",
+    "ratio": 11.04,
+    "pass_nonText_3": true
+   },
+   {
+    "level": "L2",
+    "bg": "#ec833a",
+    "surface": "#232322",
+    "ratio": 5.9,
+    "pass_nonText_3": true
+   },
+   {
+    "level": "L3",
+    "bg": "#d03b3b",
+    "surface": "#232322",
+    "ratio": 3.27,
+    "pass_nonText_3": true
+   }
+  ],
+  "adjacentLevels": [
+   {
+    "pair": "L0/L1",
+    "ratio": 2.35
+   },
+   {
+    "pair": "L1/L2",
+    "ratio": 1.87
+   },
+   {
+    "pair": "L2/L3",
+    "ratio": 1.8
+   }
+  ],
+  "legendGlyph": [
+   {
+    "level": "L0",
+    "glyph_on_bg": 4.48,
+    "font": "8px"
+   },
+   {
+    "level": "L1",
+    "glyph_on_bg": 7.75,
+    "font": "8px"
+   },
+   {
+    "level": "L2",
+    "glyph_on_bg": 5.24,
+    "font": "8px"
+   },
+   {
+    "level": "L3",
+    "glyph_on_bg": 3.45,
+    "font": "8px"
+   }
+  ],
+  "mutedText": [
+   {
+    "text": "text-muted",
+    "fg": "#8a8980",
+    "bg": "#1a1a19",
+    "ratio": 4.95,
+    "pass_AA_small": true
+   },
+   {
+    "text": "text-muted",
+    "fg": "#8a8980",
+    "bg": "#232322",
+    "ratio": 4.47,
+    "pass_AA_small": false
+   },
+   {
+    "text": "text-secondary",
+    "fg": "#c3c2b7",
+    "bg": "#1a1a19",
+    "ratio": 9.72,
+    "pass_AA_small": true
+   },
+   {
+    "text": "white on accent (buttons)",
+    "fg": "#ffffff",
+    "bg": "#3987e5",
+    "ratio": 3.64,
+    "pass_AA_small": false
+   },
+   {
+    "text": "pending status (lvl-1 on surface-2)",
+    "fg": "#ffd43b",
+    "bg": "#232322",
+    "ratio": 11.04
+   },
+   {
+    "text": "decl-mark label (lvl-3 on surface-1, 9.5px)",
+    "fg": "#d03b3b",
+    "bg": "#1a1a19",
+    "ratio": 3.62,
+    "pass_AA_small": false
+   }
+  ]
+ },
+ "keyboard": {
+  "initialFocus": "input#search \"Search for a country\"",
+  "resultsOpenAfterTyping": [
+   "KenyaLive"
+  ],
+  "enterSelectsCountry": "Kenya",
+  "tabOrder": [
+   "button#play \"\"",
+   "input#scrub \"0\"",
+   "button#run-alerts \"Run alerts for this mont\"",
+   "button \"1×\"",
+   "button \"2×\"",
+   "button \"4×\"",
+   "body \"Map\n  Alert feed 61\n  Us\"",
+   "button[tab] \"Map\"",
+   "button[tab] \"Alert feed 61\"",
+   "button[tab] \"Users joining\"",
+   "button[tab] \"Phone\"",
+   "input#search \"Kenya\"",
+   "button#play \"\"",
+   "input#scrub \"0\"",
+   "button#run-alerts \"Run alerts for this mont\"",
+   "button \"1×\"",
+   "button \"2×\"",
+   "button \"4×\""
+  ],
+  "arrowRightOnTab": {
+   "focus": "button[tab] \"Map\"",
+   "selected": "map",
+   "month": "Feb 2019"
+  },
+  "enterOnAlertsTab": {
+   "page": "alerts",
+   "visible": true
+  },
+  "spaceOnUsersTab": {
+   "page": "alerts",
+   "visible": false,
+   "playing": true
+  },
+  "escapeOnLivePage": "alerts",
+  "timeline": {
+   "before": "Jun 2019",
+   "afterTwoArrowRight": "Aug 2019",
+   "spaceStartsPlay": true,
+   "spaceStops": true,
+   "sliderEnd": "71",
+   "sliderHomePlusOne": "1"
+  },
+  "playButton": {
+   "spaceToggles": true,
+   "enterToggles": true
+  },
+  "speedButtons": {
+   "enterSets2x": true,
+   "spaceOn4x": {
+    "speed": "2",
+    "playing": true
+   }
+  },
+  "feedKeyboard": {
+   "notes": 9,
+   "focusableNotes": 0,
+   "notesHaveRole": false,
+   "globeCanvasFocusable": -1,
+   "resultsOptionsFocusable": false
+  },
+  "detailPanel": {
+   "openedByDeepLink": true,
+   "escapeCloses": true,
+   "closeButtonReachableByTab": true,
+   "audienceTabsReachable": false,
+   "focusMovedIntoPanelOnOpen": false
+  },
+  "focusRing": {
+   "#tabs [data-page=\"alerts\"]": {
+    "outline": "2px solid rgb(57, 135, 229)",
+    "boxShadow": false
+   },
+   "#play": {
+    "outline": "1px auto rgb(238, 238, 238)",
+    "boxShadow": false
+   },
+   "#scrub": {
+    "outline": "2px solid rgb(57, 135, 229)",
+    "boxShadow": false
+   },
+   "#speeds button": {
+    "outline": "1px auto rgb(238, 238, 238)",
+    "boxShadow": false
+   },
+   "#search": {
+    "outline": "none",
+    "boxShadow": false
+   },
+   ".d-close": {
+    "outline": "1px auto rgb(238, 238, 238)",
+    "boxShadow": false
+   },
+   ".aud-tabs button": {
+    "outline": "1px auto rgb(238, 238, 238)",
+    "boxShadow": false
+   },
+   "#run-alerts": {
+    "outline": "1px auto rgb(238, 238, 238)",
+    "boxShadow": false
+   }
+  }
+ },
+ "levelText": {
+  "chips": 121,
+  "nonConforming": [],
+  "legend": [
+   "● L0 Normal 1",
+   "▲ L1 Watch 68",
+   "▲ L2 Warning 22",
+   "■ L3 Emergency 0"
+  ],
+  "feedMoves": [
+   "escalated from L0 Normal",
+   "escalated from L0 Normal",
+   "escalated from L0 Normal"
+  ],
+  "glyphs": [
+   "▲",
+   "O",
+   "●"
+  ],
+  "watchVsWarningSameGlyph": true,
+  "globeHoverLabel": "polygonLabel is empty: on the globe itself the level is colour + extrusion height only (legend gives the key)"
+ },
+ "errors": {
+  "axe_online": {
+   "js": [],
+   "console": [],
+   "net": []
+  },
+  "axe_offline": {
+   "js": [],
+   "console": [],
+   "net": [
+    "net::ERR_CONNECTION_REFUSED http://localhost:8403/health",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8403/health",
+    "net::ERR_CONNECTION_REFUSED http://localhost:8403/health",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8403/health",
+    "net::ERR_CONNECTION_REFUSED http://localhost:8403/health",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:8403/health"
+   ]
+  },
+  "contrast": {
+   "js": [],
+   "console": [],
+   "net": []
+  },
+  "keyboard": {
+   "js": [],
+   "console": [],
+   "net": [
+    "net::ERR_ABORTED http://localhost:8402/feed/crowd?iso3=KEN"
+   ]
+  }
+ }
+}

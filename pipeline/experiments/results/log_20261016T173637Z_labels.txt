@@ -1,0 +1,24 @@
+              label  label_mean35  label_min20  label_q20  label_mean_q20
+event                                                                    
+cant_plant    0.168           NaN          NaN        NaN             NaN
+crop_failure  0.204         0.174        0.288      0.211           0.214
+no_grass      0.287         0.277        0.245      0.202           0.202
+                   label  label_mean35  label_min20  label_q20  label_mean_q20
+iso3 event                                                                    
+KEN  cant_plant    0.153           NaN          NaN        NaN             NaN
+     crop_failure  0.248         0.234        0.299      0.207           0.207
+     no_grass      0.394         0.377        0.358      0.207           0.207
+MWI  cant_plant    0.189           NaN          NaN        NaN             NaN
+     crop_failure  0.172         0.135        0.328      0.221           0.216
+     no_grass      0.190         0.187        0.166      0.188           0.190
+ZMB  cant_plant    0.161           NaN          NaN        NaN             NaN
+     crop_failure  0.215         0.185        0.322      0.232           0.238
+     no_grass      0.243         0.236        0.205      0.204           0.203
+ZWE  cant_plant    0.182           NaN          NaN        NaN             NaN
+     crop_failure  0.166         0.128        0.224      0.185           0.189
+     no_grass      0.289         0.279        0.232      0.200           0.200
+label n 13456 P(1|prev=1) 0.32 P(1|prev=0) 0.222
+label_mean35 n 13456 P(1|prev=1) 0.316 P(1|prev=0) 0.2
+label_min20 n 13456 P(1|prev=1) 0.333 P(1|prev=0) 0.243
+label_q20 n 13456 P(1|prev=1) 0.224 P(1|prev=0) 0.202
+label_mean_q20 n 13456 P(1|prev=1) 0.242 P(1|prev=0) 0.199

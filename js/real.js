@@ -142,7 +142,7 @@ const REAL = (() => {
     // Missing data is missing: a unit with no model output stays grey-green
     // at level 0 with nulls rather than being invented.
     const emptyRow = t => ({
-      t, level: 0, p: 0, confidence: 'low', agreeing: 0,
+      t, level: 0, p: null, p_crisis: null, confidence: 'low', agreeing: 0,
       families: { rain: false, vegetation: false, soil: false, heat: false },
       event: 'none', horizon: 0, drivers: [], signals: {}, missing: true,
     });
@@ -186,11 +186,91 @@ const REAL = (() => {
       return { units, events, national };
     }
 
+    // ---- Forecast (CONTRACT.md sections 4 and 4b) --------------------------
+    // A row MAY carry forecast["1".."8"] = { p, p_crisis, fews_phase,
+    // fews_scenario, fews_published, target_label, source }. Leads 1..3 fall
+    // back to existing real fields when the key is missing (p_crisis is
+    // P(IPC3+ within 1-3 months) so it is the same number for leads 1..3; p
+    // stands for lead 1 only). Leads without any field are "pending": every
+    // value null. Nothing is extrapolated or invented.
+    const num = v => (v == null || Number.isNaN(+v) ? null : +v);
+    const MAX_LEAD = 8;
+    let hasForecast = false, maxModelLead = 0, hasFews = false;
+    const fewsLeads = new Set();
+    for (const u of R.units) for (const r of (u.series || [])) {
+      if (!r || !r.forecast) continue;
+      for (const k of Object.keys(r.forecast)) {
+        const f = r.forecast[k], L = +k;
+        if (!f || !(L >= 1 && L <= MAX_LEAD)) continue;
+        if (num(f.p_crisis) != null || num(f.p) != null) { hasForecast = true; if (L > maxModelLead) maxModelLead = L; }
+        if (num(f.fews_phase) != null) { hasFews = true; fewsLeads.add(L); }
+      }
+    }
+    const pcMeta = (meta.metrics && meta.metrics.p_crisis) || {};
+    const WATCH_P_CRISIS = num(pcMeta.watch_threshold) != null ? num(pcMeta.watch_threshold) : 0.57;
+    function forecastAt(row, lead) {
+      lead = Math.max(1, Math.min(MAX_LEAD, lead | 0));
+      const target_label = dateAt(row.t + lead).label;
+      const f = row.forecast && row.forecast[String(lead)];
+      let p = null, p_crisis = null, derived = true, pending = false;
+      let fews_phase = null, fews_scenario = null, fews_published = null, source = null;
+      if (f) {
+        p = num(f.p); p_crisis = num(f.p_crisis); derived = false;
+        fews_phase = num(f.fews_phase);
+        if (fews_phase != null) fews_phase = Math.max(1, Math.min(5, Math.round(fews_phase)));
+        fews_scenario = f.fews_scenario || null;
+        fews_published = f.fews_published || null;
+        source = f.source || null;
+      } else if (!row.missing && lead <= 3) {
+        p_crisis = num(row.p_crisis);
+        p = lead === 1 ? num(row.p) : null;
+      } else {
+        pending = true;
+      }
+      const chance = p_crisis != null ? p_crisis : p;
+      const kind = p_crisis != null ? 'crisis' : p != null ? 'event' : null;
+      return { lead, p, p_crisis, chance, kind, derived, pending,
+               fews_phase, fews_scenario, fews_published, source,
+               target_label: (f && f.target_label) || target_label };
+    }
+
+    // Confidence per lead. If the export carries tested skill per lead
+    // (meta.metrics.forecast_skill | skill_by_lead | lead_skill, keyed "1".."8"
+    // with a `confidence`/`label` string or a roc_auc number) use it;
+    // otherwise the back-test defaults for +1..+3 (Medium-High / Medium /
+    // Low-Medium); beyond the tested leads: "no model forecast - FEWS NET only".
+    const DEFAULT_CONF = { 1: 'Medium-High', 2: 'Medium', 3: 'Low-Medium' };
+    const skillTab = (meta.metrics && (meta.metrics.forecast_skill || meta.metrics.skill_by_lead || meta.metrics.lead_skill)) || null;
+    function forecastConfidence(lead) {
+      lead = Math.max(1, Math.min(MAX_LEAD, lead | 0));
+      const s = skillTab && (skillTab[String(lead)] || skillTab[lead]);
+      if (s && typeof s === 'object') {
+        const lab = s.confidence || s.label;
+        if (typeof lab === 'string' && lab.trim()) return { label: lab.trim(), source: 'tested skill per lead', tested: true };
+        const auc = num(s.roc_auc);
+        if (auc != null) {
+          const label = auc >= 0.75 ? 'High' : auc >= 0.65 ? 'Medium-High' : auc >= 0.6 ? 'Medium' : auc >= 0.55 ? 'Low-Medium' : 'Low';
+          return { label, source: `tested skill per lead (ROC AUC ${auc.toFixed(2)})`, tested: true };
+        }
+      } else if (typeof s === 'string' && s.trim()) {
+        return { label: s.trim(), source: 'tested skill per lead', tested: true };
+      }
+      if (lead <= 3) return { label: DEFAULT_CONF[lead], source: 'based on back-tests', tested: false };
+      if (lead <= maxModelLead) return { label: 'Untested', source: 'model output exists but no skill test for this lead', tested: false };
+      return { label: 'no model forecast — FEWS NET only', source: 'beyond tested leads', tested: false, none: true };
+    }
+
     const isStub = String(meta.model_version).toUpperCase() === 'STUB';
     return {
+      forecastConfidence,
+      REPLAY_END_T: 71,            // t > 71 = live months added after the replay window
       isReal: true, isStub, meta,
       START_YEAR, N_MONTHS, LEVELS, AUDIENCES, EVENTS, FAMILIES, N_FAMILIES,
       dateAt, build, composeSMS, audiencesFor,
+      forecastAt, hasForecast, WATCH_P_CRISIS, MAX_LEAD,
+      maxModelLead, hasFews, fewsLeads: [...fewsLeads].sort((a, b) => a - b),
+      pCrisisAvailable: pcMeta.available !== false,   // false = IPC model not run for this country
+      liveT: Number.isFinite(+meta.live_t) && meta.live_t != null ? +meta.live_t : null,
       declaration: meta.declaration || null,
       // app.js never shows a STUB file; isStub is kept for callers that check.
       disclaimer: 'Real satellite + weather data (CHIRPS, MODIS, ERA5). Risk levels from our model.',

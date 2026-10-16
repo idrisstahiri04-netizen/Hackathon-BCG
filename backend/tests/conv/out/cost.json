@@ -1,0 +1,47 @@
+{
+ "model": "claude-haiku-5-5",
+ "avg_input_tokens": 1199,
+ "avg_output_tokens": 53,
+ "usd_per_router_call": 0.000146,
+ "share_inbound_reaching_claude": 0.73,
+ "usd_per_1000_inbound_router_only": 0.107,
+ "usd_per_1000_inbound_with_advice_picks": 0.114,
+ "usd_per_1000_inbound_worst_case_all_llm": 0.153,
+ "samples": [
+  {
+   "sms": "hi",
+   "input_tokens": 1169,
+   "output_tokens": 47,
+   "cache_read": 0,
+   "cost_usd": 0.0001404
+  },
+  {
+   "sms": "I want drought alerts for Binga, I am a ",
+   "input_tokens": 1185,
+   "output_tokens": 52,
+   "cache_read": 0,
+   "cost_usd": 0.00014450000000000002
+  },
+  {
+   "sms": "Ndinoda kujoina. Ndiri murimi kuMbire",
+   "input_tokens": 1191,
+   "output_tokens": 54,
+   "cache_read": 0,
+   "cost_usd": 0.0001461
+  },
+  {
+   "sms": "what should i plant now that the rains a",
+   "input_tokens": 1180,
+   "output_tokens": 49,
+   "cache_read": 0,
+   "cost_usd": 0.0001425
+  },
+  {
+   "sms": "Good morning sir/madam, I hope this mess",
+   "input_tokens": 1270,
+   "output_tokens": 63,
+   "cache_read": 0,
+   "cost_usd": 0.00015850000000000003
+  }
+ ]
+}

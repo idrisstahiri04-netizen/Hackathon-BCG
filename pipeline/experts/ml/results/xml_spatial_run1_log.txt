@@ -1,0 +1,51 @@
+[19:26:42] building rows (harness.build) ...
+rows=159271 cv=141288 test=13496 cols=62
+[19:26:50] rows (159271, 81), cols 62, neighbours for 282 units
+[19:26:59] spatial features joined: 9 nb, 9 nat, 4 dif; nb NaN share 0.020
+[19:26:59] exp base
+[19:28:13] exp nb (71 gb cols)
+[19:29:32]    nb: ens mean PR 0.349 (base 0.345); MWI ens 0.182 (base 0.182)
+[19:29:32] exp nat (71 gb cols)
+[19:30:53]    nat: ens mean PR 0.343 (base 0.345); MWI ens 0.172 (base 0.182)
+[19:30:53] exp nb_nat (84 gb cols)
+[19:32:24]    nb_nat: ens mean PR 0.34 (base 0.345); MWI ens 0.176 (base 0.182)
+[19:32:24] exp nb_nat_oni (85 gb cols)
+[19:33:50]    nb_nat_oni: ens mean PR 0.35 (base 0.345); MWI ens 0.214 (base 0.182)
+[19:33:50] exp nb_nat_prev (85 gb cols)
+[19:35:23]    nb_nat_prev: ens mean PR 0.34 (base 0.345); MWI ens 0.1705 (base 0.182)
+[19:35:23] exp iso_onehot (66 gb cols)
+[19:36:27]    iso_onehot: ens mean PR 0.344 (base 0.345); MWI ens 0.1755 (base 0.182)
+[19:36:27] exp percountry
+Traceback (most recent call last):
+  File "/kaggle/working/pipeline/experiments/xml_spatial.py", line 325, in <module>
+    main()
+    ~~~~^^
+  File "/kaggle/working/pipeline/experiments/xml_spatial.py", line 267, in main
+    o = H.cv(rows, cols, models=MODELS, events=EV2, n_jobs=N_JOBS, group_fn=lambda d: d["iso3"])
+  File "/kaggle/working/pipeline/experiments/harness.py", line 181, in cv
+    raw[m][va] = ms[m].raw(d[va])
+                 ~~~~~~~~~^^^^^^^
+  File "/kaggle/working/pipeline/train.py", line 169, in raw
+    return self.m.predict_proba(d[self.cols].values)[:, 1]
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/pipeline.py", line 903, in predict_proba
+    Xt = transform.transform(Xt)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/_set_output.py", line 319, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/impute/_base.py", line 607, in transform
+    X = self._validate_input(X, in_fit=False)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/impute/_base.py", line 363, in _validate_input
+    raise ve
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/impute/_base.py", line 344, in _validate_input
+    X = validate_data(
+        self,
+    ...<6 lines>...
+        copy=self.copy,
+    )
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/validation.py", line 2944, in validate_data
+    out = check_array(X, input_name="X", **check_params)
+  File "/usr/local/lib/python3.13/dist-packages/sklearn/utils/validation.py", line 1130, in check_array
+    raise ValueError(
+    ...<3 lines>...
+    )
+ValueError: Found array with 0 sample(s) (shape=(0, 62)) while a minimum of 1 is required by SimpleImputer.

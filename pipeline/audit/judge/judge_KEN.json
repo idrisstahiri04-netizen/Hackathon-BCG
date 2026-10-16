@@ -1,7 +1,7 @@
 {
  "iso3": "KEN",
  "model_version": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB",
- "generated_at": "2026-10-16T18:40:10+00:00",
+ "generated_at": "2026-10-16T19:44:15+00:00",
  "n_units": 47,
  "declaration": "2021-09-08",
  "crisis_window": [
@@ -9,29 +9,24 @@
   "2021-12-01"
  ],
  "level_counts_all": {
-  "0": 2348,
-  "1": 807,
-  "2": 198,
+  "0": 2985,
+  "1": 1104,
+  "2": 251,
   "3": 31
  },
- "watch_share_before_decl": 0.553,
- "watch_n_before_decl": 26,
- "watch_share_ever_in_window": 0.574,
- "watch_median_lead_wk": 22.9,
+ "watch_share_before_decl": 0.766,
+ "watch_n_before_decl": 36,
+ "watch_share_ever_in_window": 0.766,
+ "watch_median_lead_wk": 31.3,
  "watch_lead_wk_iqr": [
-  5.4,
-  27.3
+  31.3,
+  35.7
  ],
  "watch_first_month_hist": {
-  "2020-12": 2,
-  "2021-01": 3,
-  "2021-02": 8,
-  "2021-04": 2,
-  "2021-05": 1,
-  "2021-06": 1,
-  "2021-07": 3,
-  "2021-08": 6,
-  "2021-09": 1
+  "2020-12": 13,
+  "2021-01": 18,
+  "2021-05": 2,
+  "2021-08": 3
  },
  "warning_share_before_decl": 0.128,
  "warning_n_before_decl": 6,
@@ -108,7 +103,7 @@
    "warning_plus_unit_months": 0,
    "unit_months": 282,
    "share_units_ever_warning": 0.0,
-   "share_units_ever_watch": 0.319
+   "share_units_ever_watch": 0.66
   },
   "2021/22": {
    "mean_spi1_NovMar": 0.24,
@@ -124,7 +119,7 @@
    "warning_plus_unit_months": 56,
    "unit_months": 282,
    "share_units_ever_warning": 0.298,
-   "share_units_ever_watch": 0.617
+   "share_units_ever_watch": 0.723
   },
   "2023/24": {
    "mean_spi1_NovMar": 0.75,
@@ -135,12 +130,20 @@
    "share_units_ever_watch": 0.277
   },
   "2024/25": {
-   "mean_spi1_NovMar": 0.46,
-   "cls": "wet",
-   "warning_plus_unit_months": 2,
-   "unit_months": 94,
+   "mean_spi1_NovMar": 0.01,
+   "cls": "normal",
+   "warning_plus_unit_months": 3,
+   "unit_months": 282,
    "share_units_ever_warning": 0.021,
    "share_units_ever_watch": 0.298
+  },
+  "2025/26": {
+   "mean_spi1_NovMar": 0.42,
+   "cls": "wet",
+   "warning_plus_unit_months": 44,
+   "unit_months": 282,
+   "share_units_ever_warning": 0.255,
+   "share_units_ever_watch": 0.553
   }
  },
  "spearman_warning_months_vs": {

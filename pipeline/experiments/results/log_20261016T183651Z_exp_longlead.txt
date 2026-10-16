@@ -1,0 +1,27 @@
+long_base                    logreg   mean2 PR 0.3230 Brier 0.1825 | crop 0.595/0.276/0.1608(b0.204) no_g 0.573/0.37/0.2042(b0.287)
+long_base                    lgbm     mean2 PR 0.3145 Brier 0.1837 | crop 0.573/0.259/0.1623(b0.204) no_g 0.55/0.37/0.2051(b0.287)
+long_base                    ensemble mean2 PR 0.3305 Brier 0.1820 | crop 0.593/0.276/0.1611(b0.204) no_g 0.57/0.385/0.2029(b0.287)
+   lead 1: crop 0.593/0.282 no_g 0.639/0.45
+   lead 2: crop 0.584/0.258 no_g 0.583/0.401
+   lead 3: crop 0.584/0.263 no_g 0.544/0.362
+   lead 4: crop 0.602/0.287 no_g 0.529/0.355
+   lead 5: crop 0.6/0.29 no_g 0.546/0.368
+   lead 6: crop 0.597/0.285 no_g 0.57/0.379
+long_oni_both                logreg   mean2 PR 0.3330 Brier 0.1818 | crop 0.644/0.307/0.1569(b0.204) no_g 0.559/0.359/0.2066(b0.287)
+long_oni_both                lgbm     mean2 PR 0.3090 Brier 0.1846 | crop 0.615/0.283/0.1603(b0.204) no_g 0.531/0.335/0.2089(b0.287)
+long_oni_both                ensemble mean2 PR 0.3335 Brier 0.1824 | crop 0.644/0.308/0.1573(b0.204) no_g 0.552/0.359/0.2075(b0.287)
+   lead 1: crop 0.654/0.324 no_g 0.602/0.401
+   lead 2: crop 0.643/0.31 no_g 0.571/0.376
+   lead 3: crop 0.644/0.308 no_g 0.534/0.339
+   lead 4: crop 0.652/0.309 no_g 0.536/0.341
+   lead 5: crop 0.647/0.309 no_g 0.536/0.354
+   lead 6: crop 0.621/0.293 no_g 0.534/0.355
+long_oni_sfc                 logreg   mean2 PR 0.3425 Brier 0.1805 | crop 0.658/0.317/0.1553(b0.204) no_g 0.561/0.368/0.2057(b0.287)
+long_oni_sfc                 lgbm     mean2 PR 0.3290 Brier 0.1830 | crop 0.637/0.31/0.1576(b0.204) no_g 0.546/0.348/0.2084(b0.287)
+long_oni_sfc                 ensemble mean2 PR 0.3490 Brier 0.1807 | crop 0.661/0.327/0.1553(b0.204) no_g 0.56/0.371/0.2062(b0.287)
+   lead 1: crop 0.665/0.339 no_g 0.612/0.417
+   lead 2: crop 0.659/0.327 no_g 0.578/0.388
+   lead 3: crop 0.665/0.329 no_g 0.55/0.351
+   lead 4: crop 0.683/0.337 no_g 0.535/0.341
+   lead 5: crop 0.666/0.332 no_g 0.534/0.362
+   lead 6: crop 0.625/0.303 no_g 0.552/0.374

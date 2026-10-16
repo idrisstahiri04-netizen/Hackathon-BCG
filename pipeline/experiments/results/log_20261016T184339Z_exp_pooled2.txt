@@ -1,0 +1,8 @@
+   + extra training rows: 656621 from ['AGO', 'BWA', 'ETH', 'MDG', 'MOZ', 'NAM', 'SOM', 'TZA', 'UGA', 'ZAF']
+/kaggle/working/pipeline/experiments/harness_ext.py:65: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  tr = pd.concat([tr, ex[(ex.event == ev) & (ex.agyear != yv)]], ignore_index=True)
+/kaggle/working/pipeline/experiments/harness_ext.py:65: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  tr = pd.concat([tr, ex[(ex.event == ev) & (ex.agyear != yv)]], ignore_index=True)
+pool_oni_sfc                 logreg   mean2 PR 0.3605 Brier 0.1796  dPR +0.0320 dBrier -0.0033 | crop 0.652/0.33/0.1556(b0.204) no_g 0.616/0.391/0.2036(b0.287)
+pool_oni_sfc                 lgbm     mean2 PR 0.3710 Brier 0.1787  dPR +0.0450 dBrier -0.0046 | crop 0.657/0.327/0.1555(b0.204) no_g 0.623/0.415/0.2019(b0.287)
+pool_oni_sfc                 ensemble mean2 PR 0.3800 Brier 0.1771  dPR +0.0425 dBrier -0.0048 | crop 0.665/0.341/0.154(b0.204) no_g 0.626/0.419/0.2002(b0.287)

@@ -1,0 +1,1018 @@
+{
+ "load": {
+  "numbers": 20,
+  "messages": 100,
+  "wall_s": 4.55,
+  "throughput_msg_s": 21.96,
+  "p50_s": 0.123,
+  "p95_s": 2.994,
+  "max_s": 4.237,
+  "llm_p50_s": 2.411,
+  "llm_p95_s": 4.048,
+  "llm_n": 20,
+  "kw_p50_s": 0.091,
+  "kw_p95_s": 0.196,
+  "http_errors": 0,
+  "claude_fallbacks": 0,
+  "wrong_intents": 0,
+  "wrong_intent_rows": []
+ },
+ "rate_limit": {
+  "burst": 14,
+  "limited_from": 11,
+  "limited_n": 4,
+  "replies_before_limit": 10,
+  "stop_under_limit_ok": true,
+  "stop_reply": "You will get no more alerts. Reply JOIN to come back.",
+  "after_stop_still_limited": true,
+  "limited_latency_p50": 0.013
+ },
+ "rows": [
+  {
+   "phone": "+263798200001",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.018,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200001",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.119,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200001",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 1.418,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200001",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.014,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200001",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.01,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200002",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.037,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200002",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.192,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200002",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 1.913,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200002",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.044,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200002",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.015,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200003",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.105,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200003",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.146,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200003",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 2.224,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200003",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.08,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200003",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.075,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200004",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.055,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200004",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.172,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200004",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 1.941,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200004",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.022,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200004",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.017,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200005",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.103,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200005",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.141,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200005",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 4.048,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200005",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.008,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200005",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.011,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200006",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.115,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200006",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.123,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200006",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 2.388,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200006",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.039,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200006",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.063,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200007",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.115,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200007",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.13,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200007",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 2.411,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200007",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.018,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200007",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.071,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200008",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.127,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200008",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.134,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200008",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 2.207,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200008",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.169,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200008",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.031,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200009",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.121,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200009",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.134,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200009",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 1.694,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200009",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.091,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200009",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.118,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200010",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.141,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200010",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.111,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200010",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 4.237,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200010",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.018,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200010",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.016,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200011",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.201,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200011",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.177,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200011",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 1.67,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200011",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.077,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200011",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.042,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200012",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.195,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200012",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.179,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200012",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 2.994,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200012",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.028,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200012",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.018,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200013",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.189,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200013",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.07,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200013",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 2.208,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200013",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.127,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200013",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.059,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200014",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.196,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200014",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.166,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200014",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 2.73,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200014",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.027,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200014",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.018,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200015",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.195,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200015",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.122,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200015",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 2.266,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200015",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.065,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200015",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.073,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200016",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.198,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200016",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.177,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200016",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 3.254,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200016",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.007,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200016",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.007,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200017",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.192,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200017",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.195,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200017",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 2.712,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200017",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.02,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200017",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.018,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200018",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.195,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200018",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.132,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200018",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 2.428,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200018",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.009,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200018",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.01,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200019",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.192,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200019",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.2,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200019",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 3.081,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200019",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.008,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200019",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.01,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  },
+  {
+   "phone": "+263798200020",
+   "text": "JOIN Binga farmer",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "keyword",
+   "latency_s": 0.186,
+   "reply": "Join drought alerts for Binga as farmer? Max 6 SMS a month, free. Reply YES to confirm or NO to cancel."
+  },
+  {
+   "phone": "+263798200020",
+   "text": "YES",
+   "http": 200,
+   "intent": "subscribe",
+   "source": "session",
+   "latency_s": 0.203,
+   "reply": "You are registered for Binga (farmer). Reply 1 ok 2 poor 3 failed for your crops, HELP for an officer, STOP to quit."
+  },
+  {
+   "phone": "+263798200020",
+   "text": "what should I plant now, the rains are late?",
+   "http": 200,
+   "intent": "ask_advice",
+   "source": "llm",
+   "latency_s": 3.003,
+   "reply": "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+  },
+  {
+   "phone": "+263798200020",
+   "text": "2",
+   "http": 200,
+   "intent": "report",
+   "source": "keyword",
+   "latency_s": 0.014,
+   "reply": "Thank you. Crop report 'poor' saved for Binga. It helps us check our alerts."
+  },
+  {
+   "phone": "+263798200020",
+   "text": "we have no food left please help us",
+   "http": 200,
+   "intent": "ask_help",
+   "source": "keyword",
+   "latency_s": 0.013,
+   "reply": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number."
+  }
+ ],
+ "burst": [
+  {
+   "i": 1,
+   "intent": "report",
+   "reply": "Thank you for your report. Reply JOIN to get drought alerts for your district.",
+   "latency_s": 0.009
+  },
+  {
+   "i": 2,
+   "intent": "unknown",
+   "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP for an officer, or STOP to quit.",
+   "latency_s": 1.457
+  },
+  {
+   "i": 3,
+   "intent": "report",
+   "reply": "Thank you for your report. Reply JOIN to get drought alerts for your district.",
+   "latency_s": 0.028
+  },
+  {
+   "i": 4,
+   "intent": "unknown",
+   "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP for an officer, or STOP to quit.",
+   "latency_s": 1.369
+  },
+  {
+   "i": 5,
+   "intent": "report",
+   "reply": "Thank you for your report. Reply JOIN to get drought alerts for your district.",
+   "latency_s": 0.015
+  },
+  {
+   "i": 6,
+   "intent": "unknown",
+   "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP for an officer, or STOP to quit.",
+   "latency_s": 1.407
+  },
+  {
+   "i": 7,
+   "intent": "report",
+   "reply": "Thank you for your report. Reply JOIN to get drought alerts for your district.",
+   "latency_s": 0.025
+  },
+  {
+   "i": 8,
+   "intent": "unknown",
+   "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP for an officer, or STOP to quit.",
+   "latency_s": 1.45
+  },
+  {
+   "i": 9,
+   "intent": "report",
+   "reply": "Thank you for your report. Reply JOIN to get drought alerts for your district.",
+   "latency_s": 0.01
+  },
+  {
+   "i": 10,
+   "intent": "unknown",
+   "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP for an officer, or STOP to quit.",
+   "latency_s": 1.309
+  },
+  {
+   "i": 11,
+   "intent": "rate_limited",
+   "reply": null,
+   "latency_s": 0.013
+  },
+  {
+   "i": 12,
+   "intent": "rate_limited",
+   "reply": null,
+   "latency_s": 0.012
+  },
+  {
+   "i": 13,
+   "intent": "rate_limited",
+   "reply": null,
+   "latency_s": 0.015
+  },
+  {
+   "i": 14,
+   "intent": "rate_limited",
+   "reply": null,
+   "latency_s": 0.011
+  }
+ ]
+}

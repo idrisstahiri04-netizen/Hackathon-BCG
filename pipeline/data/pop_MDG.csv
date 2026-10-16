@@ -1,0 +1,120 @@
+unit_id,unit_name,pop_millions,source,year
+10022922B83786714905046,1er Arrondissement,0.09,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B64856352127888,2e Arrondissement,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B59270450060951,3e Arrondissement,0.08,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B42847936410668,4e Arrondissement,0.10,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B36895306051586,5e Arrondissement,0.42,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B53755400100934,6e Arrondissement,0.28,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B7475622417535,Ambalavao,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B10293113814705,Ambanja,0.26,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B29824664852903,Ambato Boeni,0.40,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B11162683268422,Ambatofinandrahana,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B90393204210047,Ambatolampy,0.23,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B59098628147577,Ambatomainty,0.04,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B15285270155057,Ambatondrazaka,0.36,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B52521872200932,Ambilobe,0.31,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B61088153240222,Amboasary-Atsimo,0.26,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B52736847594449,Ambohidratrimo,0.97,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B34392392155891,Ambohimahasoa,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B13687813160362,Ambositra,0.25,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B3330352702203,Ambovombe-Androy,0.64,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B9355726550011,Ampanihy Ouest,0.43,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B80147144228565,Amparafaravola,0.33,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B21608854890468,Analalava,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B40357207342555,Andapa,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B97539486376385,Andilamena,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B11040894453097,Andramasina,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B1306198900476,Anjozorobe,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B67140219559440,Ankazoabo,0.08,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B97289291498871,Ankazobe,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B56031688474611,Anosibe-An'ala,0.07,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B15279482214677,Antalaha,0.24,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B63046975451138,Antanambao Manampontsy,0.04,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B82805843876956,Antananarivo Atsimondrano,0.64,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B99940912082943,Antananarivo Avaradrano,1.35,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B69082959012584,Antanifotsy,0.33,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B48021466276127,Antsalova,0.10,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B38771191417556,Antsirabe I,0.05,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B65379850816186,Antsirabe II,0.64,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B77517626674469,Antsiranana I,0.04,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B22775533170221,Antsiranana II,0.26,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B54557741887580,Antsohihy,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B99194691228489,Arivonimamo,0.30,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B56468572037030,Bealanana,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B32579750162608,Befandriana Nord,0.29,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B11101019287712,Befotaka,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B6580820782603,Bekily,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B50417492685621,Belo Sur Tsiribihina,0.32,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B63714971659336,Beloha,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B93003724204974,Benenitra,0.05,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B39697778193382,Beroroha,0.04,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B83460232588272,Besalampy,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B74688195218658,Betafo,0.25,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B63491232053463,Betioky Atsimo,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B59412081262724,Betroka,0.24,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B71585303896889,Brickaville,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B23434626058692,Fandriana,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B75046296685916,Farafangana,0.54,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B80317071360034,Faratsiho,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B92224420422748,Fenerive Est,0.34,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B23923498940873,Fenoarivobe,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B21478747844721,Fianarantsoa I,0.06,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B30377745880071,Iakora,0.08,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B31790128040616,Ifanadiana,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B7074189327891,Ihosy,0.41,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B85703559853082,Ikalamavony,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B6018255004858,Ikongo,0.39,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B29889196912325,Isandra,0.10,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B57896428715958,Ivohibe,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B38821373259374,Kandreho,0.05,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B72540367204165,Lalangina,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B61824869015313,Maevatanana,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B70120442307447,Mahabo,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B60996293868186,Mahajanga I,0.09,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B51504984909978,Mahajanga II,0.33,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B42807663031303,Mahanoro,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B40533998311047,Maintirano,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B54995100782210,Mampikony,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B29911348985828,Manakara Atsimo,0.47,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B77596397547877,Mananara-Avaratra,0.26,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B47245353926014,Manandriana,0.08,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B52512193010711,Mananjary,0.37,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B69129581267436,Mandoto,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B13687974105922,Mandritsara,0.28,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B70385192089273,Manja,0.08,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B50774823120221,Manjakandriana,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B79548799707119,Maroantsetra,0.25,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B10629043557873,Marolambo,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B7387017022835,Marovoay,0.24,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B2580716977723,Miandrivazo,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B79563685419763,Miarinarivo,0.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B72475763343132,Midongy-Atsimo,0.08,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B34339999190032,Mitsinjo,0.05,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B27026898293410,Morafenobe,0.03,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B82658288648411,Moramanga,0.28,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B72547257848133,Morombe,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B91714644312966,Morondava,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B66036521727834,Nosy-Be,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B12403701465046,Nosy-Varika,0.29,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B55197674782137,Port-Berge (Boriziny-Vaovao),0.35,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B25342620887316,Sainte Marie,0.04,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B49716742274905,Sakaraha,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B78580830473532,Sambava,0.29,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B91378939255033,Soalala,0.10,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B56427545477040,Soanierana Ivongo,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B59328070281510,Soavinandriana,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B85658862424992,Taolagnaro,0.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B32937301443957,Toamasina I,0.03,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B55539380638871,Toamasina II,0.59,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B36331574429859,Toliary-I,0.03,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B75767771564463,Toliary-II,0.53,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B96360954496738,Tsaratanana,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B95964642483948,Tsihombe,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B70813515121555,Tsiroanomandidy,0.44,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B74242760889111,Vangaindrano,0.46,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B31178585124685,Vatomandry,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B54073545298219,Vavatenina,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B16213196407560,Vohemar,0.35,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B39439372576611,Vohibato,0.38,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B81120329184352,Vohipeno,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+10022922B86038713071830,Vondrozo,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020

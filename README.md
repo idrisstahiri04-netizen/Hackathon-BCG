@@ -70,15 +70,69 @@ the demo.
    probability. Herders get the message when the event is "no grass".
 6. **Scrub past the crisis.** Levels stand down slowly (hysteresis: 3 runs).
 
+### Forecast view (the predictions, not just today's level)
+
+The horizon switch under the HUD — **Now | +1 … +8** — turns the map from the
+alert levels into a forecast for the month `now + N`, issued at the end of the
+month on the slider. The **layer** switch picks what is drawn:
+
+- **Our model** — choropleth of the predicted chance of Crisis (`p_crisis`,
+  IPC 3+; falls back to `p` when `p_crisis` is null). Single-hue, light→dark,
+  five % bins with the country's Watch threshold as a bin edge. The HUD counts
+  districts at or above the threshold and the population in them.
+- **FEWS NET outlook** — the projected IPC phase (`fews_phase`, standard IPC
+  colours 1–5 with number and name) from the latest outlook published on or
+  before the issue month. The HUD counts districts projected at Phase 3+.
+- **Both** — our chance as the fill, the FEWS phase on the outline and sides.
+
+The legend is titled *"Forecast issued end of Feb 2024 for May 2024 — using only
+data available then"* and lists the bins/phases with counts. `L` cycles the layer.
+
+- **District panel**: headline *"Chance of Crisis by May 2024: 82%"* (or the
+  FEWS projected phase in the FEWS layer) plus a chart — past 6 issued months
+  (solid), our model +1..+8 (dotted; leads without model output are shaded "no
+  model forecast"), the Watch threshold line, and a stepped strip of the FEWS
+  NET projected phase per lead with ML1 / ML2 brackets and the publication
+  month, so the ~4-month outlook steps are visible.
+- **Feed column**: *Top 10 districts most at risk, next 3 months* for the issue
+  month on the slider (ranked on the highest chance over +1..+3; click a row to
+  fly to the district).
+- **Confidence per lead** next to every forecast (horizon buttons, caption,
+  legend, panel, Top-10 note). Read from `meta.metrics.forecast_skill`
+  (`{"1":{roc_auc|confidence},…}`, "tested skill per lead") when the export has
+  it; otherwise the back-test defaults **+1 Medium-High · +2 Medium · +3
+  Low-Medium** ("based on back-tests"); leads beyond the tested model show
+  *"no model forecast — FEWS NET only"*. From +3 on the view adds *"+N-month
+  forecasts show season-level risk; district detail is less certain."* Live
+  months (t > 71) with partly-null forecast fields add *"live: some inputs
+  missing (see data notes)"*. The FEWS layers add *"How to read: FEWS NET
+  outlook updates ~3×/year, so its layer changes in steps; our model updates
+  monthly."*
+- **Timeline**: when `meta.live_t` is set the slider shows a blue **TODAY** tick
+  and a **Go to today** button; `meta.n_months` may exceed 72.
+- **Data contract**: `pipeline/CONTRACT.md` §4 / §4b (`forecast: {"1".."8"}`
+  per row with `p, p_crisis, fews_phase, fews_scenario, fews_published,
+  target_label, source`). Only real fields are shown; missing leads or layers
+  say *"pending"*. For leads 1–3 without a `forecast` key the UI derives a
+  fallback from the existing real fields only (`p_crisis`, a 1–3 month window,
+  so the same number at +1/+2/+3; `p` for +1) and says so. `js/real.js`
+  `forecastAt(row, lead)` is the single seam.
+- Test: `node tests/e2e/forecast_view.js` (own server on :8601, own Chrome;
+  screenshots `tests/e2e/screens/forecast_*.png`).
+
 ### Controls
 
 | Input | Action |
 |---|---|
 | `space` | play / pause (also with the slider focused) |
 | `←` `→` | step one month |
+| `F` | toggle Now ↔ forecast (last used lead, default +3) |
+| `0` … `8` | Now, +1 … +8 months |
+| `L` | cycle the forecast layer: our model → FEWS NET outlook → both |
 | `esc` | close the county panel |
 | click a county | open its detail panel |
 | click a notification | jump to that month and fly to that county |
+| click a Top-10 row | fly to that district and open its panel |
 
 ### Deep links (stage insurance)
 
@@ -88,6 +142,8 @@ a moment:
 ```
 ?country=Zimbabwe&t=63                   # Apr 2024, Zimbabwe declaration month
 ?country=Zimbabwe&t=63&county=Binga      # district detail (name match, case-insensitive)
+?country=Zimbabwe&t=61&view=f3           # Feb 2024, forecast for May 2024 (view = now | f1 … f8)
+?country=Zimbabwe&t=57&view=f6&layer=both # Oct 2023, +6 months, our chance + FEWS NET phase outline
 ?country=Kenya&t=26                      # Mar 2021, drought spreading
 ?country=Kenya&t=33&county=Marsabit      # Oct 2021, just after the declaration
 ?country=Kenya&t=48&county=Turkana       # Jan 2023, peak crisis

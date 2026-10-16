@@ -11,6 +11,8 @@ backend/gateway.py      GATEWAY=android|sim|log
 backend/llm.py          Claude wrapper (strict JSON via structured outputs; reads text blocks only)
 backend/advice.yaml     approved advice library (DEMO CONTENT, to be validated by WHH/extension)
 backend/seed_demo.py    fake demo subscribers (+2126000000xx) in northern Zimbabwe
+backend/crowd.py        crowd signal: 1/2/3 reports per district (consent, 7-day dedup) + display-level rule
+backend/seed_crowd.py   4 DEMO-marked crowd reports in one district (default Hurungwe), --clear removes them
 backend/check_gateway.py  test the Android gateway connection / send one test SMS / register webhooks
 ```
 

@@ -1,0 +1,9 @@
+/kaggle/working/pipeline/train.py:123: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  fam = ae.families(X[cols], ins, inr, X["unit_id"].map(crop_dom or {}).fillna(False).values)
+/kaggle/working/pipeline/train.py:123: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  fam = ae.families(X[cols], ins, inr, X["unit_id"].map(crop_dom or {}).fillna(False).values)
+/kaggle/working/pipeline/train.py:123: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  fam = ae.families(X[cols], ins, inr, X["unit_id"].map(crop_dom or {}).fillna(False).values)
+/kaggle/working/pipeline/train.py:123: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  fam = ae.families(X[cols], ins, inr, X["unit_id"].map(crop_dom or {}).fillna(False).values)
+rows=159271 cv=141288 test=13496 cols=58

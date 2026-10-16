@@ -1,0 +1,7 @@
+MDG {"iso3": "MDG", "ipc_rows": 27921, "scenarios": {"CS": 4220, "ML1": 11929, "ML2": 11772}, "unit_types": {"fsc_admin_lhz": 27903, "admin0": 18}, "features": {"fsc_admin_lhz": {"n_features": 312, "bytes": 69915082}}, "fnids_ipc": 313, "fnids_with_geometry": 312, "fnids_missing_geometry": ["MG"]}
+UGA {"iso3": "UGA", "ipc_rows": 55896, "scenarios": {"CS": 8453, "ML1": 23730, "ML2": 23713}, "unit_types": {"fsc_admin_lhz": 54817, "idp_camp": 884, "national_park": 177, "admin0": 18}, "features": {"fsc_admin_lhz": {"n_features": 1484, "bytes": 82918719}, "idp_camp": {"n_features": 13, "bytes": 11833}, "national_park": {"n_features": 2, "bytes": 1586203}}, "fnids_ipc": 633, "fnids_with_geometry": 632, "fnids_missing_geometry": ["UG"]}
+TZA {"error": "KeyError('projection_start')"}
+AGO {"iso3": "AGO", "ipc_rows": 79, "scenarios": {"CS": 18, "ML1": 31, "ML2": 30}, "unit_types": {"fsc_rm_admin": 61, "admin0": 18}, "features": {"fsc_rm_admin": {"n_features": 1, "bytes": 255250}}, "fnids_ipc": 2, "fnids_with_geometry": 1, "fnids_missing_geometry": ["AO"]}
+NAM {"error": "KeyError('projection_start')"}
+BWA {"error": "KeyError('projection_start')"}
+ZAF {"error": "KeyError('projection_start')"}

@@ -94,3 +94,19 @@ units x 2 windows x 3 products (seasonal_fc).
 
 `scripts/kaggle/push_data.sh` run 2026-10-16 19:38 UTC: 86 files (77 MB) staged, new version of
 `omarserghini/drought-signals` created, tree hash `8cd4054b46dd061c`, status `ready`.
+
+## 7. Kenya live soil moisture (sm1_z down to about -6 SD): checked 2026-10-16, real, kept
+
+Pitch review flagged KEN `sm1_z` near -6 in the live months. Checked against the raw cache
+(`pipeline/cache/KEN/era5_<year>.json`, ERA5-Land `volumetric_soil_water_layer_1`, m3/m3) and Earth Engine:
+- **No unit or version change.** The 2025-2026 raw values are in the same m3/m3 range as 2001-2024 (e.g. Busia
+  0.25-0.39, Turkana 0.02-0.12). The 2026-05..09 `MONTHLY_AGGR` images are full months (time_end = month end,
+  normal asset size). The z-scores use the same 2001-2020 per-unit, per-calendar-month baseline as history
+  (Busia Sep 2026: (0.256 - 0.353) / 0.021 = -4.6, as stored).
+- **The large |z| comes from a tiny baseline SD.** Western Kenya topsoil sits near field capacity in Jun-Sep
+  (Kakamega Aug SD 0.018 m3/m3), so a real drop to 0.29 gives z of about -6. History has the same effect (2021: -7.4).
+- **Other sources agree it is dry.** Busia / Kakamega / Bungoma Jun-Aug 2026: CHIRPS SPI-3 -1.6 to -2.8,
+  ERA5 t2m +3.7 to +5.4 SD. So the values are not masked (masking real data would be fabricating "normal").
+- Effect on alerts: none beyond the sign. The soil family is a threshold (`sm1_z <= -1`, rainy season +1 month
+  only); magnitude does not change levels. UI text should show such values as "far below normal" rather than
+  as a precise SD.

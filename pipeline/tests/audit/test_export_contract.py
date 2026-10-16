@@ -13,8 +13,8 @@ from conftest import PIPE, make_long
 ROOT = PIPE.parent
 META_KEYS = {"iso3", "country", "start_year", "n_months", "live_t", "declaration", "model_version", "metrics", "generated_at"}
 DECL_KEYS = {"t", "date", "label"}
-UNIT_KEYS = {"id", "name", "series"}
-ROW_KEYS = {"t", "level", "held", "p", "p_crisis", "confidence", "agreeing", "families", "event", "horizon", "drivers", "signals", "forecast"}
+UNIT_KEYS = {"id", "name", "urban", "series"}
+ROW_KEYS = {"t", "level", "held", "watch_reason", "p", "p_crisis", "confidence", "agreeing", "families", "event", "horizon", "drivers", "signals", "forecast"}
 FAM_KEYS = {"rain", "vegetation", "soil", "heat"}
 SIG_KEYS = {"spi_1m", "spi_3m", "ndvi_z_crop", "ndvi_z_grass", "vci_crop", "vci_grass", "sm1_z", "t2m_z"}
 EVENTS = {"none", "cant_plant", "crop_failure", "no_grass"}
@@ -60,6 +60,7 @@ def validate(doc, iso3):
     if len(ids) != len(set(ids)): E("duplicate unit ids")
     for u in doc["units"]:
         if set(u) != UNIT_KEYS: E(f"unit {u.get('id')} keys {sorted(u)}"); continue
+        if not isinstance(u["urban"], bool): E(f"unit {u['id']} urban not bool")
         if not isinstance(u["name"], str): E(f"unit {u['id']} name")
         s = u["series"]
         if len(s) != n: E(f"unit {u['id']} series length {len(s)}"); continue
@@ -72,6 +73,8 @@ def validate(doc, iso3):
             if not (isint(r["level"]) and 0 <= r["level"] <= 3): E(f"{tag} level {r['level']}")
             if not isinstance(r["held"], bool): E(f"{tag} held {r['held']!r} not bool")
             if r["held"] and r["level"] == 0: E(f"{tag} held at level 0")
+            if (r["watch_reason"] is None) != (r["level"] == 0): E(f"{tag} watch_reason {r['watch_reason']!r} at level {r['level']}")
+            if r["level"] >= 2 and r["watch_reason"] != "district_evidence": E(f"{tag} Warning+ not district_evidence")
             for pk in ("p", "p_crisis"):      # contract: 0-1 or null (missing is missing)
                 if not (r[pk] is None or (isnum(r[pk]) and 0 <= r[pk] <= 1)): E(f"{tag} {pk} {r[pk]}")
             if r["confidence"] not in ("low", "medium", "high"): E(f"{tag} confidence {r['confidence']}")

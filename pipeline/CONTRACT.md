@@ -56,8 +56,9 @@ Rings clockwise (see prep_data.py note), simplified, 3 dp.
 {
   meta: { iso3, country, start_year: 2019, n_months: 72,
           declaration: { t, date, label }, model_version, metrics: {...}, generated_at },
-  units: [ { id, name, series: [   // length n_months, t = 0 is Jan 2019
-     { t, level (0-3, after hysteresis), held (bool: level kept only by hysteresis, raw level lower), p (0-1 or null; satellite-event probability, information only), p_crisis (0-1 or null; FEWS NET-informed P(enter IPC3+ within 1-3 months), shown to NGOs as "chance of Crisis within 3 months"), confidence ("low"|"medium"|"high"),
+  units: [ { id, name, urban (bool: town/city unit, pipeline/urban_units.py; level shown, no farmer/herder SMS, not in farm Warning counts), series: [   // length n_months, t = 0 is Jan 2019
+     { t, level (0-3, after hysteresis), held (bool: level kept only by hysteresis, raw level lower),
+       watch_reason (null at level 0, else "district_evidence" | "ipc_outlook" | "climate_readiness"; climate readiness is country-wide by design (ENSO/NMME); Warning+ is always district_evidence; held rows keep the reason that raised them), p (0-1 or null; satellite-event probability, information only), p_crisis (0-1 or null; FEWS NET-informed P(enter IPC3+ within 1-3 months), shown to NGOs as "chance of Crisis within 3 months"), confidence ("low"|"medium"|"high"),
        agreeing (int, number of families in alarm), families: { rain: bool, vegetation: bool, soil: bool, heat: bool },
        event ("none"|"cant_plant"|"crop_failure"|"no_grass"), horizon (weeks),
        drivers: [string, ...max 3], signals: { spi_1m, spi_3m, ndvi_z_crop, ndvi_z_grass, vci_crop, vci_grass, sm1_z, t2m_z } }

@@ -1,0 +1,16 @@
+{
+  "cv_base_rate": 0.245,
+  "watch": {
+    "rate": 0.148,
+    "precision": 0.297,
+    "recall": 0.179,
+    "f1": 0.224
+  },
+  "warn": {
+    "rate": 0.035,
+    "precision": 0.333,
+    "recall": 0.047,
+    "f1": 0.083
+  },
+  "note": "levels come from the spec family rule; p is information only (v1.1, audit B3)"
+}

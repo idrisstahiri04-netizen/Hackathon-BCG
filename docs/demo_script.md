@@ -1,195 +1,172 @@
-# Live demo script — 3 minutes
+# Live demo script: 3 minutes
 
-Companion to `docs/pitch.md` (slide 5). Three people:
+Goes with `docs/pitch.md` (slide 5). Three people:
 
-| Role | Who | Has |
-| --- | --- | --- |
-| **Speaker** | talks, never touches the laptop | printed copy of this page |
-| **Driver** | laptop, browser, clicks | second tab with deep links, third tab with the backup video |
-| **Phone** | holds the gateway Android phone, watches the jury phone | gateway app open, charger |
+| Role | Does |
+| --- | --- |
+| **Speaker** | Talks. Never touches the laptop. Has this page printed. |
+| **Driver** | Laptop and browser. Tab 1 is the demo, Tab 2 the deep links, Tab 3 the backup video. |
+| **Phone** | Holds the gateway Android phone and looks after the jury member's phone. |
 
-Everything shown is real: real satellite data, real model output, real SMS. Say so once, early.
+Written for the **final export**: `data/risk/ZWE.js` (`sat-v1-ensemble-ZWE_KEN_MWI_ZMB`, generated 2026-10-16 20:07 UTC).
+Month index: t=57 is Oct 2023 · 61 Feb 2024 · 62 Mar 2024 · 63 Apr 2024 (declaration on 3 Apr) · 66 Jul 2024 · **92 Sep 2026 (today)**.
+Every month is an **issue month**: issued at the end of month t from data of month t-1.
+Keys: `space` play/pause · `←` `→` one month · `0` Now · `1`…`8` lead · `L` cycles the layer (our model → FEWS NET → both) · `esc` closes the panel.
+**Play at 1× only** (950 ms a month). At 2× the pause sometimes lands a month late (`pipeline/audit/e2e_demo.md`, F1).
 
-Built against the **final export** `data/risk/ZWE.js`, `sat-v1-ensemble-ZWE_KEN_MWI_ZMB`, **16:53 UTC**.
-Month index `t`: 0 = Jan 2019 · 57 = Oct 2023 · 62 = Mar 2024 · 63 = Apr 2024 (declaration 3 Apr) · 66 = Jul 2024.
-Months are **issue months**: the level at t is issued at the end of month t from data of month t-1
-(latency already applied; never add it again, never call them data months).
+## Facts the lines below use (all counted on the 20:07 file)
 
-## The one rule that decides the live SMS
+| Moment | What is on screen |
+| --- | --- |
+| Oct 2023 (t=57), Now view | 37 districts at Watch, 0 at Warning |
+| Oct 2023, forecast +1…+3 / +4…+7 | FEWS NET Phase 3+: 26 / 38 districts. Our chance of Crisis ≥ 57 %: 8 / 40 districts (40 = 5.7 M people, +4…+6; +7 is FEWS NET only; +8 is empty) |
+| Mbire at t=57 | FEWS Phase 2 at +1…+3, Phase 3 at +4…+7 (Feb–May 2024). Our chance: 15 % at +1…+3, 57 % at +4…+6 |
+| Feb 2024 (t=61), +2 or +3 | 33 districts ≥ 57 % (4.8 M people). Top: Plumtree 91 %, Mutare, Lupane and Gwanda 81 %, Hwange 77 % |
+| Watch count, Nov 2023 → Jul 2024 | 91 of 91 (Ready, driver "climate readiness (El Niño + dry forecast)") |
+| Warning count, t=60…66 | 3, 4, **7** (Mar), **22** (Apr), 50, 50, 46. Emergency 46 in May–Jun |
+| Hwange, t=63 | Rises 1 → 2. Event **no_grass** (so the SMS goes to **herders**), 3 of 3 families, confidence high, p 83 %, NGO chance of Crisis 94 %. Drivers: cropland greenness 9/100, grazing land greenness 15/100, topsoil moisture -1.9 SD |
+| Mbire, t=63 | Also rises 1 → 2, no_grass, 3/3, high: the "north" answer |
+| Today (t=92, Sep 2026) | 87 Normal, 4 Watch (Harare, Harare Rural, Mvurwi, Norton, held). **No Zimbabwe forecast for this issue** (all leads say "no model forecast"). Kenya t=92: 6 Warning, live forecast +1…+5 |
 
-`/alerts/run` creates an event for a district **only in the month its level rises** (`backend/app.py`,
-`lvl <= plvl: continue`). The event's type fixes the audience (`backend/composer.py`): Warning with
-event `no_grass` → **herders**; any other Warning event → **farmers**; Emergency → everyone. So the
-jury member's role must match the event type **of the rise month**. A herder in a district whose rise
-month says *crop failure* receives nothing (red-team finding, `docs/redteam.md` §2).
-
-**Live choice: `JOIN Hwange herder`, alerts run at t = 63.** In the final export Hwange rises 0 → 2 at
-t=63 with event `no_grass`, all three families, confidence high, p 0.69, drivers "cropland greenness
-9/100", "grazing land greenness 15/100", "topsoil moisture -1.9 SD". Same month, same role, same event
-for Tsholotsho, Bulilima, Plumtree, Umguza, Victoria Falls (fallback districts, all herder/no_grass at t=63).
-
-### Verify on the day (Driver, after any re-export)
-
-```bash
-cd /home/looooo/bcg/Hackathon-BCG && python3 -I - <<'EOF'
-import json
-s = open('data/risk/ZWE.js').read()
-j = json.loads(s[s.index('= {') + 2:].rstrip().rstrip(';'))
-print(j['meta']['model_version'], j['meta']['generated_at'])
-print('HERDER-eligible rises (level rises to 2 with event no_grass, or to 3), Oct 2023..Jun 2024:')
-for u in j['units']:
-    ser = u['series']
-    for t in range(57, 66):
-        c, p = ser[t], ser[t - 1]
-        if c['level'] >= 2 and c['level'] > p['level'] and (c['event'] == 'no_grass' or c['level'] == 3):
-            print(f"  t={t}  {u['name']:<24} L{c['level']} {c['event']:<12} agree={c['agreeing']} {c['confidence']:<6} p={c['p']:.2f} drivers={len(c['drivers'])}")
-print('Watch+ count t57..66:', [sum(1 for u in j['units'] if u['series'][t]['level'] >= 1) for t in range(57, 67)])
-print('Warning+ count t57..66:', [sum(1 for u in j['units'] if u['series'][t]['level'] >= 2) for t in range(57, 67)])
-EOF
-```
-
-Expected with the 16:53 file: `Hwange` at `t=63 L2 no_grass agree=3 high p=0.69 drivers=3`;
-Watch+ `[13, 13, 12, 3, 4, 22, 69, 84, 83, 51]`; Warning+ `[0, 0, 0, 0, 0, 4, 26, 43, 48, 33]`.
-If any of this differs, the file changed again: pick the earliest northern herder-eligible row, update
-the district and `t` below and on slide 5, and tell the pipeline owner to re-run the judge.
-
-Other facts the lines below rely on (16:53 file):
-- t=57 (Oct 2023): 13 districts at Watch (south-east and Harare), none at Warning.
-- t=62 (issued end of March 2024): **22 at Watch**, including **Mbire, Karoi, Rushinga** (all three families, confidence high) and Uzumba Maramba Pfungwe; **4 at Warning** (Chitungwiza, Epworth, Harare Rural, Ruwa; crop failure).
-- t=63 (issued end of April, the red line): **26 at Warning**: Hwange, Hwange Urban, Tsholotsho, Bulilima, Plumtree, Victoria Falls, Bulawayo, Umguza, Umzingwane, Insiza, Bubi, Bindura, Marondera, Goromonzi, Seke, Mudzi, Kadoma Urban and the Harare units. 4 at Emergency (Harare-area units).
-- 48 of 91 reach Warning by June; Hwange is back to Normal at t=66 (Jul 2024).
-- Wet 2020/21: zero Warnings; 2020: zero Emergency. Safe to scrub anywhere, but the 3 minutes stay in Oct 2023 – Jul 2024.
-- Mbire never reaches Warning in the final export (Watch from t=61). Do not promise a Mbire Warning.
-- Do not point at t=62 Hwange: all three families agree, p 0.69, but level 0 (hysteresis: first run). If asked: "The signals are there in March; the level waits for a second run. That is the rule that keeps wet years quiet."
+Herder SMS (134 septets, GSM-7, 1 segment, no probability):
+`WARNING Hwange: grazing drying fast. Sell weak animals early while prices hold, plan herd moves. Reply 1 ok 2 poor 3 bad. STOP to quit`
 
 ---
 
 ## Minute by minute
 
-### 0:00 – 0:25 · The globe, the country, the line to beat
+### 0:00–0:15 · The line to beat
 
 | Driver | Speaker says |
 | --- | --- |
-| Tab 1 is already on `http://localhost:8777/?country=Zimbabwe&t=57`. Globe shows Zimbabwe, 91 districts, timeline at Oct 2023. Thirteen yellow in the south-east, nothing orange. | "This is Zimbabwe, October 2023, start of the rainy season. Ninety-one districts, none at Warning; a few on Watch in the south-east from the last dry year. Every colour you will see is real satellite data and real model output; nothing is simulated." |
-| Points cursor at the red dashed line on the timeline. | "The red line is 3 April 2024, the day the government declared a national disaster." |
+| Tab 1 is already on `?country=Zimbabwe&t=57`. Point at the red dashed line. | "Zimbabwe, October 2023. Ninety-one districts. The red line is 3 April 2024, the day the drought became a national disaster. Everything here is real data, nothing is simulated." |
 
-Stage insurance: if the page did not load, reload the same URL. If the globe is black, see Fallbacks.
-
-### 0:25 – 1:05 · Play the season
+### 0:15–0:55 · The forecast (the centrepiece)
 
 | Driver | Speaker says |
 | --- | --- |
-| Press **space** at 2× speed. Nov, Dec, Jan, Feb pass; the map goes quiet (3–4 yellow). | "Rains came late. The system stays quiet while it is unsure; that is on purpose." |
-| At **Mar 2024 (t=62)** press **space** to pause. 22 yellow, 4 orange around Harare. | "End of March, days before the declaration. Twenty-two districts on Watch, Mbire, Karoi and Rushinga in the north among them, all three families agreeing: rain, plants, soil. Watch goes to NGOs and extension officers, not to farmers." |
-| Step once with **→** onto t=63, the red line. 26 orange. | "End of April: twenty-six districts tip to Warning. Hwange, Tsholotsho, Bulilima, Victoria Falls. Four weeks after the declaration, not before. We will show you why we accept that in a minute." |
+| Press `3` (forecast +3), then `L` until the layer is **FEWS NET outlook**. | "This is the forecast issued in October 2023, using only what was public then. FEWS NET says Phase 2, stressed, until January." |
+| Press `4`, `5`, `6`, `7`: the map steps to Phase 3 (38 districts). | "From February it says Crisis. FEWS NET updates about three times a year, so it moves in steps." |
+| Press `L` to get **both**, then `4`. Click **Mbire** (north). The chart shows 15 % at +1…+3 and 57 % at +4. | "Our model turns that into a number for each district, every month. Mbire, in the north: 15 percent now, 57 percent by February. Forty districts, almost six million people, are above our line." |
 
-Stage insurance: `?country=Zimbabwe&t=62` (22 Watch, 4 Warning), `?country=Zimbabwe&t=63` (26 Warning). Both bookmarked in Tab 2.
+Insurance: `?country=Zimbabwe&t=57&view=f4&layer=both&county=Mbire`
 
-### 1:05 – 1:40 · One district, one message
+### 0:55–1:15 · Before the declaration
 
 | Driver | Speaker says |
 | --- | --- |
-| Still at t=63. Click **Hwange** on the map. Detail panel opens. | "Hwange, north-west, cattle country. Event: *no grass*. All three families agree. Confidence high. Drivers in plain words: grazing land greenness fifteen out of a hundred, cropland nine, topsoil moisture far below normal." |
-| Click the **Herders** tab in the panel. Point at the character count. | "The herder gets one SMS, one segment, 160 characters, one action: sell weak animals early while prices hold. No probability. The NGO tab is the one with the number." |
+| `→` four times to Feb 2024 (t=61). Press `2`. Point at the Top-10 list. | "February 2024, five weeks before the declaration. Thirty-three districts, nearly five million people, have a high chance of Crisis by April. This is 'Ready': it goes to aid workers, not farmers, and it is allowed to be wrong." |
 
-Stage insurance: `?country=Zimbabwe&t=63&county=Hwange` opens straight on the panel.
+Insurance: `?country=Zimbabwe&t=61&view=f2`
 
-### 1:40 – 2:35 · The live SMS moment (jury member)
+### 1:15–1:35 · From Ready to Go
 
-Before the demo the Phone person has asked one jury member to keep their phone out. The Moroccan
-gateway number is on a card and on slide 5.
+| Driver | Speaker says |
+| --- | --- |
+| Press `0` (Now). `→` to Mar 2024 (t=62): everything yellow, 7 orange. `→` to Apr 2024 (t=63): 22 orange. | "Now the observed levels. Ready since November, everywhere. Warning needs proof from space, dry plants plus dry rain or soil, two months in a row. Seven districts in March, twenty-two in April." |
+| Click **Hwange** (or the deep link). Panel: No grass, 3/3, high. Click the **Herders** tab. | "Hwange, cattle country. No grass. All three families agree. The herder gets one SMS, one action, no percentage." |
+
+Insurance: `?country=Zimbabwe&t=63&county=Hwange`
+
+### 1:35–2:35 · The live SMS loop (jury member)
 
 | Who | Does | Speaker says |
 | --- | --- | --- |
-| Jury member | Texts **JOIN Hwange herder** to the gateway number. | "Please send *JOIN Hwange herder* to the number on the card." |
-| Driver | Clicks the **Users joining** tab. Within ~5 s the new subscriber appears; Claude Haiku has read the text and matched the district. | "There you are. The AI read your message, matched Hwange to our district list, and signed you up as a herder. It asks you to confirm." |
+| Jury member | Texts **JOIN Hwange herder** to the number on the card. | "Please text JOIN Hwange herder." |
+| Driver | **Users joining** tab: the row appears within about 5 s. | "The AI read it, matched Hwange to our district list, and asks you to confirm." |
 | Jury member | Replies **YES**. | |
-| Driver | Back to **Map**, confirm the clock says **Apr 2024 (t=63)**, click **Run alerts for this month**. Then the **Alert feed** tab: the Hwange Warning event sits at *pending approval* among the others created for that month. | "April 2024, the month Hwange's grazing signal tipped it into Warning. A Warning never goes out by itself. A human approves it." |
-| Driver | Clicks **Approve & send** on the **Hwange** event only. | "Approved. Sent." |
-| Jury member | Phone buzzes: the real herder Warning for Hwange, one segment. | "Read it out, please." (pause for the message) |
-| Jury member | Replies **We can't manage** (or anything in that spirit). | "Now tell us you need help." |
-| Driver | **Alert feed / messages**: intent *ask_help*, reply "An officer will contact you", a help request is open. | "The AI did not try to be a hero. It opened a help request and a person takes over. That is the whole loop: watch, tell one person, listen back." |
+| Driver | **Map**, check the clock says **Apr 2024**, click **Run alerts for this month**. Then **Alert feed**: Hwange is "Waiting for approval". Click **Approve & send** on **Hwange only**. | "A Warning never goes out by itself. A person approves it." |
+| Jury member | The phone buzzes with the Warning above. | "Read it out, please." |
+| Jury member | Texts **how do I save my cattle?** | "Ask it something." |
+| Phone | The reply is livestock advice from the approved list. | "The answer comes only from advice WHH approved. The AI does not invent it." |
+| Jury member | Texts **3** | "Now report: three means bad." |
+| Driver | **Map**: Hwange shows a crowd badge (✔), the panel says "crowd-confirmed · already at Warning", and the feed says "crowd report: Hwange 3 of 5 say failed". | "Your report confirms the satellite. Replies can confirm a level. They can never trigger one." |
+| Jury member | Texts **We need help** | |
+| Phone / Driver | Reply: "An officer will contact you soon…". A help request opens. | "Distress goes straight to a person." |
 
-Timing guard: if the jury's phone has not buzzed within 15 seconds of Approve, go to Fallback A without comment.
+15-second rule: if the jury phone has not buzzed 15 s after Approve, switch to Fallback A without comment.
 
-Never say "weeks early" about this message. If a judge asks about lead time, answer: "With real data
-delays, Warning came four weeks after the declaration; Watch came days before, in twenty-two districts.
-An earlier, looser model warned forty-six districts before the declaration but also lit up every district
-every year. We kept the strict one. Zero warnings in the wet year before."
-
-### 2:35 – 3:00 · Close
+### 2:35–3:00 · Today
 
 | Driver | Speaker says |
 | --- | --- |
-| Scrub to **Jul 2024 (t=66)**; Hwange and many others have stepped down. Then back to the pitch deck, slide 6. | "After the crisis, levels stand down slowly, three runs, so nobody gets a false all-clear. Everything you saw runs on free data, one model run a month, and a phone with a SIM card. The honest numbers are on the next slide." |
+| Close the panel (`esc`). Click **Go to today** (Sep 2026). Press `1`. | "This is today, September 2026, the dry season. Zimbabwe is calm. The leads say 'no model forecast': we forecast the rainy season, and the first 2026/27 forecast comes with the October data." |
+| (Only if 10 s are left) Tab 2: `?country=Kenya&t=92&view=f1`. | "Kenya's short rains start now. The live forecast is already running there." |
+| Back to the deck, slide 6. | "Forecasts to get ready, satellites to act, one SMS to the person who decides." |
+
+Never say "weeks early" about the Hwange SMS. If asked: "The Warning came the month of the declaration. The Ready signal came in November, and the district forecast by February."
 
 ---
 
-## Deep links (Tab 2, in this order)
+## Deep links (Tab 2, checked against the 20:07 file)
 
 ```
-http://localhost:8777/?country=Zimbabwe&t=57                     Oct 2023, 13 Watch, no Warnings
-http://localhost:8777/?country=Zimbabwe&t=62                     end Mar 2024: 22 Watch (north incl.), 4 Warning
-http://localhost:8777/?country=Zimbabwe&t=63                     end Apr 2024, red line: 26 Warning
-http://localhost:8777/?country=Zimbabwe&t=63&county=Hwange       Hwange panel: no grass, 3 families, herder SMS
-http://localhost:8777/?country=Zimbabwe&t=62&county=Mbire        Mbire at Watch, 3 families (for the "north" question)
-http://localhost:8777/?country=Zimbabwe&t=66                     Jul 2024, standing down
+http://localhost:8777/?country=Zimbabwe&t=57                                  Oct 2023, Now: 37 Watch, 0 Warning
+http://localhost:8777/?country=Zimbabwe&t=57&view=f3&layer=fews               Oct 2023 → Jan 2024: FEWS Phase 3+ in 26 (Mbire Phase 2)
+http://localhost:8777/?country=Zimbabwe&t=57&view=f4&layer=both&county=Mbire  Oct 2023 → Feb 2024: Mbire 57 %, FEWS Phase 3; 40 districts ≥ 57 %
+http://localhost:8777/?country=Zimbabwe&t=61&view=f2                          Feb 2024 → Apr 2024: 33 districts ≥ 57 %
+http://localhost:8777/?country=Zimbabwe&t=62                                  Mar 2024: 91 Watch, 7 Warning
+http://localhost:8777/?country=Zimbabwe&t=63&county=Hwange                    Apr 2024: 22 Warning; Hwange no grass, herder SMS
+http://localhost:8777/?country=Zimbabwe&t=63&county=Mbire                     Apr 2024: Mbire Warning, no grass (north)
+http://localhost:8777/?country=Zimbabwe&t=92                                  Today, Sep 2026: 87 Normal, 4 Watch
+http://localhost:8777/?country=Kenya&t=92&view=f1                             Kenya today, +1 (Oct 2026): West Pokot 43 %, Baringo 37 %
 ```
-
-Append `&api=http://localhost:8000` if the backend runs on another host or port.
-
-Only use Zimbabwe on stage. Zambia and Malawi files (`data/risk/ZMB.js`, `MWI.js`) are still the
-**16:29–16:31 exports** with the old thresholds and no latency; do not open them until re-exported.
-Kenya (16:52) only if someone has checked it.
+Add `&api=http://localhost:8000` if the backend runs on another host or port.
 
 ## Fallbacks, in order
 
-**A. Phone tab (on-screen simulator).** Same router, same backend, no radio.
-Driver clicks **Phone** tab, types `JOIN Hwange herder`, then `YES`, then runs/approves the t=63 alert exactly
-as above; the Warning appears in the on-screen thread; type `We need food help`. Speaker: "The venue radio is
-slow, so here is the same conversation on screen; the code path is identical."
-
-**B. Pre-seeded subscriber.** `backend/seed_demo.py` already holds "Demo Herder Hwange" on a placeholder
-number; before the session re-point it to a real team phone (local `.env`-driven run only, never committed).
-If the jury member's JOIN never arrives, approve the Hwange event; the team phone buzzes; hand it to the jury
-member to read and reply.
-
-**C. Backend down.** The map still works without the backend (Phone/Users/Alert tabs show "Backend
-offline"). Finish the map part, then play the recorded video for the SMS loop.
-
-**D. Recorded video (Tab 3, local file, muted).** Full 3-minute run recorded the night before.
-Driver presses play; Speaker narrates over it with the same lines. Never apologise for more than one sentence.
+- **A. On-screen phone (simulator).** Same router, same backend, no radio. In the **Phone** tab type `JOIN Hwange herder` → `YES`, then run and approve as above, then `how do I save my cattle?` → `3` → `We need help`. Say: "Venue radio is slow, so here is the same conversation on screen. The code path is identical."
+- **B. Pre-seeded herder.** `backend/seed_demo.py` has "Demo Herder Hwange". Before the session, re-point it to a team phone (local `.env` only, never commit it). If the jury JOIN never arrives, approve Hwange and hand the team phone to the jury member.
+- **C. Backend down.** The map works without the backend. Finish the forecast and map part, then play the video for the SMS loop.
+- **D. Backup video** (Tab 3, local file, muted). The full 3 minutes, recorded the night before. The Speaker talks over it. Apologise in one sentence at most.
 
 ---
 
-## Pre-demo checklist (T-30 min)
+## T-30 checklist
 
-Backend and data
-- [ ] `head -1 data/risk/ZWE.js` says `Real model output - pipeline/export_risk.py (sat-v1-…)`, not `STUB`. Zimbabwe shows `LIVE` in the country list.
-- [ ] Run the **Verify on the day** command; output matches the expected lines (Hwange t=63 herder; Warning+ `[0,0,0,0,0,4,26,43,48,33]`). If not, update this page and slide 5, and tell the pipeline owner to re-run `judge.py` / `compare_ipc.py`.
-- [ ] `python3 -m http.server 8777` running from the repo root (not `file://`). Open `http://localhost:8777` once; globe renders, textures load (vendored, no network needed).
-- [ ] Backend: `/home/looooo/bcg/.venv/bin/uvicorn backend.app:app --host 0.0.0.0 --port 8000`; `curl -s localhost:8000/health` returns ok; the `backend …` dot in the top bar is green.
-- [ ] `.env` has `ANTHROPIC_API_KEY`; from the Phone tab send `JOIN Mbire farmer` and get the confirmation question back (proves the Haiku router works, not just the keyword fast-path).
-- [ ] `backend/demo.db` deleted (clean reset), then `python -m backend.seed_demo`, then the Fallback-B team phone set as herder in Hwange.
-- [ ] **Dry run of the exact live path:** Phone tab `JOIN Hwange herder` → `YES`; `POST /alerts/run {"iso3":"ZWE","t":63}`; approve the Hwange event; the simulated phone shows the **herder** text (sell weak animals). If it shows a farmer text or nothing, the role/event do not match: re-run the verify command and pick another row. Then delete `demo.db` and re-seed so the live run creates a fresh event (the run de-duplicates on unit + month + level).
-- [ ] `MONTHLY_CAP` default 6 is fine; the jury member receives at most one alert.
+**Data**
+- [ ] Run the verify command below. The output must match the expected lines. If it does not, the file changed: update this page and slides 4–6 before going on stage.
 
-Android gateway
-- [ ] Gateway phone charged > 60 %, charger plugged in, screen-lock off, battery optimisation off for the gateway app.
-- [ ] `GATEWAY=android` in `.env`, `ANDROID_GW_URL/USER/PASS` set; `python backend/check_gateway.py` passes; `python backend/check_gateway.py +2126XXXXXXXX` arrives on a team phone within 10 s.
-- [ ] Inbound webhook works (HTTPS tunnel up if cloud mode): text `STOP` from a team phone, see it in **Alert feed / messages**, then re-subscribe the team phone.
-- [ ] Moroccan SIM has credit for at least 50 SMS; the number is printed on cards and on slide 5.
-- [ ] Phone person has the jury member's consent; one test SMS to them before the session if possible.
+```bash
+cd /home/looooo/bcg/Hackathon-BCG && python3 -I - <<'EOF'
+import json
+s = open('data/risk/ZWE.js').read(); k = 'RISK_DATA["ZWE"] ='
+j, _ = json.JSONDecoder().raw_decode(s[s.index(k) + len(k):].lstrip())
+U = {u['name']: u for u in j['units']}; m = j['meta']
+print(m['generated_at'], m['live_t'])
+print('Watch+  t57-66', [sum(u['series'][t]['level'] >= 1 for u in j['units']) for t in range(57, 67)])
+print('Warning t57-66', [sum(u['series'][t]['level'] >= 2 for u in j['units']) for t in range(57, 67)])
+f = U['Mbire']['series'][57]['forecast']
+print('Mbire t57', [(k, f[k]['p_crisis'], f[k]['fews_phase']) for k in '1234567'])
+print('t61 +2 >=0.57', sum((u['series'][61]['forecast']['2']['p_crisis'] or 0) >= 0.57 for u in j['units']))
+h, p = U['Hwange']['series'][63], U['Hwange']['series'][62]
+print('Hwange t63', p['level'], '->', h['level'], h['event'], h['agreeing'], h['confidence'], h['p'])
+EOF
+```
+Expected:
+```
+2026-10-16T20:07:34+00:00 92
+Watch+  t57-66 [37, 91, 91, 91, 91, 91, 91, 91, 91, 91]
+Warning t57-66 [0, 0, 0, 3, 4, 7, 22, 50, 50, 46]
+Mbire t57 [('1', 0.152, 2), ('2', 0.152, 2), ('3', 0.152, 2), ('4', 0.565, 3), ('5', 0.565, 3), ('6', 0.565, 3), ('7', None, 3)]
+t61 +2 >=0.57 33
+Hwange t63 1 -> 2 no_grass 3 high 0.832
+```
 
-Browser
-- [ ] Chrome, one window, three tabs: (1) demo at `?country=Zimbabwe&t=57`, (2) deep links, (3) backup video. All other tabs and notifications closed.
-- [ ] Zoom 125 % for the projector; check the detail panel and the SMS character count are readable from the back of the room.
-- [ ] Playback speed 2× selected; `space`, `←`, `→` tested; `esc` closes the panel.
-- [ ] Projector resolution checked; the feed column and timeline are both visible (no cut-off at the bottom).
-- [ ] Wifi may be off entirely: the globe is offline-safe. Only the backend's Claude calls and the gateway (cloud mode) need internet; if venue wifi is down, use the phone's hotspot for the laptop.
+**Stack**
+- [ ] `scripts/start_demo.sh --fresh`. This wipes `backend/demo.db`, starts the backend on :8000 and the site on :8777, and seeds the demo users. All checks must say `[ok]`.
+- [ ] `/home/looooo/bcg/.venv/bin/python -m backend.seed_crowd --district Hwange`. `start_demo.sh` does **not** do this, and the default district is Hurungwe. It seeds 4 reports, share 0.50, so the jury's "3" tips it to 3 of 5.
+- [ ] The backend dot in the top bar is green. Zimbabwe shows LIVE.
+- [ ] Dry run in the **Phone** tab: `JOIN Hwange herder` → `YES` → Run alerts at Apr 2024 → Approve Hwange. The herder text appears. Then run `scripts/start_demo.sh --fresh` again and re-seed the crowd, so the live run creates a new event.
+- [ ] From the Phone tab, `how do I save my cattle?` gets advice (this proves the Claude key works). `We need help` gets the officer reply.
 
-People
-- [ ] Speaker has this page printed; the numbers 22 / 4 / 26 / 48 / zero-in-2020-21 match slide 6.
-- [ ] Driver has rehearsed the click path three times, including Fallback A.
-- [ ] Phone person knows the 15-second rule and the hand-off for Fallback B.
-- [ ] Nobody says a number that is not on a slide. Nobody says "weeks early" about the Hwange message. Nobody opens Malawi or Zambia.
+**Gateway**
+- [ ] Real SMS: `GATEWAY=android` and `ANDROID_GW_URL/USER/PASS` in `.env`. Run with `BACKEND_HOST=0.0.0.0` if the phone must reach the laptop. `python backend/check_gateway.py +2126…` reaches a team phone within 10 s.
+- [ ] Gateway phone charged above 60 %, plugged in, screen lock off, battery saver off for the gateway app. The SIM has credit for 50+ SMS. The number is on the cards.
+- [ ] No radio or no credit: stay on `GATEWAY=sim` and use Fallback A from the start.
+
+**Browser and people**
+- [ ] Chrome, one window. Tab 1 `?country=Zimbabwe&t=57`, Tab 2 the deep links, Tab 3 the video. Notifications off. Zoom 125 %. Speed **1×**.
+- [ ] Driver has rehearsed the click path 3 times, including Fallback A. Phone knows the 15-second rule.
+- [ ] Nobody opens Malawi (monitoring only) or the countries that stop in 2024. Nobody says a number that is not on this page or a slide.
+- [ ] Optional regression: `node tests/e2e/demo_flow.js --runs 1` (on its own ports, about 3 min). It was last run on the 18:40 export, so if it fails, compare the failure with this page.

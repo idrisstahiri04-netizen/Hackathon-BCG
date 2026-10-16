@@ -1,0 +1,431 @@
+{
+  "checks": {
+    "search_lists_14": {
+      "pass": true,
+      "info": {
+        "missing": [],
+        "list": [
+          "Zimbabwe LIVE",
+          "Kenya LIVE",
+          "Malawi LIVE",
+          "Zambia LIVE",
+          "Mozambique LIVE",
+          "Tanzania LIVE",
+          "Ethiopia LIVE",
+          "Somalia LIVE",
+          "Namibia LIVE",
+          "Botswana LIVE",
+          "South Africa LIVE",
+          "Madagascar LIVE",
+          "Angola LIVE",
+          "Uganda LIVE"
+        ]
+      }
+    },
+    "countries_live_render": {
+      "pass": true,
+      "info": {
+        "ZWE": {
+          "pass": true,
+          "live": "Zimbabwe LIVE",
+          "geoN": 91,
+          "riskN": 91,
+          "hud": "91 districts · disaster declared 3 Apr 2024",
+          "legendN": 91,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "KEN": {
+          "pass": true,
+          "live": "Kenya LIVE",
+          "geoN": 47,
+          "riskN": 47,
+          "hud": "47 counties · disaster declared 8 Sep 2021",
+          "legendN": 47,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "MWI": {
+          "pass": true,
+          "live": "Malawi LIVE",
+          "geoN": 28,
+          "riskN": 28,
+          "hud": "28 districts · disaster declared 23 Mar 2024",
+          "legendN": 28,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "ZMB": {
+          "pass": true,
+          "live": "Zambia LIVE",
+          "geoN": 116,
+          "riskN": 116,
+          "hud": "116 districts · disaster declared 29 Feb 2024",
+          "legendN": 116,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "MOZ": {
+          "pass": true,
+          "live": "Mozambique LIVE",
+          "geoN": 156,
+          "riskN": 156,
+          "hud": "156 districts · no national declaration in replay window",
+          "legendN": 156,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "TZA": {
+          "pass": true,
+          "live": "Tanzania LIVE",
+          "geoN": 170,
+          "riskN": 170,
+          "hud": "170 districts · no national declaration in replay window",
+          "legendN": 170,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "ETH": {
+          "pass": true,
+          "live": "Ethiopia LIVE",
+          "geoN": 74,
+          "riskN": 74,
+          "hud": "74 zones · no national declaration in replay window",
+          "legendN": 74,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "SOM": {
+          "pass": true,
+          "live": "Somalia LIVE",
+          "geoN": 118,
+          "riskN": 118,
+          "hud": "118 districts · disaster declared 23 Nov 2021",
+          "legendN": 118,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "NAM": {
+          "pass": true,
+          "live": "Namibia LIVE",
+          "geoN": 103,
+          "riskN": 103,
+          "hud": "103 constituencies · disaster declared 22 May 2024",
+          "legendN": 103,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "BWA": {
+          "pass": true,
+          "live": "Botswana LIVE",
+          "geoN": 25,
+          "riskN": 25,
+          "hud": "25 districts · disaster declared 20 Jun 2024",
+          "legendN": 25,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "ZAF": {
+          "pass": true,
+          "live": "South Africa LIVE",
+          "geoN": 52,
+          "riskN": 52,
+          "hud": "52 municipalities · disaster declared 4 Mar 2020",
+          "legendN": 52,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "MDG": {
+          "pass": true,
+          "live": "Madagascar LIVE",
+          "geoN": 119,
+          "riskN": 119,
+          "hud": "119 districts · no national declaration in replay window",
+          "legendN": 119,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "AGO": {
+          "pass": true,
+          "live": "Angola LIVE",
+          "geoN": 157,
+          "riskN": 157,
+          "hud": "157 municipalities · no national declaration in replay window",
+          "legendN": 157,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        },
+        "UGA": {
+          "pass": true,
+          "live": "Uganda LIVE",
+          "geoN": 151,
+          "riskN": 151,
+          "hud": "151 districts · no national declaration in replay window",
+          "legendN": 151,
+          "mv": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB"
+        }
+      }
+    },
+    "data_mbire_phases": {
+      "pass": true,
+      "info": {
+        "1": [
+          2,
+          "ML1",
+          0.152
+        ],
+        "2": [
+          2,
+          "ML1",
+          0.152
+        ],
+        "3": [
+          2,
+          "ML1",
+          0.152
+        ],
+        "4": [
+          3,
+          "ML2",
+          0.565
+        ],
+        "5": [
+          3,
+          "ML2",
+          0.565
+        ],
+        "6": [
+          3,
+          "ML2",
+          0.565
+        ],
+        "7": [
+          3,
+          "ML2",
+          null
+        ],
+        "8": [
+          null,
+          null,
+          null
+        ]
+      }
+    },
+    "oct2023_fews_phase_mbire": {
+      "pass": true,
+      "info": {
+        "1": "2FEWS NET projected Phase 2 Stressed for Jan 2024 season · ML1 · published 2023-10",
+        "2": "2FEWS NET projected Phase 2 Stressed for Jan 2024 season · ML1 · published 2023-10",
+        "3": "2FEWS NET projected Phase 2 Stressed for Jan 2024 · ML1 · published 2023-10",
+        "4": "3FEWS NET projected Phase 3 Crisis for Feb 2024 · ML2 · published 2023-10",
+        "5": "3FEWS NET projected Phase 3 Crisis for Mar 2024 · ML2 · published 2023-10",
+        "6": "3FEWS NET projected Phase 3 Crisis for Apr 2024 · ML2 · published 2023-10",
+        "7": "3FEWS NET projected Phase 3 Crisis for May 2024 · ML2 · published 2023-10",
+        "8": "?FEWS NET projected no outlook for Jun 2024"
+      }
+    },
+    "oct2023_f8_honest": {
+      "pass": true,
+      "info": {
+        "cap": "FEWS NET projected IPC phase for Jun 2024 · issued end of Oct 2023Confidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly.",
+        "fews": "?FEWS NET projected no outlook for Jun 2024",
+        "legend": [
+          "1Phase 1 Minimal—",
+          "2Phase 2 Stressed—",
+          "3Phase 3 Crisis—",
+          "4Phase 4 Emergency—",
+          "5Phase 5 Famine—",
+          "?no outlook91"
+        ]
+      }
+    },
+    "oct2023_model_layer": {
+      "pass": true,
+      "info": {
+        "clock": "Oct 2023",
+        "on": "f3",
+        "layer": "model",
+        "title": "Forecast issued end of Oct 2023 for Jan 2024 — using only data available then",
+        "stat": "8",
+        "statLab": "districts ≥ 57% chance of Crisis by Jan 2024",
+        "note": "Confidence Low-Medium — based on back-tests.+3-month forecasts show season-level risk; district detail is less certain.",
+        "cap": "Predicted chance of Crisis (IPC 3+) for Jan 2024 · issued end of Oct 2023 · darker = higherConfidence Low-Medium — based on back-tests+3-month forecasts show season-level risk; district detail is less certain.",
+        "conf": [
+          "M-H",
+          "M",
+          "L-M",
+          "?",
+          "?",
+          "?",
+          "FEWS",
+          "FEWS"
+        ],
+        "goToday": false,
+        "top10note": "Ranked on the highest chance over +1 to +3 months · Confidence +1 Medium-High · +2 Medium · +3 Low-Medium · +4 Untested · +5 Untested · +6 Untested (based on back-tests) · +7..+8: no model forecast — FEWS NET only"
+      }
+    },
+    "oct2023_chart_ml_step_pub": {
+      "pass": true,
+      "info": {
+        "hidden": false,
+        "big": "15%",
+        "chip": "Low-Medium confidence",
+        "confs": "2023 → 2024 · Confidence +1 Medium-High · +2 Medium · +3 Low-Medium · +4 Untested · +5 Untested · +6 Untested (based on back-tests) · +7..+8: no model forecast — FEWS NET only",
+        "braces": [
+          "ML1",
+          "ML2"
+        ],
+        "pub": "outlook published Oct 2023",
+        "steps": 8,
+        "stepsNone": 1,
+        "chart": true,
+        "notes": [
+          "+3-month forecasts show season-level risk; district detail is less certain."
+        ]
+      }
+    },
+    "oct2023_model_f8_pending": {
+      "pass": true,
+      "info": "Predicted chance of Crisis (IPC 3+) for Jun 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +8 yet (model leads 1–6)"
+    },
+    "feb2024_counts": {
+      "pass": true,
+      "info": {
+        "2": {
+          "ui": "33",
+          "data": 33,
+          "of": 91,
+          "lab": "districts ≥ 57% chance of Crisis by Apr 2024"
+        },
+        "3": {
+          "ui": "33",
+          "data": 33,
+          "of": 91,
+          "lab": "districts ≥ 57% chance of Crisis by May 2024"
+        }
+      }
+    },
+    "go_today_visible": {
+      "pass": true,
+      "info": null
+    },
+    "go_today_clock": {
+      "pass": true,
+      "info": "Sep 2026"
+    },
+    "live_f1_f8_render_and_notes": {
+      "pass": false,
+      "info": {
+        "1": {
+          "on": "f1",
+          "title": "Forecast issued end of Sep 2026 for Oct 2026 — using only data available then",
+          "stat": "50",
+          "nullUnits": 0,
+          "cap": "Predicted chance of Crisis (IPC 3+) for Oct 2026 · issued end of Sep 2026 · darker = higherConfidence Medium-High — based on back-tests",
+          "note": "Confidence Medium-High — based on back-tests.",
+          "legend": [
+            "457% – 75% (Watch)23",
+            "5≥ 75%27"
+          ]
+        },
+        "2": {
+          "on": "f2",
+          "title": "Forecast issued end of Sep 2026 for Nov 2026 — using only data available then",
+          "stat": "50",
+          "nullUnits": 0,
+          "cap": "Predicted chance of Crisis (IPC 3+) for Nov 2026 · issued end of Sep 2026 · darker = higherConfidence Medium — based on back-tests",
+          "note": "Confidence Medium — based on back-tests.",
+          "legend": [
+            "457% – 75% (Watch)23",
+            "5≥ 75%27"
+          ]
+        },
+        "3": {
+          "on": "f3",
+          "title": "Forecast issued end of Sep 2026 for Dec 2026 — using only data available then",
+          "stat": "50",
+          "nullUnits": 0,
+          "cap": "Predicted chance of Crisis (IPC 3+) for Dec 2026 · issued end of Sep 2026 · darker = higherConfidence Low-Medium — based on back-tests+3-month forecasts show season-level risk; district detail is less certain.",
+          "note": "Confidence Low-Medium — based on back-tests.+3-month forecasts show season-level risk; district detail is less certain.",
+          "legend": [
+            "457% – 75% (Watch)23",
+            "5≥ 75%27"
+          ]
+        },
+        "4": {
+          "on": "f4",
+          "title": "Forecast issued end of Sep 2026 for Jan 2027 — using only data available then",
+          "stat": "0",
+          "nullUnits": 0,
+          "cap": "Predicted chance of Crisis (IPC 3+) for Jan 2027 · issued end of Sep 2026 · darker = higherConfidence Untested — model output exists but no skill test for this lead+4-month forecasts show season-level risk; district detail is less certain.",
+          "note": "Confidence Untested — model output exists but no skill test for this lead.+4-month forecasts show season-level risk; district detail is less certain.",
+          "legend": [
+            "457% – 75% (Watch)0",
+            "5≥ 75%0"
+          ]
+        },
+        "5": {
+          "on": "f5",
+          "title": "Forecast issued end of Sep 2026 for Feb 2027 — using only data available then",
+          "stat": "0",
+          "nullUnits": 0,
+          "cap": "Predicted chance of Crisis (IPC 3+) for Feb 2027 · issued end of Sep 2026 · darker = higherConfidence Untested — model output exists but no skill test for this lead+5-month forecasts show season-level risk; district detail is less certain.",
+          "note": "Confidence Untested — model output exists but no skill test for this lead.+5-month forecasts show season-level risk; district detail is less certain.",
+          "legend": [
+            "457% – 75% (Watch)0",
+            "5≥ 75%0"
+          ]
+        },
+        "6": {
+          "on": "f6",
+          "title": "Forecast issued end of Sep 2026 for Mar 2027 — using only data available then",
+          "stat": "0",
+          "nullUnits": 0,
+          "cap": "Predicted chance of Crisis (IPC 3+) for Mar 2027 · issued end of Sep 2026 · darker = higherConfidence Untested — model output exists but no skill test for this lead+6-month forecasts show season-level risk; district detail is less certain.",
+          "note": "Confidence Untested — model output exists but no skill test for this lead.+6-month forecasts show season-level risk; district detail is less certain.",
+          "legend": [
+            "457% – 75% (Watch)0",
+            "5≥ 75%0"
+          ]
+        },
+        "7": {
+          "on": "f7",
+          "title": "Forecast issued end of Sep 2026 for Apr 2027 — using only data available then",
+          "stat": "—",
+          "nullUnits": 91,
+          "cap": "Predicted chance of Crisis (IPC 3+) for Apr 2027 · issued end of Sep 2026 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+7-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +7 yet (model leads 1–6)",
+          "note": "Confidence no model forecast — FEWS NET only — beyond tested leads.+7-month forecasts show season-level risk; district detail is less certain.No model forecast fields for +7 yet (model leads 1–6).",
+          "legend": [
+            "5≥ 75%—",
+            "?no forecast91"
+          ]
+        },
+        "8": {
+          "on": "f8",
+          "title": "Forecast issued end of Sep 2026 for May 2027 — using only data available then",
+          "stat": "—",
+          "nullUnits": 91,
+          "cap": "Predicted chance of Crisis (IPC 3+) for May 2027 · issued end of Sep 2026 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +8 yet (model leads 1–6)",
+          "note": "Confidence no model forecast — FEWS NET only — beyond tested leads.+8-month forecasts show season-level risk; district detail is less certain.No model forecast fields for +8 yet (model leads 1–6).",
+          "legend": [
+            "5≥ 75%—",
+            "?no forecast91"
+          ]
+        }
+      }
+    },
+    "mobile_no_hscroll_oct2023_f3": {
+      "pass": true,
+      "info": false
+    },
+    "mobile_no_hscroll_feb2024_f3": {
+      "pass": true,
+      "info": false
+    },
+    "mobile_no_hscroll_live_f2": {
+      "pass": true,
+      "info": false
+    },
+    "mobile_no_hscroll_uganda": {
+      "pass": true,
+      "info": false
+    },
+    "zero_js_errors": {
+      "pass": true,
+      "info": []
+    },
+    "zero_console_errors": {
+      "pass": true,
+      "info": []
+    }
+  },
+  "js": [],
+  "con": []
+}

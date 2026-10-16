@@ -1,5 +1,5 @@
 {
-  "pass": true,
+  "pass": false,
   "checks": {
     "oct2023_f3_view": {
       "pass": true,
@@ -12,17 +12,17 @@
         "nBtns": 9,
         "title": "Forecast issued end of Oct 2023 for Jan 2024 — using only data available then",
         "legend": [
-          "1< 20%48",
-          "220% – 40%32",
+          "1< 20%47",
+          "220% – 40%31",
           "340% – 57%5",
           "457% – 75% (Watch)6",
-          "5≥ 75%0"
+          "5≥ 75%2"
         ],
         "groups": [],
         "legendSum": 91,
         "phaseSum": 0,
         "noneCt": 0,
-        "statUnits": 6,
+        "statUnits": 8,
         "statLab": "districts ≥ 57% chance of Crisis by Jan 2024",
         "note": "Confidence Low-Medium — based on back-tests.+3-month forecasts show season-level risk; district detail is less certain.",
         "cap": "Predicted chance of Crisis (IPC 3+) for Jan 2024 · issued end of Oct 2023 · darker = higherConfidence Low-Medium — based on back-tests+3-month forecasts show season-level risk; district detail is less certain.",
@@ -40,14 +40,22 @@
           "M-H",
           "M",
           "L-M",
-          "FEWS",
-          "FEWS",
-          "FEWS",
+          "?",
+          "?",
+          "?",
           "FEWS",
           "FEWS"
         ],
         "url": "?country=Zimbabwe&t=57&view=f3",
         "top10": [
+          {
+            "name": "Plumtree",
+            "pc": "90%"
+          },
+          {
+            "name": "Redcliff",
+            "pc": "85%"
+          },
           {
             "name": "Chivi",
             "pc": "69%"
@@ -79,17 +87,9 @@
           {
             "name": "Kariba",
             "pc": "50%"
-          },
-          {
-            "name": "Kariba Urban",
-            "pc": "50%"
-          },
-          {
-            "name": "Binga",
-            "pc": "46%"
           }
         ],
-        "top10note": "Ranked on the highest chance over +1 to +3 months · Confidence +1 Medium-High · +2 Medium · +3 Low-Medium (based on back-tests) · +4..+8: no model forecast — FEWS NET only",
+        "top10note": "Ranked on the highest chance over +1 to +3 months · Confidence +1 Medium-High · +2 Medium · +3 Low-Medium · +4 Untested · +5 Untested · +6 Untested (based on back-tests) · +7..+8: no model forecast — FEWS NET only",
         "goToday": false,
         "todayMark": true,
         "scrubMax": 92
@@ -103,8 +103,8 @@
       "pass": true,
       "info": {
         "sum": 91,
-        "stat": 6,
-        "data": 6,
+        "stat": 8,
+        "data": 8,
         "lab": "districts ≥ 57% chance of Crisis by Jan 2024"
       }
     },
@@ -115,9 +115,9 @@
           "M-H",
           "M",
           "L-M",
-          "FEWS",
-          "FEWS",
-          "FEWS",
+          "?",
+          "?",
+          "?",
           "FEWS",
           "FEWS"
         ],
@@ -125,9 +125,9 @@
           "M-H",
           "M",
           "L-M",
-          "FEWS",
-          "FEWS",
-          "FEWS",
+          "?",
+          "?",
+          "?",
           "FEWS",
           "FEWS"
         ],
@@ -151,12 +151,12 @@
       }
     },
     "oct2023_all_leads_1_to_8": {
-      "pass": true,
+      "pass": false,
       "info": {
         "1": {
           "on": "f1",
-          "stat": 6,
-          "exp": 6,
+          "stat": 8,
+          "exp": 8,
           "none": 0,
           "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Nov 2023 — using only data available then",
@@ -164,8 +164,8 @@
         },
         "2": {
           "on": "f2",
-          "stat": 6,
-          "exp": 6,
+          "stat": 8,
+          "exp": 8,
           "none": 0,
           "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Dec 2023 — using only data available then",
@@ -173,8 +173,8 @@
         },
         "3": {
           "on": "f3",
-          "stat": 6,
-          "exp": 6,
+          "stat": 8,
+          "exp": 8,
           "none": 0,
           "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Jan 2024 — using only data available then",
@@ -182,48 +182,48 @@
         },
         "4": {
           "on": "f4",
-          "stat": 0,
-          "exp": 0,
-          "none": 91,
-          "expNone": 91,
+          "stat": 40,
+          "exp": 40,
+          "none": 0,
+          "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Feb 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Feb 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+4-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +4 yet (model leads 1–3)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for Feb 2024 · issued end of Oct 2023 · darker = higherConfidence Untested — model output exists but no skill test for this lead+4-month forecasts show season-level risk; district detail is less certain."
         },
         "5": {
           "on": "f5",
-          "stat": 0,
-          "exp": 0,
-          "none": 91,
-          "expNone": 91,
+          "stat": 40,
+          "exp": 40,
+          "none": 0,
+          "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Mar 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Mar 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+5-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +5 yet (model leads 1–3)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for Mar 2024 · issued end of Oct 2023 · darker = higherConfidence Untested — model output exists but no skill test for this lead+5-month forecasts show season-level risk; district detail is less certain."
         },
         "6": {
           "on": "f6",
-          "stat": 0,
-          "exp": 0,
-          "none": 91,
-          "expNone": 91,
+          "stat": 40,
+          "exp": 40,
+          "none": 0,
+          "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Apr 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Apr 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+6-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +6 yet (model leads 1–3)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for Apr 2024 · issued end of Oct 2023 · darker = higherConfidence Untested — model output exists but no skill test for this lead+6-month forecasts show season-level risk; district detail is less certain."
         },
         "7": {
           "on": "f7",
-          "stat": 0,
+          "stat": null,
           "exp": 0,
           "none": 91,
           "expNone": 91,
           "title": "Forecast issued end of Oct 2023 for May 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for May 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+7-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +7 yet (model leads 1–3)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for May 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+7-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +7 yet (model leads 1–6)"
         },
         "8": {
           "on": "f8",
-          "stat": 0,
+          "stat": null,
           "exp": 0,
           "none": 91,
           "expNone": 91,
           "title": "Forecast issued end of Oct 2023 for Jun 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Jun 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +8 yet (model leads 1–3)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for Jun 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +8 yet (model leads 1–6)"
         }
       }
     },
@@ -231,29 +231,17 @@
       "pass": true,
       "info": [
         {
-          "L": "4",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Feb 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+4-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +4 yet (model leads 1–3)"
-        },
-        {
-          "L": "5",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Mar 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+5-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +5 yet (model leads 1–3)"
-        },
-        {
-          "L": "6",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Apr 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+6-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +6 yet (model leads 1–3)"
-        },
-        {
           "L": "7",
-          "cap": "Predicted chance of Crisis (IPC 3+) for May 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+7-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +7 yet (model leads 1–3)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for May 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+7-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +7 yet (model leads 1–6)"
         },
         {
           "L": "8",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Jun 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +8 yet (model leads 1–3)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for Jun 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +8 yet (model leads 1–6)"
         }
       ]
     },
     "fews_layer": {
-      "pass": true,
+      "pass": false,
       "info": {
         "clock": "Oct 2023",
         "fcView": true,
@@ -263,21 +251,20 @@
         "nBtns": 9,
         "title": "Forecast issued end of Oct 2023 for Feb 2024 — using only data available then",
         "legend": [
-          "1Phase 1 Minimal0",
-          "2Phase 2 Stressed0",
-          "3Phase 3 Crisis0",
+          "1Phase 1 Minimal3",
+          "2Phase 2 Stressed50",
+          "3Phase 3 Crisis38",
           "4Phase 4 Emergency0",
-          "5Phase 5 Famine0",
-          "?no outlook91"
+          "5Phase 5 Famine0"
         ],
         "groups": [],
         "legendSum": 0,
         "phaseSum": 91,
         "noneCt": -1,
-        "statUnits": 0,
+        "statUnits": 38,
         "statLab": "districts projected IPC 3+ by Feb 2024 (FEWS NET)",
-        "note": "Confidence no model forecast — FEWS NET only — beyond tested leads.+4-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly.FEWS NET outlook fields pending (fews_phase).",
-        "cap": "FEWS NET projected IPC phase for Feb 2024 · issued end of Oct 2023Confidence no model forecast — FEWS NET only — beyond tested leads+4-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly.FEWS NET outlook fields pending (fews_phase)",
+        "note": "Confidence Untested — model output exists but no skill test for this lead.+4-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly.",
+        "cap": "FEWS NET projected IPC phase for Feb 2024 · issued end of Oct 2023Confidence Untested — model output exists but no skill test for this lead+4-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly.",
         "smalls": [
           "Nov '23",
           "Dec",
@@ -292,14 +279,22 @@
           "M-H",
           "M",
           "L-M",
-          "FEWS",
-          "FEWS",
-          "FEWS",
+          "?",
+          "?",
+          "?",
           "FEWS",
           "FEWS"
         ],
         "url": "?country=Zimbabwe&t=57&view=f4&layer=fews",
         "top10": [
+          {
+            "name": "Plumtree",
+            "pc": "90%"
+          },
+          {
+            "name": "Redcliff",
+            "pc": "85%"
+          },
           {
             "name": "Chivi",
             "pc": "69%"
@@ -331,17 +326,9 @@
           {
             "name": "Kariba",
             "pc": "50%"
-          },
-          {
-            "name": "Kariba Urban",
-            "pc": "50%"
-          },
-          {
-            "name": "Binga",
-            "pc": "46%"
           }
         ],
-        "top10note": "Ranked on the highest chance over +1 to +3 months · Confidence +1 Medium-High · +2 Medium · +3 Low-Medium (based on back-tests) · +4..+8: no model forecast — FEWS NET only",
+        "top10note": "Ranked on the highest chance over +1 to +3 months · Confidence +1 Medium-High · +2 Medium · +3 Low-Medium · +4 Untested · +5 Untested · +6 Untested (based on back-tests) · +7..+8: no model forecast — FEWS NET only",
         "goToday": false,
         "todayMark": true,
         "scrubMax": 92
@@ -355,7 +342,7 @@
           "Our model · chance of Crisis (fill)",
           "FEWS NET outlook · projected IPC phase (outline)"
         ],
-        "cap": "Our chance of Crisis (IPC 3+) as fill, FEWS NET projected phase on the outline for Feb 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+4-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly.no model forecast fields for +4 yet (model leads 1–3) · FEWS NET outlook fields pending (fews_phase)"
+        "cap": "Our chance of Crisis (IPC 3+) as fill, FEWS NET projected phase on the outline for Feb 2024 · issued end of Oct 2023 · darker = higherConfidence Untested — model output exists but no skill test for this lead+4-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly."
       }
     },
     "L_cycles_back_to_model": {
@@ -368,12 +355,12 @@
     "feb2024_high_risk_before_declaration": {
       "pass": true,
       "info": {
-        "ui": 32,
-        "data": 32,
+        "ui": 33,
+        "data": 33,
         "of": 91,
         "top": {
-          "n": "Lupane",
-          "v": 0.815
+          "n": "Plumtree",
+          "v": 0.906
         }
       }
     },
@@ -382,19 +369,23 @@
       "info": {
         "ui": [
           {
+            "name": "Plumtree",
+            "pc": "91%"
+          },
+          {
             "name": "Lupane",
             "pc": "82%"
           },
           {
             "name": "Gwanda",
             "pc": "81%"
-          },
-          {
-            "name": "Mutare",
-            "pc": "81%"
           }
         ],
         "data": [
+          {
+            "n": "Plumtree",
+            "v": 0.906
+          },
           {
             "n": "Lupane",
             "v": 0.815
@@ -402,13 +393,9 @@
           {
             "n": "Gwanda",
             "v": 0.814
-          },
-          {
-            "n": "Mutare",
-            "v": 0.812
           }
         ],
-        "note": "Ranked on the highest chance over +1 to +3 months · Confidence +1 Medium-High · +2 Medium · +3 Low-Medium (based on back-tests) · +4..+8: no model forecast — FEWS NET only"
+        "note": "Ranked on the highest chance over +1 to +3 months · Confidence +1 Medium-High · +2 Medium · +3 Low-Medium · +4 Untested · +5 Untested · +6 Untested (based on back-tests) · +7..+8: no model forecast — FEWS NET only"
       }
     },
     "today_marker_live_t": {
@@ -424,24 +411,26 @@
       "pass": true,
       "info": {
         "hidden": false,
-        "name": "Lupane",
-        "big": "82%",
+        "name": "Plumtree",
+        "big": "91%",
         "target": "May 2024",
         "lab": "Chance of Crisis by May 2024:",
-        "fews": "?FEWS NET projected pending for May 2024",
+        "fews": "2FEWS NET projected Phase 2 Stressed for May 2024 · ML1 · published 2024-02",
         "chip": "Low-Medium confidence",
-        "confs": "2023 → 2024 · Confidence +1 Medium-High · +2 Medium · +3 Low-Medium (based on back-tests) · +4..+8: no model forecast — FEWS NET only",
+        "confs": "2023 → 2024 · Confidence +1 Medium-High · +2 Medium · +3 Low-Medium · +4 Untested · +5 Untested · +6 Untested (based on back-tests) · +7..+8: no model forecast — FEWS NET only",
         "hasChart": true,
         "dotted": true,
         "thr": true,
         "solid": true,
         "noModel": true,
-        "futDots": 3,
+        "futDots": 6,
         "steps": 8,
-        "stepsNone": 8,
+        "stepsNone": 1,
         "braces": [
-          "FEWS NET outlook: pending"
+          "ML1",
+          "ML2"
         ],
+        "pub": "outlook published Feb 2024",
         "xLabels": [
           "+1",
           "+2",
@@ -457,10 +446,10 @@
         ],
         "read": "How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly.",
         "oldBig": [
-          "43%",
-          "0/3"
+          "46%",
+          "held"
         ],
-        "selRow": "Lupane"
+        "selRow": "Plumtree"
       }
     },
     "key_F_and_digits": {
@@ -509,7 +498,7 @@
       "pass": true,
       "info": {
         "hidden": false,
-        "big": "82%",
+        "big": "91%",
         "chart": true,
         "steps": 8,
         "fits": true
@@ -606,11 +595,15 @@
     "n_months": 93,
     "live_t": 92,
     "thr": 0.57,
-    "maxModelLead": 3,
-    "hasFews": false,
-    "hot3_oct2023": 6,
-    "hot3_feb2024": 32,
+    "maxModelLead": 6,
+    "hasFews": true,
+    "hot3_oct2023": 8,
+    "hot3_feb2024": 33,
     "top_feb2024": [
+      {
+        "n": "Plumtree",
+        "v": 0.906
+      },
       {
         "n": "Lupane",
         "v": 0.815
@@ -618,10 +611,6 @@
       {
         "n": "Gwanda",
         "v": 0.814
-      },
-      {
-        "n": "Mutare",
-        "v": 0.812
       }
     ]
   }

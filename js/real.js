@@ -75,8 +75,12 @@ const REAL = (() => {
 
   function audiencesFor(lvl, row) {
     const grazing = row && row.event === 'no_grass';
+    // Urban units (town councils, export flag `urban`): level stays visible,
+    // but no farmer / herder SMS - their signals describe surrounding farmland.
+    const urban = !!(row && row.urban);
     return Object.entries(AUDIENCES)
       .filter(([k, a]) => lvl >= a.minLevel)
+      .filter(([k]) => !(urban && (k === 'farmer' || k === 'herder')))
       .filter(([k]) => (k === 'herder' ? grazing : k === 'farmer' ? !grazing : true))
       .map(([k]) => k);
   }
@@ -156,6 +160,7 @@ const REAL = (() => {
           row.signals = row.signals || {};
           row.drivers = row.drivers || [];
           row.families = row.families || {};
+          row.urban = !!(r && r.urban);
           series.push(row);
         }
         return { id: f.properties.id, name: f.properties.name, props: f.properties, feature: f, series };
@@ -181,7 +186,9 @@ const REAL = (() => {
 
       const national = [];
       for (let t = 0; t < N_MONTHS; t++) {
-        national.push(units.filter(u => u.series[t].level >= 2).length / Math.max(1, units.length));
+        // farm Warning share: urban units keep their level on the map but are not counted
+        const farm = units.filter(u => !u.series[t].urban);
+        national.push(farm.filter(u => u.series[t].level >= 2).length / Math.max(1, farm.length));
       }
       return { units, events, national };
     }

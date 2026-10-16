@@ -1,0 +1,605 @@
+{
+ "iso3": "ZMB",
+ "model_version": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB",
+ "generated_at": "2026-10-16T21:30:58+00:00",
+ "unit_match": {
+  "our_units": 116,
+  "our_units_matched": 85,
+  "fews_districts": 90,
+  "fews_districts_matched": 86,
+  "our_unmatched": [
+   "Chasefu",
+   "Chembe",
+   "Chiengi",
+   "Chifunabuli",
+   "Chikankanta",
+   "Chipangali",
+   "Chirundu",
+   "Chisamba",
+   "Chitambo",
+   "Kalumbila",
+   "Kanchibiya",
+   "Kasenengwa",
+   "Lavushimanda",
+   "Limulunga",
+   "Luano",
+   "Lumezi",
+   "Lunte",
+   "Lupososhi",
+   "Lusangazi",
+   "Milengi",
+   "Mushindano",
+   "Mwandi",
+   "Mwansabombwe",
+   "Nalolo",
+   "Ngabwe",
+   "Nkeyema",
+   "Pemba",
+   "Senga Hill",
+   "Shiwang'Andu",
+   "Sikongo",
+   "Sioma"
+  ],
+  "fews_unmatched": [
+   "Chienge",
+   "Chikankata",
+   "Milenge",
+   "Shiwang\u2019andu"
+  ],
+  "method": "name match on admin2 element of FEWS NET fsc_admin_lhz full name; district = max over LHZ pieces"
+ },
+ "ipc_snapshots": [
+  "2016-02-01",
+  "2016-06-01",
+  "2016-10-01",
+  "2017-02-01",
+  "2017-06-01",
+  "2017-10-01"
+ ],
+ "seasons": {
+  "2019/20": {
+   "transition_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_watch": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "lead_weeks_warning": null,
+   "lead_weeks_watch": null,
+   "transition_fews_projection": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": null,
+   "n_transitions": 0,
+   "n_units_with_warning": 5
+  },
+  "2020/21": {
+   "transition_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_watch": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "lead_weeks_warning": null,
+   "lead_weeks_watch": null,
+   "transition_fews_projection": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": null,
+   "n_transitions": 0,
+   "n_units_with_warning": 2
+  },
+  "2021/22": {
+   "transition_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_watch": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "lead_weeks_warning": null,
+   "lead_weeks_watch": null,
+   "transition_fews_projection": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": null,
+   "n_transitions": 0,
+   "n_units_with_warning": 36
+  },
+  "2022/23": {
+   "transition_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_watch": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "lead_weeks_warning": null,
+   "lead_weeks_watch": null,
+   "transition_fews_projection": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": null,
+   "n_transitions": 0,
+   "n_units_with_warning": 8
+  },
+  "2023/24": {
+   "transition_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_watch": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "lead_weeks_warning": null,
+   "lead_weeks_watch": null,
+   "transition_fews_projection": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": null,
+   "n_transitions": 0,
+   "n_units_with_warning": 66
+  },
+  "2024/25": {
+   "transition_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_watch": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "lead_weeks_warning": null,
+   "lead_weeks_watch": null,
+   "transition_fews_projection": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": null,
+   "n_transitions": 0,
+   "n_units_with_warning": 26
+  },
+  "2025/26": {
+   "transition_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_watch": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "transition_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_warning": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "ipc3_window_persistence": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "lead_weeks_warning": null,
+   "lead_weeks_watch": null,
+   "transition_fews_projection": {
+    "n": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": null,
+   "n_transitions": 0,
+   "n_units_with_warning": 1
+  }
+ },
+ "all_seasons": {
+  "transition_warning": {
+   "n": 0,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tn": 0,
+   "precision": null,
+   "recall": null,
+   "f1": null
+  },
+  "transition_watch": {
+   "n": 0,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tn": 0,
+   "precision": null,
+   "recall": null,
+   "f1": null
+  },
+  "transition_persistence": {
+   "n": 0,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tn": 0,
+   "precision": null,
+   "recall": null,
+   "f1": null
+  },
+  "ipc3_window_warning": {
+   "n": 0,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tn": 0,
+   "precision": null,
+   "recall": null,
+   "f1": null
+  },
+  "ipc3_window_persistence": {
+   "n": 0,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tn": 0,
+   "precision": null,
+   "recall": null,
+   "f1": null
+  },
+  "lead_weeks_warning": null,
+  "lead_weeks_watch": null,
+  "transition_fews_projection": {
+   "n": 0,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tn": 0,
+   "precision": null,
+   "recall": null,
+   "f1": null
+  },
+  "warning_vs_fews_wk": null,
+  "fews_proj_lead_wk": null,
+  "n_transitions": 0,
+  "n_units_with_warning": 144
+ }
+}

@@ -172,8 +172,11 @@
     let nul = 0, tot = 0;
     const n = modelLeads();
     for (const u of MODEL.units) for (let L = 1; L <= n; L++) { tot++; if (fcAt(u, t, L).chance == null) nul++; }
-    return nul > 0 && nul < tot;
+    liveAllNull = tot > 0 && nul === tot;
+    return nul > 0;
   };
+  let liveAllNull = false;
+  const liveNote = () => (liveAllNull ? 'No forecast available for this month (inputs missing)' : NOTE_LIVE);
   // Pending text for the current lead/layer, or null when the fields exist.
   const pendingText = lead => {
     const bits = [];
@@ -297,7 +300,7 @@
     const term = q.trim().toLowerCase();
     const hits = term
       ? COUNTRIES.filter(c => c.name.toLowerCase().includes(term))
-      : COUNTRIES.slice(0, 6);
+      : COUNTRIES.filter(c => c.live || c.inProgress);
 
     resultsEl.innerHTML = '';
     if (!hits.length) {
@@ -552,6 +555,7 @@
   });
 
   // Target month under each lead button and the caption under the switch.
+  const pubLab = v => { const m = /^(\d{4})-(\d{2})/.exec(v || ''); return m && +m[2] >= 1 && +m[2] <= 12 ? `${MON[+m[2] - 1]} ${m[1]}` : v; };
   const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function updateViewCaption() {
     const live = !!(active && active.live);
@@ -576,7 +580,7 @@
       cap.append(el('div', null, `${what} for ${tgt} · issued end of ${iss}` + (layer === 'fews' ? '' : ' · darker = higher')));
       cap.append(el('div', 'vc-conf', `Confidence ${cf.label} — ${cf.source}`));
       if (lead >= 3) cap.append(el('div', 'vc-note', noteSeason(lead)));
-      if (liveGaps(now)) cap.append(el('div', 'vc-note', NOTE_LIVE));
+      if (liveGaps(now)) cap.append(el('div', 'vc-note', liveNote()));
       if (layer !== 'model') cap.append(el('div', 'vc-read', NOTE_READ));
       const pend = pendingText(lead);
       if (pend) cap.append(el('div', 'vc-pending', pend));
@@ -728,6 +732,7 @@
       people = hot.reduce((s, x) => s + (x.props.pop || 0), 0);
       u.textContent = String(hot.length);
       u.style.color = hot.length === 0 ? 'var(--lvl-0)' : 'var(--text-primary)';
+      if (MODEL.units.every(x => fcAt(x, now, lead).fews_phase == null)) u.textContent = '—';
       u.parentNode.querySelector('.stat-lab').textContent =
         `${unitWord} projected IPC 3+ by ${ENGINE.dateAt(now + lead).label} (FEWS NET)`;
       $('#stat-people').parentNode.querySelector('.stat-lab').textContent = 'population in them';
@@ -738,11 +743,12 @@
       people = hot.reduce((s, x) => s + (x.props.pop || 0), 0);
       u.textContent = String(hot.length);
       u.style.color = hot.length === 0 ? 'var(--lvl-0)' : 'var(--text-primary)';
+      if (MODEL.units.every(x => fcAt(x, now, lead).chance == null)) u.textContent = '—';
       u.parentNode.querySelector('.stat-lab').textContent =
         `${unitWord} ≥ ${pct(fcThr())} chance of Crisis by ${ENGINE.dateAt(now + lead).label}`;
       $('#stat-people').parentNode.querySelector('.stat-lab').textContent = 'population in them';
     } else {
-      hot = MODEL.units.filter((x, i) => rows[i].level >= 2);
+      hot = MODEL.units.filter((x, i) => rows[i].level >= 2 && !rows[i].urban);
       people = hot.reduce((s, x) => s + (x.props.pop || 0), 0);
       u.textContent = String(hot.length);
       u.style.color = hot.length === 0 ? 'var(--lvl-0)'
@@ -849,17 +855,17 @@
       if (li.dataset.bin != null) {
         const b = +li.dataset.bin;
         if (b < 0) { li.hidden = none === 0; ct.textContent = String(none); }
-        else ct.textContent = String(counts[b]);
+        else ct.textContent = none === MODEL.units.length ? '—' : String(counts[b]);
       } else if (li.dataset.phase != null) {
         const ph = +li.dataset.phase;
         if (ph === 0) li.hidden = phases[0] === 0;
-        ct.textContent = String(phases[ph]);
+        ct.textContent = phases[0] === MODEL.units.length && ph !== 0 ? '—' : String(phases[ph]);
       }
     });
     const cf = fcConf(lead);
     const lines = [{ c: 'ln-conf', s: `Confidence ${cf.label} — ${cf.source}.` }];
     if (lead >= 3) lines.push({ c: 'ln-note', s: noteSeason(lead) });
-    if (liveGaps(now)) lines.push({ c: 'ln-note', s: NOTE_LIVE });
+    if (liveGaps(now)) lines.push({ c: 'ln-note', s: liveNote() });
     if (layer !== 'model') lines.push({ c: 'ln-read', s: NOTE_READ });
     const pend = pendingText(lead);
     if (pend) lines.push({ c: 'ln-pending', s: pend[0].toUpperCase() + pend.slice(1) + '.' });
@@ -921,7 +927,7 @@
     note.hidden = false;
     note.textContent = `Ranked on the highest chance over +1 to +3 months · ${confLine()}` +
       (ENGINE.hasForecast ? '' : ' · forecast fields pending (p_crisis shown)') +
-      (liveGaps(now) ? ` · ${NOTE_LIVE}` : '');
+      (liveGaps(now) ? ` · ${liveNote()}` : '');
   }
 
   // =========================================================================
@@ -955,6 +961,14 @@
     if (!rebuild) feedEl.scrollTop = 0;
   }
 
+  // Plain words for why a unit is at Watch (export field watch_reason).
+  const WATCH_WORDS = {
+    climate_readiness: 'Ready: climate readiness (El Niño + dry forecast, country-wide)',
+    ipc_outlook: 'Ready: crisis outlook',
+    district_evidence: 'Watch: district evidence',
+  };
+  const watchWords = row => (row && row.level === 1 && WATCH_WORDS[row.watch_reason]) || null;
+
   function buildNote(e, animate) {
     if (e.kind === 'declaration') {
       const li = el('li', 'note decl' + (animate ? ' is-new' : ''));
@@ -985,6 +999,10 @@
       e.escalation
         ? `escalated from L${e.from} ${ENGINE.LEVELS[e.from].label}`
         : `stood down from L${e.from} ${ENGINE.LEVELS[e.from].label}`));
+
+    const evRow = (MODEL.units.find(x => x.id === e.id) || { series: [] }).series[e.t];
+    const ww = e.escalation && e.to === 1 ? watchWords(evRow) : null;
+    if (ww) li.append(el('div', 'n-line', ww));
 
     if (e.escalation) {
       const line = el('div', 'n-line');
@@ -1197,7 +1215,7 @@
       // publication month(s) once, so the brace labels never collide
       const pubs = [...new Set(scen.map(g => g.pub).filter(Boolean))];
       if (pubs.length) svg.append(svgEl('text', { x: W - padR, y: H - 2, class: 'fc-pub', 'text-anchor': 'end' },
-        `outlook published ${pubs.join(' / ')}`));
+        `outlook published ${pubs.map(pubLab).join(' / ')}`));
     } else {
       svg.append(svgEl('text', { x: (x(7) + x(14)) / 2, y: sy + sh + 14, class: 'fc-brace-lab', 'text-anchor': 'middle' },
         ENGINE.hasFews ? 'no FEWS NET outlook covers these months' : 'FEWS NET outlook: pending'));
@@ -1210,7 +1228,7 @@
     const yr0 = yearOf(pts.find(p => p.t >= 0)?.label), yr1 = yearOf(pts[pts.length - 1].label);
     sect.append(el('div', 'fc-confs', `${yr0 && yr1 && yr0 !== yr1 ? `${yr0} → ${yr1} · ` : yr1 ? `${yr1} · ` : ''}${confLine()}`));
     if (lead >= 3) sect.append(el('div', 'fc-note', noteSeason(lead)));
-    if (liveGaps(now)) sect.append(el('div', 'fc-note', NOTE_LIVE));
+    if (liveGaps(now)) sect.append(el('div', 'fc-note', liveNote()));
     sect.append(el('div', 'fc-read', NOTE_READ));
     const pend = pendingText(lead);
     if (pend) sect.append(el('div', 'fc-pending', pend[0].toUpperCase() + pend.slice(1) + '.'));
@@ -1243,6 +1261,8 @@
       (unit.props.pop != null ? ` · population ${fmtPop(unit.props.pop)}` : ''));
     if (ENGINE.EVENTS[row.event]) sub.append(el('span', 'evt', ENGINE.EVENTS[row.event]));
     ht.append(sub);
+    if (unit.series[now].urban) ht.append(el('div', 'sub', 'town unit — no farmer/herder SMS'));
+    if (watchWords(row)) ht.append(el('div', 'sub', watchWords(row)));
     const dl = dispLevel(unit, row), DL = ENGINE.LEVELS[dl];
     const chip = el('span', 'chip' + (dl !== row.level ? ' crowd-up' : ''),
       `${DL.glyph} L${dl} ${DL.label.toUpperCase()}`);

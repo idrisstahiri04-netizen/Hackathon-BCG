@@ -144,6 +144,39 @@ def _r(v):
     return None if v is None or (isinstance(v, float) and np.isnan(v)) else round(float(v), 3)
 
 
+FEWS_NA = "FEWS NET outlook not available"
+WATCH_REASONS = {"district_evidence": "district evidence (satellite / weather families)",
+                 "ipc_outlook": "FEWS NET-informed Crisis outlook (p_crisis)",
+                 "climate_readiness": "climate readiness (country-wide: El Niño + dry seasonal forecast)"}
+
+
+def watch_reasons(lvl, fam_raw, crisis, climate) -> list:
+    """Why a unit is at its level: district evidence (family rule) beats the IPC-outlook trigger, which beats
+    country-wide climate readiness. Rows held by hysteresis keep the reason that raised them."""
+    out, last = [], None
+    for k in range(len(lvl)):
+        now = ("district_evidence" if fam_raw[k] >= 1 else "ipc_outlook" if crisis[k]
+               else "climate_readiness" if climate[k] else None)
+        if lvl[k] == 0:
+            last = None
+            out.append(None)
+            continue
+        if lvl[k] >= 2:
+            now = "district_evidence"         # Warning/Emergency only come from the family rule
+        last = now or last
+        out.append(last)
+    return out
+
+
+def load_urban(iso3: str) -> set:
+    """Unit ids flagged urban by pipeline/urban_units.py (WorldCover built-up + WorldPop density)."""
+    f = Path(DATA_DIR) / "urban_units.csv"
+    if not f.exists():
+        return set()
+    d = pd.read_csv(f)
+    return set(d[(d.iso3 == iso3) & d.urban.astype(bool)].unit_id)
+
+
 def forecast_row(u, m, k, fp, flab, pc, pc46, fews, proxy=False) -> dict:
     out = {}
     g = fews.get(u) if fews else None
@@ -155,11 +188,14 @@ def forecast_row(u, m, k, fp, flab, pc, pc46, fews, proxy=False) -> dict:
         ipc_name = "IPC proxy (satellite-only)" if (proxy and L <= 3) else "IPC model"
         src = [x for x, ok in (("model", p is not None), (ipc_name, pcr is not None),
                                (f"FEWS {fw[1]}" if fw else "", fw is not None)) if ok]
+        source = "+".join(src) if src else "none"
+        if fw is None:                    # say why the FEWS layer is empty instead of a silent null
+            source = (f"{source}; " if src else "") + FEWS_NA
         out[str(L)] = {"p": p, "p_crisis": pcr,
                        "fews_phase": fw[0] if fw else None, "fews_scenario": fw[1] if fw else None,
                        "fews_published": fw[2] if fw else None,
                        "target_label": flab.get((u, m, L)) or T.strftime("%b %Y"),
-                       "source": "+".join(src) if src else "none"}
+                       "source": source}
     return out
 
 
@@ -266,6 +302,7 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
 
     pcr = load_p_crisis(iso3)
     disp = P["display"]
+    urban = load_urban(iso3)
     crop_dom = crop_dominant(P["c"])
     decl_m = pd.Timestamp(decl.year, decl.month, 1) if decl is not None else None
     units = []
@@ -284,6 +321,7 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
         p = b["p"].values                      # information only (NGO / food-bank text), not used for levels
         dif = np.array([decl_m is not None and (m >= decl_m) and (agyear(m) == agyear(decl_m)) for m in months])
         raw = ae.raw_levels(fam, dif)
+        fam_raw = raw.copy()
         # announcement/text family (FEWS NET-informed IPC model): may raise to Watch only, never higher
         if pcr is not None:
             pr_ = pcr.reindex(pd.MultiIndex.from_product([[u], months]))
@@ -311,6 +349,7 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
         # held is recomputed so capped rows are held only if the raw level is below Warning
         lvl = np.where((lvl == 3) & ~dif, 2, lvl)
         held = raw < lvl
+        why = watch_reasons(lvl, fam_raw, crisis, climate)
         plant = plant_months(P["ss"][u])
         st = P["c"].static.loc[u]
         default_ev = "no_grass" if (st["grass_frac"] or 0) > (st["crop_frac"] or 0) else "crop_failure"
@@ -330,7 +369,7 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
                 conf = "low"
             d = b["delta"].iloc[k]
             series.append({
-                "t": t, "level": int(lvl[k]), "held": bool(held[k]), "p": None if np.isnan(p[k]) else round(float(p[k]), 3),
+                "t": t, "level": int(lvl[k]), "held": bool(held[k]), "watch_reason": why[k], "p": None if np.isnan(p[k]) else round(float(p[k]), 3),
                 "p_crisis": None if np.isnan(pc[k]) else round(float(pc[k]), 3),
                 "confidence": conf, "agreeing": int(fam["agreeing"].iloc[k]), "families": f,
                 "event": ("none" if lvl[k] == 0 else
@@ -343,7 +382,7 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
                             + ([ae.CLIMATE_REASON] if climate[k] else []))[:3],
                 "signals": s,
                 "forecast": forecast_row(u, m, k, fp, flab, pc, pc46, fews, bool(pxy[k]))})
-        units.append({"id": u, "name": str(P["c"].names[u]), "series": series})
+        units.append({"id": u, "name": str(P["c"].names[u]), "urban": u in urban, "series": series})
 
     mj = json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
     win = bundle["winner"]
@@ -372,6 +411,16 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
                              "phase is below 3, may raise the level to Watch (1) only (NGO / officer audiences); "
                              "never Warning; farmers unchanged"},
         "fast_entry": False,
+        "watch_reason": {"values": WATCH_REASONS,
+                         "rule": "per row (null at Normal): district_evidence if the family rule fires, else ipc_outlook "
+                                 "if the p_crisis trigger fires, else climate_readiness; rows held by hysteresis keep "
+                                 "the reason that raised them; Warning/Emergency are always district_evidence"},
+        "urban_units": {"ids": sorted(x for x in urban if x in P["c"].names.index),
+                        "rule": "pipeline/urban_units.py: WorldCover v200 built-up share >= 0.15, or >= 0.05 with area "
+                                "< 1000 km2 or WorldPop density >= 1000/km2, or an official town/city unit name "
+                                "(area < 5000 km2)",
+                        "use": "levels stay visible; farmer/herder SMS and farm Warning counts exclude urban units "
+                               "(town councils: little cropland, signals describe the surrounding farmland)"},
         "forecast_skill": forecast_skill(metrics_path, bundle["winner"]),
         "training_data": (json.loads((Path(OUT_DIR) / "training_data.json").read_text())
                           if (Path(OUT_DIR) / "training_data.json").exists() else None),

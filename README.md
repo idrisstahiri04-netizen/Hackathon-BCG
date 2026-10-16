@@ -29,6 +29,49 @@ it also proxies the FEWS NET live feed.
 | **Events** | 500 real reclassifications |
 | **Live mode** | Current FEWS NET situation, re-pullable on demand |
 
+## Observed vs forecast — what the colours mean
+
+**The default view is the observed current situation, not a prediction.** That
+was previously ambiguous, so the UI now says so explicitly and lets you switch.
+
+The `Showing` control in the timeline footer selects what the map colours:
+
+| View | Scenario | Horizon | Source |
+|---|---|---|---|
+| **Now** | `CS` Current Situation | observed, 0–1 months | FEWS NET |
+| **+1.5 mo** | `ML1` Near-Term Projection | median **1.5** months ahead (0–4) | FEWS NET |
+| **+5 mo** | `ML2` Medium-Term Projection | median **5.0** months ahead (1–8) | FEWS NET |
+
+Those horizons are **measured from the data**, not assumed — each record's
+`projection_start`/`projection_end` against its `reporting_date`. All three
+scenarios exist for all 290 sub-counties.
+
+Every forecast on screen is **FEWS NET's own**. We do not predict anything.
+
+### How the difference is visible
+
+- **The headline contrast is always on screen.** Even on the observed view the
+  HUD reads e.g. *"16 units at Crisis+ now · 46 forecast at Crisis+ +1.5 mo"*.
+  That gap is the product.
+- **A trajectory strip** — `P2 ▲ P3 → P3` with Now / +1.5 mo / +5 mo labelled —
+  appears in the marker hover card and the detail panel. The active horizon is
+  highlighted, and arrows carry the direction of change.
+- **Areas forecast to deteriorate get a second, dashed rotating ring** on their
+  marker, and sort to the top of the marker list. Those are the areas early
+  warning exists for.
+- **A forecast view looks different**: violet tint on the scrim and legend, and
+  the legend title changes to "forecast +1.5 mo".
+- **Missing projections are marked, not filled.** If FEWS NET published no
+  projection for a unit, the trajectory shows `–` rather than silently
+  repeating the observed value.
+
+A good demo moment is **Jun 2021** (`t=28`): 16 sub-counties observed at
+Crisis, 46 forecast at Crisis within six weeks, 30 of them forecast to
+deteriorate.
+
+Live mode carries only `CS` and `ML1`, so **+5 mo is disabled there** rather
+than falling back to a shorter forecast dressed up as a longer one.
+
 ## Sign in as a role
 
 The app opens on a role picker — **Food bank / NGO** or **Government entity**.
@@ -122,7 +165,9 @@ If dragging the slider in front of an audience goes wrong, reload straight into
 a moment:
 
 ```
-?country=Kenya&role=ngo&t=11&tip=1       # Oct 2022 peak, NGO view, card open
+?country=Kenya&role=ngo&t=28&view=now    # Jun 2021 observed: 16 at Crisis
+?country=Kenya&role=ngo&t=28&view=ml1&tip=1   # same moment forecast: 46 at Crisis
+?country=Kenya&role=gov&t=11&tip=1       # Oct 2022 peak, government view
 ?country=Kenya&role=gov&t=11&tip=1       # same moment, government view
 ?country=Kenya&res=county&t=11           # county resolution instead
 ?country=Kenya&live=1                    # straight into the live FEWS NET feed

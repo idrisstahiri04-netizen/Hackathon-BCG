@@ -55,6 +55,7 @@
   let playing = false, speed = 1, timer = null;
   let active = null, selected = null, hovered = null;
   let liveMode = false;
+  let view = 'now';          // 'now' | 'ml1' | 'ml2' — what the colours mean
   let smsAudience = null;
 
   const featuresFor = r =>
@@ -135,11 +136,24 @@
   const unitAt = name => (MODEL ? MODEL.byName.get(name) : null);
 
   // Single source of truth for "what level is this unit showing".
-  function levelAt(name) {
-    if (liveMode) return liveLevel(name);
+  // The colour on screen is whatever horizon is selected: observed now, or
+  // FEWS NET's own 1.5- or 5-month projection. Never our own model.
+  function levelAt(name, v) {
+    const vv = v || view;
+    if (liveMode) return liveLevel(name, vv);
     const u = unitAt(name);
-    const lv = u ? u.series[now].level : null;
+    if (!u) return 0;
+    const lv = ENGINE.levelFor(u.series[now], vv);
     return lv == null ? 0 : lv;
+  }
+  // How a unit's forecast compares to its observed state: +1 worse, -1 better.
+  function trend(name) {
+    if (view === 'now') return 0;
+    const u = unitAt(name);
+    if (liveMode || !u) return 0;
+    const row = u.series[now];
+    if (!row.hasData || !ENGINE.hasProjection(row, view)) return 0;
+    return Math.sign(ENGINE.levelFor(row, view) - ENGINE.levelFor(row, 'now'));
   }
   function hasData(name) {
     if (liveMode) return !!(LIVE && LIVE.current && LIVE.current[liveKey(name)]);
@@ -174,7 +188,7 @@
   const markerEls = new Map();
   function markerElement(d) {
     const wrap = document.createElement('div');
-    wrap.className = `mk lvl-${d.level}`;
+    wrap.className = `mk lvl-${d.level}` + (d.trend > 0 ? ' rising' : '');
     markerEls.set(d.name, { el: wrap, d });
     wrap.innerHTML = '<span class="mk-ring"></span><span class="mk-dot"></span>';
     wrap.addEventListener('mouseenter', () => showTip(d, wrap));
@@ -208,10 +222,15 @@
         county: f.properties.county || n,
         lat: f.properties.lat, lng: f.properties.lng,
         level: lvl,
+        nowLevel: levelAt(n, 'now'),
+        trend: trend(n),
         zones: f.properties.zones || (unitAt(n) || {}).zones || [],
       });
     }
-    rows.sort((a, b) => b.level - a.level || a.name.localeCompare(b.name));
+    // On a forecast view, areas FEWS NET expects to deteriorate come first —
+    // those are the ones early warning exists for.
+    rows.sort((a, b) => b.trend - a.trend || b.level - a.level
+                        || a.name.localeCompare(b.name));
     const shown = rows.slice(0, MAX_MARKERS);
     markerEls.clear();
     world.htmlElementsData(shown);
@@ -220,6 +239,35 @@
       n.id = 'marker-overflow';
       $('#globe-col').append(n);
     }
+  }
+
+  // Now -> +1.5mo -> +5mo, as published. Steps with no projection are marked
+  // rather than filled in with the observed value.
+  function buildTrajectory(row, compact) {
+    const wrap = el('div', 'traj' + (compact ? ' compact' : ''));
+    ['now', 'ml1', 'ml2'].forEach((v, i) => {
+      const V = ENGINE.VIEWS[v];
+      const has = ENGINE.hasProjection(row, v);
+      const phase = has ? ENGINE.phaseFor(row, v) : null;
+      const lvl = has ? ENGINE.levelFor(row, v) : null;
+
+      if (i) {
+        const prevLvl = ENGINE.levelFor(row, ['now', 'ml1', 'ml2'][i - 1]);
+        const arr = el('span', 'traj-arr',
+          lvl == null ? '→' : lvl > prevLvl ? '▲' : lvl < prevLvl ? '▼' : '→');
+        if (lvl != null && lvl > prevLvl) arr.classList.add('up');
+        if (lvl != null && lvl < prevLvl) arr.classList.add('down');
+        wrap.append(arr);
+      }
+
+      const cell = el('div', 'traj-cell' + (v === view ? ' sel' : ''));
+      const dot = el('span', 'traj-dot', phase != null ? `P${phase}` : '–');
+      dot.style.background = lvl != null ? ENGINE.LEVELS[lvl].color : '#44444a';
+      cell.append(dot, el('span', 'traj-lab', V.label));
+      cell.title = has ? V.blurb : 'No projection published for this unit';
+      wrap.append(cell);
+    });
+    return wrap;
   }
 
   // The hover card — role-specific next steps, directly over the area.
@@ -241,6 +289,14 @@
     tip.append(head);
 
     tip.append(el('div', 'tip-lead', ROLES.headline(role, d.level, d.name)));
+
+    const u = unitAt(d.name);
+    if (u && !liveMode) {
+      const tw = el('div', 'tip-traj');
+      tw.append(el('span', 'tip-lab', 'FEWS NET trajectory'));
+      tw.append(buildTrajectory(u.series[now], true));
+      tip.append(tw);
+    }
 
     if (rec.crops.length) {
       const c = el('div', 'tip-crops');
@@ -355,10 +411,11 @@
       $('#legend').hidden = false;
       $('#res').hidden = false;
       $('#spark').style.opacity = '1';
+      $('#hz-note').hidden = false;
       setTime(0, { rebuild: true });
     } else {
       world.polygonsData([]); world.htmlElementsData([]);
-      $('#legend').hidden = true; $('#res').hidden = true;
+      $('#legend').hidden = true; $('#res').hidden = true; $('#hz-note').hidden = true;
       $('#spark').style.opacity = '.18';
       $('#hud-sub').textContent = 'not yet modelled';
       $('#feed-sub').textContent = `${c.name} · no coverage`;
@@ -396,6 +453,27 @@
     $('#hud-sub').textContent = `${feats.length} ${noun} · ${covered} with FEWS NET data`;
     $('#feed-sub').textContent = `Kenya · ${covered} ${noun}`;
     buildSpark();
+  }
+
+  $('#horizon').addEventListener('click', ev => {
+    const b = ev.target.closest('button');
+    if (!b || b.dataset.view === view) return;
+    setView(b.dataset.view);
+  });
+
+  function setView(v) {
+    view = v;
+    [...$('#horizon').querySelectorAll('button')]
+      .forEach(b => b.classList.toggle('on', b.dataset.view === v));
+    document.body.dataset.view = v;
+    $('#hz-note').textContent = ENGINE.VIEWS[v].blurb;
+    $('#hz-note').hidden = !active;
+    $('#legend .legend-title').textContent = v === 'now'
+      ? 'FEWS NET IPC phase — observed'
+      : `FEWS NET IPC phase — forecast ${ENGINE.VIEWS[v].label}`;
+    if (!MODEL || !active) return;
+    paintGlobe(); renderMarkers(); updateStats(); updateLegend();
+    if (selected) renderDetail();
   }
 
   // =========================================================================
@@ -526,9 +604,27 @@
     $('#stat-units').style.color = crisis.length === 0 ? 'var(--lvl-0)'
       : crisis.length > live.length * 0.25 ? 'var(--lvl-3)' : 'var(--lvl-2)';
 
-    const alerts = liveMode ? crisis.length
-      : MODEL.events.filter(e => e.t === now && e.escalation).length;
-    $('#stat-alerts').textContent = String(alerts);
+    // Compare observed against the selected forecast horizon.
+    const nowCrisis = live.filter(u => levelAt(u.name, 'now') >= 2).length;
+    const worse = live.filter(u => trend(u.name) > 0).length;
+    const fc = $('#stat-forecast');
+    if (view === 'now') {
+      // Even on the observed view, show where FEWS NET expects this to go.
+      // The contrast between the two numbers is the whole product.
+      const soon = live.filter(u => levelAt(u.name, 'ml1') >= 2).length;
+      fc.textContent = String(soon);
+      fc.style.color = soon > nowCrisis ? 'var(--lvl-3)'
+                     : soon < nowCrisis ? 'var(--lvl-0)' : '';
+      $('#stat-forecast-lab').textContent = 'forecast at Crisis+ +1.5 mo';
+    } else {
+      fc.textContent = (worse > 0 ? '+' : '') + worse;
+      fc.style.color = worse > 0 ? 'var(--lvl-3)' : 'var(--text-muted)';
+      $('#stat-forecast-lab').textContent =
+        `forecast to worsen by ${ENGINE.VIEWS[view].label}`;
+    }
+    $('#stat-units').nextElementSibling.textContent = view === 'now'
+      ? 'units at Crisis+ now'
+      : `units at Crisis+ ${ENGINE.VIEWS[view].label}`;
 
     // One message per subscriber reached in each alerted unit. Rough, but it
     // is the number that drives the cost model.
@@ -707,9 +803,15 @@
           .properties?.county || name;
     return liveLookup(county) || county;
   };
-  function liveLevel(name) {
-    const e = LIVE && LIVE.current && LIVE.current[liveKey(name)];
-    return e ? (ENGINE.PHASE_TO_LEVEL[e.phase] ?? 0) : 0;
+  // The live feed carries the observed situation plus FEWS NET's near-term
+  // projection. There is no live ML2, so +5mo falls back to +1.5mo rather
+  // than fabricating a longer forecast.
+  function liveLevel(name, v) {
+    const k = liveKey(name);
+    if (!LIVE || !LIVE.current) return 0;
+    const src = (v && v !== 'now' && LIVE.projection_ml1 && LIVE.projection_ml1[k])
+      ? LIVE.projection_ml1[k] : LIVE.current[k];
+    return src ? (ENGINE.PHASE_TO_LEVEL[src.phase] ?? 0) : 0;
   }
 
   async function loadLive({ force = false } = {}) {
@@ -787,6 +889,10 @@
     document.body.classList.toggle('live', liveMode);
     $('#timeline').classList.toggle('disabled', liveMode);
     if (liveMode) { pause(); if (!LIVE) await loadLive(); }
+    const ml2 = $('#horizon button[data-view="ml2"]');
+    ml2.disabled = liveMode;
+    ml2.title = liveMode ? 'No medium-term projection in the live feed' : '';
+    if (liveMode && view === 'ml2') setView('ml1');
     renderLiveBar();
     renderFeed({ rebuild: true });
     paintGlobe(); renderMarkers(); updateStats(); updateLegend();
@@ -855,20 +961,37 @@
       return;
     }
 
+    const shownPhase = liveMode ? row.phase : ENGINE.phaseFor(row, view);
     const pm = el('div', 'd-pm');
-    const big = el('span', 'big', `P${row.phase}`);
+    const big = el('span', 'big', `P${shownPhase}`);
     big.style.color = L.color;
     const w1 = el('div');
-    w1.append(big, el('div', 'unit', `IPC ${ENGINE.PHASE_NAME[row.phase]} — FEWS NET published`));
+    w1.append(big, el('div', 'unit',
+      `IPC ${ENGINE.PHASE_NAME[shownPhase]} — ` +
+      (liveMode || view === 'now' ? 'observed by FEWS NET'
+                                  : `FEWS NET forecast ${ENGINE.VIEWS[view].label}`)));
     pm.append(w1);
-    if (row.projection != null) {
-      const w2 = el('div');
-      const b2 = el('span', 'big', `P${row.projection}`);
-      b2.style.color = ENGINE.LEVELS[ENGINE.PHASE_TO_LEVEL[row.projection] ?? 0].color;
-      w2.append(b2, el('div', 'unit', 'their near-term projection'));
-      pm.append(w2);
-    }
     body.append(pm);
+
+    if (!liveMode) {
+      const s0 = el('div', 'd-sect');
+      s0.append(el('span', 'd-lab', 'Observed vs forecast'));
+      s0.append(buildTrajectory(row));
+      const t = trend(name);
+      if (view !== 'now' && t !== 0) {
+        s0.append(el('div', t > 0 ? 'traj-note up' : 'traj-note down',
+          t > 0
+            ? `FEWS NET expect this area to deteriorate within ${ENGINE.VIEWS[view].label.replace('+', '')}.`
+            : `FEWS NET expect this area to improve within ${ENGINE.VIEWS[view].label.replace('+', '')}.`));
+      }
+      body.append(s0);
+    } else if (row.projection != null) {
+      const s0 = el('div', 'd-sect');
+      s0.append(el('span', 'd-lab', 'FEWS NET near-term projection'));
+      s0.append(el('div', 'sms',
+        `Phase ${row.projection} ${ENGINE.PHASE_NAME[row.projection]}`));
+      body.append(s0);
+    }
 
     if (zones.length) {
       const s = el('div', 'd-sect');
@@ -926,6 +1049,7 @@
   async function boot() {
     buildRolePicker();
     buildLegend();
+    setView('now');
 
     let lhz = { zones: {} };
     try {
@@ -951,6 +1075,7 @@
       $('#login').hidden = true;
       selectCountry(COUNTRIES.find(x => x.name.toLowerCase() === c.toLowerCase()).name);
       if (qs.get('res')) applyResolution(qs.get('res'));
+      if (ENGINE.VIEWS[qs.get('view')]) setView(qs.get('view'));
       const t = parseInt(qs.get('t'), 10);
       setTime(Number.isFinite(t) ? t : 0, { rebuild: true });
       const unit = qs.get('unit');

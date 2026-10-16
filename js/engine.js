@@ -30,6 +30,21 @@ const ENGINE = (() => {
   // IPC phase -> our alert level. Phase 3 "Crisis" is the humanitarian action
   // threshold, so that is where we raise Warning.
   const PHASE_TO_LEVEL = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 3 };
+
+  // The three things FEWS NET publishes for every unit, every release. The
+  // horizons are measured from the data itself (projection_start/end against
+  // reporting_date), not assumed — see the console output of prep_adm2.py.
+  const VIEWS = {
+    now: { key: 'now',  field: 'phase',       label: 'Now',
+           short: 'observed', months: 0,
+           blurb: 'Current Situation — what FEWS NET observes today' },
+    ml1: { key: 'ml1',  field: 'projection',  label: '+1.5 mo',
+           short: 'near-term forecast', months: 1.5,
+           blurb: 'FEWS NET near-term projection, median 1.5 months ahead' },
+    ml2: { key: 'ml2',  field: 'projection2', label: '+5 mo',
+           short: 'medium-term forecast', months: 5,
+           blurb: 'FEWS NET medium-term projection, median 5 months ahead' },
+  };
   const PHASE_NAME = ['', 'Minimal', 'Stressed', 'Crisis', 'Emergency', 'Famine'];
 
   const LEVELS = [
@@ -114,6 +129,7 @@ const ENGINE = (() => {
       const rec = src[name] || {};
       const phases = rec.phases || {};
       const proj = rec.proj || {};
+      const proj2 = rec.proj2 || {};
 
       // One row per release, holding the last published classification.
       const byRelease = [];
@@ -130,6 +146,7 @@ const ENGINE = (() => {
           asOf: lastAsOf,
           fresh,
           projection: proj[key] ?? null,
+          projection2: proj2[key] ?? null,
           hasData: last != null,
         });
       }
@@ -186,6 +203,23 @@ const ENGINE = (() => {
     return { units, byName, events, national, periods: PERIODS, resolution };
   }
 
+  // Phase and level for a row under a given view. Falls back to the observed
+  // phase when FEWS NET published no projection for that unit and release —
+  // we never substitute a guess.
+  function phaseFor(row, view) {
+    if (!row) return null;
+    const f = (VIEWS[view] || VIEWS.now).field;
+    const v = row[f];
+    return v != null ? v : row.phase;
+  }
+  function levelFor(row, view) {
+    const p = phaseFor(row, view);
+    return p != null ? (PHASE_TO_LEVEL[p] ?? 0) : null;
+  }
+  // Did FEWS NET actually publish a projection here, or are we falling back?
+  const hasProjection = (row, view) =>
+    view === 'now' || (row && row[(VIEWS[view] || VIEWS.now).field] != null);
+
   // Drivers are statements of fact from FEWS NET, not model attributions.
   function buildDrivers(prev, now) {
     const out = [`FEWS NET reclassified: IPC Phase ${prev.phase} ${PHASE_NAME[prev.phase]} ` +
@@ -233,7 +267,8 @@ const ENGINE = (() => {
   }
 
   return {
-    LEVELS, AUDIENCES, PHASE_NAME, PHASE_TO_LEVEL,
+    LEVELS, AUDIENCES, PHASE_NAME, PHASE_TO_LEVEL, VIEWS,
+    phaseFor, levelFor, hasProjection,
     N_STEPS, dateAt, releaseAt, stepOfRelease, build, composeSMS, audiencesFor,
     get periods() { return PERIODS; },
     get axis() { return AXIS; },

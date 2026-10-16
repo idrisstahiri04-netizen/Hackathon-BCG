@@ -26,6 +26,15 @@
       <ul id="results" role="listbox" hidden></ul>
     </div>
 
+    <!-- Replay vs live FEWS NET current situation -->
+    <div id="mode">
+      <button id="live-toggle" title="Show the current FEWS NET classification">
+        <span class="dot"></span>Live
+      </button>
+      <button id="live-refresh" title="Re-pull from FEWS NET">&#8635;</button>
+    </div>
+    <div id="live-bar" hidden></div>
+
     <!-- Country readout -->
     <header id="hud" hidden>
       <div id="hud-country">
@@ -108,10 +117,11 @@
   </div>
 </footer>
 
-<div id="disclaimer">Simulated data · scripted to the 2020–2023 Horn of Africa drought · prototype</div>
+<div id="disclaimer">Simulated risk model · real FEWS NET official layer · scripted to the 2020–2023 Horn of Africa drought</div>
 
 <script src="vendor/globe.gl.min.js"></script>
 <script src="data/kenya-counties.js"></script>
+<script src="js/advice.js"></script>
 <script src="js/sim.js"></script>
 <script src="js/app.js"></script>
 </body>

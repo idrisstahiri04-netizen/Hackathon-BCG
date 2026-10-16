@@ -57,31 +57,45 @@ const SIM = (() => {
     return SEASONS[`${year}-OND`] ?? 1.0;                        // Oct - Dec
   }
 
-  // ---- Official announcements ---------------------------------------------
-  // (month index, minimum aridity to be covered, severity 0-3, headline)
-  // Per the spec's risk table, announcements alone can never push a unit above
-  // level 1 — they only ever confirm what the satellite and price data show.
-  const ANNOUNCEMENTS = [
-    { t: idx(2021, 6), minArid: 0.85, sev: 2, text: 'NDMA drought alert for northern counties' },
-    { t: idx(2021, 8), minArid: 0.70, sev: 3, text: 'Government declares drought a national disaster' },
-    { t: idx(2022, 1), minArid: 0.75, sev: 2, text: 'FEWS NET projects IPC Phase 3 in pastoral areas' },
-    { t: idx(2022, 8), minArid: 0.65, sev: 3, text: 'Scaled-up emergency response, 4.4M food insecure' },
-    { t: idx(2023, 0), minArid: 0.60, sev: 3, text: 'Fifth failed season confirmed; famine risk flagged' },
-    { t: idx(2023, 9), minArid: 0.00, sev: 1, text: 'El Nino flood advisory supersedes drought alert' },
-  ];
-  function idx(year, month) { return (year - START_YEAR) * 12 + month; }
+  // ---- Official source: real FEWS NET IPC classifications -----------------
+  // This replaces the hand-written announcement table. Every value below comes
+  // from the FEWS NET Data Warehouse (fdw.fews.net), "Current Situation"
+  // scenario, aggregated to county level — see fetch_fews.py.
+  //
+  // Per the spec's risk table, the official family alone can never push a unit
+  // above level 1. It only ever confirms what satellite and price data show.
+  const IPC_LABEL = ['', 'Minimal', 'Stressed', 'Crisis', 'Emergency', 'Famine'];
+  // IPC phase -> announcement severity 0-3. Phase 3 "Crisis" is the
+  // humanitarian action threshold, so that is where severity becomes decisive.
+  const IPC_TO_SEV = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 3 };
 
-  function announcementAt(t, aridity) {
-    let best = { sev: 0, text: null };
-    for (const a of ANNOUNCEMENTS) {
-      if (t < a.t || aridity < a.minArid) continue;
-      // An announcement stays on the books for 5 months, fading as it ages.
-      const age = t - a.t;
-      if (age > 5) continue;
-      const sev = a.sev - (age > 3 ? 1 : 0);
-      if (sev > best.sev) best = { sev, text: a.text };
+  let FEWS = { phases: {}, months: [] };    // injected by build()
+
+  function monthKey(t) {
+    const d = dateAt(t);
+    return `${d.year}-${String(d.month + 1).padStart(2, '0')}`;
+  }
+
+  // FEWS NET reports roughly quarterly, so a given month inherits the most
+  // recent classification published on or before it. We do not interpolate —
+  // an official classification stands until it is superseded.
+  function announcementAt(t, countyName) {
+    const series = FEWS.phases[countyName];
+    if (!series) return { sev: 0, text: null, phase: null, asOf: null };
+    const key = monthKey(t);
+    let best = null;
+    for (const m of Object.keys(series)) {
+      if (m <= key && (!best || m > best)) best = m;
     }
-    return best;
+    if (!best) return { sev: 0, text: null, phase: null, asOf: null };
+    const phase = series[best];
+    const [y, mo] = best.split('-');
+    return {
+      sev: IPC_TO_SEV[phase] ?? 0,
+      phase,
+      asOf: `${MONTH_NAMES[+mo - 1]} ${y}`,
+      text: `FEWS NET classified this county IPC Phase ${phase} ${IPC_LABEL[phase]} (${MONTH_NAMES[+mo - 1]} ${y})`,
+    };
   }
 
   // ---- Deterministic noise -------------------------------------------------
@@ -155,7 +169,7 @@ const SIM = (() => {
         -8, 95
       );
 
-      const ann = announcementAt(t, aridity);
+      const ann = announcementAt(t, name);
 
       // Farmer SMS replies: share reporting a poor or failed harvest.
       const crowd = clamp(0.10 + Math.max(0, -ndvi) * 0.24 + noise(name, t, 'cr') * 0.05, 0, 0.92);
@@ -200,6 +214,7 @@ const SIM = (() => {
         t, level, p, confidence, agreeing, families,
         spi, ndvi, price, crowd,
         annSev: ann.sev, annText: ann.text,
+        ipcPhase: ann.phase, ipcAsOf: ann.asOf,
         rainPct: Math.round((ratio - 1) * 100),
         horizon: aridity > 0.7 ? 8 : 10,
         drivers: describeDrivers({ spi, ndvi, price, crowd, ann, ratio }),
@@ -222,7 +237,9 @@ const SIM = (() => {
       { w: 0.013 * Math.max(0, price),
         text: `maize price +${Math.round(price)}%` },
       { w: 0.30 * ann.sev,
-        text: ann.text ? ann.text.toLowerCase() : 'official drought announcement' },
+        text: ann.phase
+          ? `FEWS NET: IPC Phase ${ann.phase} ${IPC_LABEL[ann.phase]} (${ann.asOf})`
+          : 'official drought classification' },
       { w: 0.55 * Math.max(0, crowd - 0.25),
         text: `${Math.round(crowd * 100)}% of farmer replies report a poor or failed harvest` },
     ];
@@ -239,12 +256,18 @@ const SIM = (() => {
     const rain = row.rainPct;
 
     switch (audience) {
-      case 'farmer':
+      case 'farmer': {
         // Farmers get an action, never a probability — a public forecast moves
         // the market and can cause the shortage it predicts.
+        // The action is matched to the county's actual livelihood zone: you do
+        // not tell a Turkana herder to plant, or a Kisii farmer to destock.
+        const act = typeof ADVICE !== 'undefined'
+          ? ADVICE.shortAction(countyName, row.level)
+          : 'Keep 2 months of grain';
         return row.level >= 3
-          ? `EMERGENCY ${countyName}: harvest failed, prices +${price}%. Relief at your chief's camp. Do not sell livestock cheap. Reply 1 ok 2 poor 3 failed. STOP to quit`
-          : `WARNING ${countyName}: rain ${rain}% vs normal, poor maize harvest likely. Keep 2 months of grain, do not sell cheap. Reply 1 ok 2 poor 3 failed. STOP to quit`;
+          ? `EMERGENCY ${countyName}: prices +${price}%. ${act}. Reply 1 ok 2 poor 3 failed. STOP to quit`
+          : `WARNING ${countyName}: rain ${rain}% vs normal, poor season likely. ${act}. Reply 1 ok 2 poor 3 failed. STOP to quit`;
+      }
       case 'coop':
         return `${L} ${countyName}: shortage risk ${pc}% in ${row.horizon} wks. Advise members to hold grain and bulk-buy inputs now. Share with all members. Details: [link]`;
       case 'foodbank':
@@ -261,7 +284,10 @@ const SIM = (() => {
   }
 
   // ---- Build everything up front ------------------------------------------
-  function build(features) {
+  // fewsData is data/fews-ipc-kenya.json. It drives the official source
+  // family, so the engine must be built with it before any series is read.
+  function build(features, fewsData) {
+    FEWS = fewsData || { phases: {}, months: [] };
     const units = features.map(f => ({
       name: f.properties.name,
       props: f.properties,
@@ -287,6 +313,11 @@ const SIM = (() => {
           drivers: row.drivers,
           audiences: now > prev ? audiencesFor(now) : [],
           people: Math.round(u.props.pop * (0.25 + 0.20 * now) * 1000) / 1000,
+          ipcPhase: row.ipcPhase,
+          // The actionable half of the alert: what is at risk here and who
+          // can do something about it. See js/advice.js.
+          advice: typeof ADVICE !== 'undefined' && now > prev
+            ? ADVICE.build(u.name, now) : null,
         });
       }
     }

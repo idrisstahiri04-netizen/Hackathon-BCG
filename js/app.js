@@ -40,8 +40,12 @@
   const WORLD_VIEW = { lat: 6, lng: 24, altitude: 2.3 };
 
   // ---- Model --------------------------------------------------------------
-  const MODEL = SIM.build(KENYA_COUNTIES.features);
-  const byName = new Map(MODEL.units.map(u => [u.name, u]));
+  // Built in boot(), once the FEWS NET files have loaded — the official source
+  // family depends on them, so there is no model before then.
+  let MODEL = null;
+  let byName = new Map();
+  let LIVE = null;        // latest FEWS NET situation, from /api/live
+  let liveMode = false;
 
   let now = 0;            // month index
   let rendered = -1;      // how far the feed has been filled, for incremental appends
@@ -85,24 +89,29 @@
 
   // Polygon accessors are re-set (new function identity) whenever the month
   // changes — that is what makes globe.gl recolour and re-tween the counties.
+  // The single source of truth for "what colour is this county right now".
+  // In replay mode that is the model at month `now`; in live mode it is the
+  // current FEWS NET classification.
+  function levelAt(countyName) {
+    if (liveMode) return liveLevel(countyName);
+    const u = byName.get(countyName);
+    return u ? u.series[now].level : 0;
+  }
+
   function paintGlobe() {
-    if (!active || !active.live) return;
+    if (!active || !active.live || !MODEL) return;
     world
       .polygonAltitude(d => {
-        const lvl = byName.get(d.properties.name).series[now].level;
-        const base = 0.008 + lvl * 0.0075;
+        const base = 0.008 + levelAt(d.properties.name) * 0.0075;
         return d === selected || d === hovered ? base + 0.014 : base;
       })
       .polygonCapColor(d => {
-        const lvl = byName.get(d.properties.name).series[now].level;
+        const lvl = levelAt(d.properties.name);
         const c = levelColor(lvl);
         if (d === selected) return c;
         return c + (lvl === 0 ? 'b0' : 'd8');      // healthy counties sit back a little
       })
-      .polygonSideColor(d => {
-        const lvl = byName.get(d.properties.name).series[now].level;
-        return levelColor(lvl) + '66';
-      })
+      .polygonSideColor(d => levelColor(levelAt(d.properties.name)) + '66')
       .polygonStrokeColor(d =>
         d === selected ? '#ffffff' : d === hovered ? '#ffffffaa' : '#00000055');
   }
@@ -304,7 +313,7 @@
   // The strip behind the slider: share of counties at Warning or above over
   // the whole window. One measure, one hue, no axis furniture — it exists to
   // show you where the crisis is, not to be read off precisely.
-  (function buildSpark() {
+  function buildSpark() {
     const svg = $('#spark');
     const W = 1000, H = 30;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
@@ -331,14 +340,29 @@
          <stop offset="100%" stop-color="#ec833a" stop-opacity=".03"/>
        </linearGradient></defs>`;
     svg.append(area, stroke);
-  })();
+  }
 
   // =========================================================================
   //  Readout + legend
   // =========================================================================
   function updateStats() {
-    const rows = MODEL.units.map(u => u.series[now]);
-    const warnPlus = MODEL.units.filter((u, i) => rows[i].level >= 2);
+    if (!MODEL) return;
+    const warnPlus = MODEL.units.filter(u => levelAt(u.name) >= 2);
+    if (liveMode) {
+      const people = warnPlus.reduce((s, u) => s + u.props.pop, 0);
+      const reach = MODEL.units
+        .filter(u => levelAt(u.name) >= 1)
+        .reduce((s, u) => s + u.props.pop * 1000 * 0.11 * SIM.audiencesFor(levelAt(u.name)).length / 3, 0);
+      const el0 = $('#stat-units');
+      el0.textContent = String(warnPlus.length);
+      el0.style.color = warnPlus.length === 0 ? 'var(--lvl-0)'
+                      : warnPlus.length > 20 ? 'var(--lvl-3)' : 'var(--lvl-2)';
+      $('#stat-people').textContent = people >= 1 ? `${people.toFixed(1)}M` : `${Math.round(people * 1000)}k`;
+      $('#stat-sms').textContent = fmtCompact(Math.round(reach));
+      $('#stat-sms').closest('.stat').querySelector('.stat-lab').textContent = 'SMS if sent now';
+      return;
+    }
+    $('#stat-sms').closest('.stat').querySelector('.stat-lab').textContent = 'SMS sent to date';
     const people = warnPlus.reduce((s, u) => s + u.props.pop, 0);
 
     // Cumulative messages: one per subscriber reached, each time a county
@@ -377,8 +401,9 @@
   })();
 
   function updateLegendCounts() {
+    if (!MODEL) return;
     const counts = [0, 0, 0, 0];
-    MODEL.units.forEach(u => counts[u.series[now].level]++);
+    MODEL.units.forEach(u => counts[levelAt(u.name)]++);
     [...$('#legend-items').children].forEach(li => {
       li.querySelector('.ct').textContent = String(counts[+li.dataset.level]);
     });
@@ -410,6 +435,59 @@
     if (!rebuild) feedEl.scrollTop = 0;
   }
 
+  // Renders the recommendation block: what is grown or herded here, what to
+  // do about it, and who can actually supply the resources.
+  function buildAdvice(rec, countyName) {
+    const box = el('div', 'n-advice');
+
+    const head = el('div', 'adv-head');
+    head.append(el('span', 'adv-kind', rec.primary));
+    if (rec.zones.length) {
+      head.append(el('span', 'adv-zone', rec.zones[0]));
+    }
+    box.append(head);
+
+    if (rec.crops.length) {
+      const r = el('div', 'adv-row');
+      r.append(el('span', 'adv-lab', 'At risk'));
+      const chips = el('span', 'adv-chips');
+      rec.crops.forEach(c => chips.append(el('span', 'crop', c)));
+      r.append(chips);
+      box.append(r);
+    }
+
+    if (rec.actions.length) {
+      const r = el('div', 'adv-row');
+      r.append(el('span', 'adv-lab', 'Do now'));
+      const ul = el('ul', 'adv-actions');
+      rec.actions.forEach(a => ul.append(el('li', null, a)));
+      r.append(ul);
+      box.append(r);
+    }
+
+    if (rec.resources.length) {
+      const r = el('div', 'adv-row');
+      r.append(el('span', 'adv-lab', 'Resources'));
+      const list = el('div', 'adv-res');
+      rec.resources.forEach(res => {
+        const d = el('div', 'res');
+        const t = el('div', 'res-t');
+        t.append(el('span', 'res-n', res.name));
+        t.append(el('span', 'res-b', res.body));
+        d.append(t);
+        d.append(el('div', 'res-w', res.what));
+        d.title = `Eligibility: ${res.who}`;
+        list.append(d);
+      });
+      r.append(list);
+      box.append(r);
+    }
+
+    // Say where help does NOT reach. A planner needs the gap, not just the list.
+    rec.gaps.forEach(g => box.append(el('div', 'adv-gap', g)));
+    return box;
+  }
+
   function buildNote(e, animate) {
     const L = SIM.LEVELS[e.to];
     const li = el('li', 'note' + (animate ? ' is-new' : '') + (e.escalation ? '' : ' deesc'));
@@ -420,7 +498,7 @@
     const top = el('div', 'n-top');
     const chip = el('span', 'chip', `${L.glyph} L${e.to} ${L.label.toUpperCase()}`);
     top.append(chip, el('span', 'n-county', e.county));
-    top.append(el('span', 'n-date', SIM.dateAt(e.t).label));
+    top.append(el('span', 'n-date', e.live ? (e.asOf || 'current') : SIM.dateAt(e.t).label));
     li.append(top);
 
     li.append(el('div', 'n-move',
@@ -430,15 +508,30 @@
 
     if (e.escalation) {
       const line = el('div', 'n-line');
-      line.innerHTML =
-        `Shortage risk <b>${Math.round(e.p * 100)}%</b> at <b>${e.horizon} weeks</b> · ` +
-        `<b>${e.agreeing}/5</b> source families agree · confidence ${e.confidence} · ` +
-        `<b>${e.people.toFixed(2)}M</b> people`;
+      if (e.live) {
+        // Live mode carries no model probability — this is FEWS NET's own
+        // published classification, so we show that and their projection.
+        const IPCN = ['', 'Minimal', 'Stressed', 'Crisis', 'Emergency', 'Famine'];
+        line.innerHTML =
+          `<b>IPC Phase ${e.ipcPhase} ${IPCN[e.ipcPhase]}</b> as of <b>${e.asOf}</b>` +
+          (e.projection
+            ? ` · FEWS NET near-term projection <b>Phase ${e.projection} ${IPCN[e.projection]}</b>`
+            : '') +
+          ` · <b>${e.people.toFixed(2)}M</b> people`;
+      } else {
+        line.innerHTML =
+          `Shortage risk <b>${Math.round(e.p * 100)}%</b> at <b>${e.horizon} weeks</b> · ` +
+          `<b>${e.agreeing}/5</b> source families agree · confidence ${e.confidence} · ` +
+          `<b>${e.people.toFixed(2)}M</b> people`;
+      }
       li.append(line);
 
       const ul = el('ul', 'n-drivers');
       e.drivers.forEach(d => ul.append(el('li', null, d)));
       li.append(ul);
+
+      // --- Recommendations: the actionable half of the alert ---------------
+      if (e.advice) li.append(buildAdvice(e.advice, e.county));
 
       const nf = el('div', 'n-notify');
       nf.append(el('span', 'lab', 'Notify'));
@@ -449,7 +542,7 @@
     }
 
     li.addEventListener('click', () => {
-      setTime(e.t);
+      if (!e.live) setTime(e.t);        // live cards have no month to jump to
       const poly = KENYA_COUNTIES.features.find(f => f.properties.name === e.county);
       if (poly) {
         selected = poly;
@@ -481,10 +574,38 @@
     paintGlobe();
   }
 
+  // Shapes the live FEWS NET entry like a model row so the detail panel can
+  // render it without branching everywhere.
+  function liveRow(unit, entry) {
+    const phase = entry ? entry.phase : 1;
+    const level = IPC_TO_LEVEL[phase] ?? 0;
+    const proj = LIVE && LIVE.projection_ml1 && LIVE.projection_ml1[unit.name];
+    const NAMES = ['', 'Minimal', 'Stressed', 'Crisis', 'Emergency', 'Famine'];
+    return {
+      level, p: null, confidence: 'official', agreeing: null,
+      horizon: unit.props.aridity > 0.7 ? 8 : 10,
+      spi: 0, ndvi: 0, price: 0, crowd: 0,
+      annSev: phase >= 3 ? 2 : 0, ipcPhase: phase,
+      asOf: entry ? entry.as_of : null,
+      rainPct: 0,
+      families: { weather: false, eo: false, market: false, official: !!entry, crowd: false },
+      live: true,
+      projection: proj ? proj.phase : null,
+      drivers: [
+        `FEWS NET: IPC Phase ${phase} ${NAMES[phase]}${entry ? ` (${entry.as_of})` : ''}`,
+      ].concat(proj ? [`near-term projection: Phase ${proj.phase} ${NAMES[proj.phase]}`] : []),
+    };
+  }
+
   function renderDetail() {
     if (!selected) { $('#detail').hidden = true; return; }
     const unit = byName.get(selected.properties.name);
-    const row = unit.series[now];
+    // In live mode the panel must describe the real FEWS NET classification,
+    // not the replay model sitting at whatever month the slider last held.
+    const liveEntry = liveMode && LIVE && LIVE.current && LIVE.current[unit.name];
+    const row = liveMode
+      ? liveRow(unit, liveEntry)
+      : unit.series[now];
     const L = SIM.LEVELS[row.level];
     const auds = SIM.audiencesFor(row.level);
     // Default to the farmer message. It is the one that shows the product is
@@ -501,7 +622,9 @@
     const head = el('div', 'd-head');
     const ht = el('div');
     ht.append(el('h3', null, unit.name));
-    ht.append(el('div', 'sub', `${SIM.dateAt(now).label} · ${(unit.props.pop).toFixed(2)}M people`));
+    ht.append(el('div', 'sub',
+      (liveMode ? `FEWS NET ${row.asOf || 'current'}` : SIM.dateAt(now).label) +
+      ` · ${(unit.props.pop).toFixed(2)}M people`));
     const chip = el('span', 'chip', `${L.glyph} L${row.level} ${L.label.toUpperCase()}`);
     chip.style.background = L.color;
     chip.style.alignSelf = 'center';
@@ -516,19 +639,36 @@
 
     // --- headline numbers
     const pm = el('div', 'd-pm');
-    const big = el('span', 'big', `${Math.round(row.p * 100)}%`);
-    big.style.color = L.color;
-    const pwrap = el('div');
-    pwrap.append(big);
-    pwrap.append(el('div', 'unit', `probability of shortage at ${row.horizon} weeks`));
-    const cwrap = el('div');
-    cwrap.append(el('span', 'big', `${row.agreeing}/5`));
-    cwrap.append(el('div', 'unit', `sources agree · ${row.confidence} confidence`));
-    pm.append(pwrap, cwrap);
+    if (row.live) {
+      const NAMES = ['', 'Minimal', 'Stressed', 'Crisis', 'Emergency', 'Famine'];
+      const big = el('span', 'big', `P${row.ipcPhase}`);
+      big.style.color = L.color;
+      const pwrap = el('div');
+      pwrap.append(big);
+      pwrap.append(el('div', 'unit', `IPC ${NAMES[row.ipcPhase]} — FEWS NET published classification`));
+      pm.append(pwrap);
+      if (row.projection) {
+        const cwrap = el('div');
+        cwrap.append(el('span', 'big', `P${row.projection}`));
+        cwrap.append(el('div', 'unit', 'their near-term projection'));
+        pm.append(cwrap);
+      }
+    } else {
+      const big = el('span', 'big', `${Math.round(row.p * 100)}%`);
+      big.style.color = L.color;
+      const pwrap = el('div');
+      pwrap.append(big);
+      pwrap.append(el('div', 'unit', `probability of shortage at ${row.horizon} weeks`));
+      const cwrap = el('div');
+      cwrap.append(el('span', 'big', `${row.agreeing}/5`));
+      cwrap.append(el('div', 'unit', `sources agree · ${row.confidence} confidence`));
+      pm.append(pwrap, cwrap);
+    }
     body.append(pm);
 
     // --- source agreement
     const s1 = el('div', 'd-sect');
+    s1.hidden = !!row.live;
     s1.append(el('span', 'd-lab', 'Source families'));
     const fams = el('div', 'fams');
     const vals = {
@@ -559,6 +699,14 @@
       });
       s2.append(ul);
       body.append(s2);
+    }
+
+    // --- Recommendations
+    if (row.level >= 1) {
+      const sr = el('div', 'd-sect');
+      sr.append(el('span', 'd-lab', 'Recommended response'));
+      sr.append(buildAdvice(ADVICE.build(unit.name, row.level), unit.name));
+      body.append(sr);
     }
 
     // --- SMS preview
@@ -592,29 +740,166 @@
   }
 
   // =========================================================================
+  //  Live feed (FEWS NET current situation)
+  // =========================================================================
+  // Served by serve.py, which proxies fdw.fews.net (no CORS header of its own)
+  // and caches the reduced result. Falls back to the committed snapshot.
+  async function loadLive({ force = false } = {}) {
+    const btn = $('#live-toggle');
+    btn.classList.add('loading');
+    try {
+      const r = await fetch('/api/live' + (force ? '?refresh=1' : ''));
+      if (!r.ok) throw new Error(r.status);
+      LIVE = await r.json();
+    } catch (err) {
+      LIVE = null;                       // serve.py not running, or offline
+    } finally {
+      btn.classList.remove('loading');
+      renderLiveBar();
+      if (liveMode) paintGlobe();
+    }
+    return LIVE;
+  }
+
+  function renderLiveBar() {
+    // The footer disclaimer must follow the mode. In live mode the numbers on
+    // screen are real FEWS NET classifications, and calling them simulated
+    // would be as wrong as the reverse.
+    $('#disclaimer').textContent = liveMode
+      ? 'Live FEWS NET IPC classifications \u00b7 recommendations are ours \u00b7 prototype'
+      : 'Simulated risk model \u00b7 real FEWS NET official layer \u00b7 scripted to the 2020\u20132023 Horn of Africa drought';
+    const bar = $('#live-bar');
+    if (!liveMode) { bar.hidden = true; return; }
+    bar.hidden = false;
+    if (!LIVE || !LIVE.n_counties) {
+      bar.className = 'warn';
+      bar.innerHTML = '<b>Live feed unavailable.</b> Start the app with ' +
+        '<code>python3 serve.py</code> to proxy FEWS NET, or stay in replay mode.';
+      return;
+    }
+    const n3 = Object.values(LIVE.current).filter(v => v.phase >= 3).length;
+    const stamp = LIVE.fetched_at
+      ? new Date(LIVE.fetched_at).toLocaleString()
+      : 'cached snapshot';
+    bar.className = LIVE.stale ? 'warn' : '';
+    bar.innerHTML =
+      `<span class="dot"></span><b>FEWS NET live</b> · reporting period ` +
+      `<b>${LIVE.reporting_period || '—'}</b> · <b>${n3}</b> of ` +
+      `${LIVE.n_counties} counties at IPC Phase 3+ · fetched ${stamp}` +
+      (LIVE.refreshing ? ' · <i>refreshing…</i>' : '') +
+      (LIVE.stale ? ' · <b>STALE</b>' : '');
+  }
+
+  // In live mode the globe shows the current real classification rather than
+  // the replayed model. IPC phase 1-5 maps onto our 0-3 ladder.
+  const IPC_TO_LEVEL = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 3 };
+  function liveLevel(countyName) {
+    const e = LIVE && LIVE.current && LIVE.current[countyName];
+    return e ? (IPC_TO_LEVEL[e.phase] ?? 0) : 0;
+  }
+
+  $('#live-toggle').addEventListener('click', async () => {
+    liveMode = !liveMode;
+    $('#live-toggle').classList.toggle('on', liveMode);
+    document.body.classList.toggle('live', liveMode);
+    $('#timeline').classList.toggle('disabled', liveMode);
+    if (liveMode) {
+      pause();
+      if (!LIVE) await loadLive();
+      renderLiveBar();
+      renderLiveFeed();
+    } else {
+      renderLiveBar();
+      renderFeed({ rebuild: true });
+    }
+    paintGlobe();
+    updateStats();
+    updateLegendCounts();
+    if (selected) renderDetail();
+  });
+
+  $('#live-refresh').addEventListener('click', async (ev) => {
+    ev.stopPropagation();
+    await loadLive({ force: true });
+    if (liveMode) { renderLiveFeed(); paintGlobe(); updateStats(); updateLegendCounts(); }
+  });
+
+  // The feed in live mode lists every county currently at Phase 2+, worst
+  // first, with the same recommendations attached.
+  function renderLiveFeed() {
+    feedEl.innerHTML = '';
+    rendered = -1;
+    if (!LIVE || !LIVE.current) { $('#feed-count').textContent = '0'; return; }
+    const rows = Object.entries(LIVE.current)
+      .map(([county, v]) => ({ county, ...v, level: IPC_TO_LEVEL[v.phase] ?? 0 }))
+      .filter(r => r.level >= 1)
+      .sort((a, b) => b.phase - a.phase || a.county.localeCompare(b.county));
+
+    for (const r of rows) {
+      const proj = LIVE.projection_ml1 && LIVE.projection_ml1[r.county];
+      feedEl.append(buildNote({
+        t: now, county: r.county, from: r.level, to: r.level,
+        escalation: true, live: true,
+        p: null, confidence: 'official', agreeing: null,
+        horizon: null, ipcPhase: r.phase, asOf: r.as_of,
+        projection: proj ? proj.phase : null,
+        drivers: [`FEWS NET Current Situation, ${r.as_of}`],
+        audiences: SIM.audiencesFor(r.level),
+        people: (byName.get(r.county)?.props.pop || 0) * 0.3,
+        advice: ADVICE.build(r.county, r.level),
+      }, false));
+    }
+    $('#feed-count').textContent = String(rows.length);
+    $('#feed-empty').hidden = rows.length > 0;
+  }
+
+  // =========================================================================
   //  Boot
   // =========================================================================
-  setTime(0);
-
-  // Deep link: ?country=Kenya&t=48&county=Turkana jumps straight to a moment.
-  // Insurance for the pitch — if live scrubbing goes wrong, reload into the
-  // peak of the crisis instead of dragging the slider in front of an audience.
-  const qs = new URLSearchParams(location.search);
-  const qCountry = qs.get('country');
-  if (qCountry && COUNTRIES.some(c => c.name.toLowerCase() === qCountry.toLowerCase())) {
-    const match = COUNTRIES.find(c => c.name.toLowerCase() === qCountry.toLowerCase());
-    selectCountry(match.name);
-    const qt = parseInt(qs.get('t'), 10);
-    if (Number.isFinite(qt)) setTime(qt, { rebuild: true });
-    const qCounty = qs.get('county');
-    if (qCounty && byName.has(qCounty)) {
-      const poly = KENYA_COUNTIES.features.find(f => f.properties.name === qCounty);
-      selected = poly;
-      smsAudience = null;
-      paintGlobe();
-      renderDetail();
+  async function boot() {
+    let fews = { phases: {}, months: [] };
+    let lhz = { zones: {} };
+    try {
+      [fews, lhz] = await Promise.all([
+        fetch('data/fews-ipc-kenya.json').then(r => r.json()),
+        fetch('data/kenya-livelihoods.json').then(r => r.json()),
+      ]);
+    } catch (err) {
+      console.error('FEWS NET data failed to load; official source family will be empty.', err);
     }
-  } else {
-    searchInput.focus();
+
+    ADVICE.init(lhz);
+    MODEL = SIM.build(KENYA_COUNTIES.features, fews);
+    byName = new Map(MODEL.units.map(u => [u.name, u]));
+
+    buildSpark();
+    setTime(0);
+    loadLive();                       // warm it, but never block the UI
+
+    const qs = new URLSearchParams(location.search);
+    const qCountry = qs.get('country');
+    if (qCountry && COUNTRIES.some(c => c.name.toLowerCase() === qCountry.toLowerCase())) {
+      const match = COUNTRIES.find(c => c.name.toLowerCase() === qCountry.toLowerCase());
+      selectCountry(match.name);
+      const qt = parseInt(qs.get('t'), 10);
+      if (Number.isFinite(qt)) setTime(qt, { rebuild: true });
+      const qCounty = qs.get('county');
+      if (qCounty && byName.has(qCounty)) {
+        selected = KENYA_COUNTIES.features.find(f => f.properties.name === qCounty);
+        smsAudience = null;
+        paintGlobe();
+        renderDetail();
+      }
+    } else {
+      searchInput.focus();
+    }
+
+    // ?live=1 opens straight into the FEWS NET current situation.
+    if (qs.get('live') === '1') {
+      await loadLive();
+      $('#live-toggle').click();
+    }
   }
+
+  boot();
 })();

@@ -129,7 +129,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* --- Country readout ------------------------------------------------------ */
 #hud {
-  position: absolute; top: 20px; left: 350px; right: 20px;
+  position: absolute; top: 20px; left: 510px; right: 20px;
   display: flex; align-items: flex-start; justify-content: space-between; gap: 22px;
   pointer-events: none; z-index: 10;
   text-shadow: 0 1px 10px rgba(0,0,0,.85), 0 0 3px rgba(0,0,0,.7);
@@ -186,7 +186,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* --- County detail panel -------------------------------------------------- */
 #detail {
   position: absolute; left: 20px; top: 76px; width: 352px;
-  max-height: calc(100% - 170px); overflow-y: auto; z-index: 15;
+  max-height: calc(100% - 232px); overflow-y: auto; z-index: 15;
   background: rgba(26,26,25,.95);
   backdrop-filter: blur(16px);
   border: 1px solid var(--line);
@@ -448,3 +448,133 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .note.is-new, #detail { animation: none; }
 }
+
+/* ===========================================================================
+   Live mode + recommendations (added with the FEWS NET integration)
+   =========================================================================== */
+
+/* --- Replay / live toggle ------------------------------------------------- */
+#mode {
+  position: absolute; top: 20px; left: 340px; z-index: 20;
+  display: flex; gap: 4px;
+}
+#mode button {
+  height: 44px; padding: 0 13px;
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(26,26,25,.88);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 13.5px;
+}
+#mode button:hover { border-color: #4a4a46; color: var(--text-primary); }
+#live-refresh { padding: 0 12px; font-size: 17px; }
+#live-toggle .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-muted); flex: none;
+}
+#live-toggle.on {
+  background: rgba(208,59,59,.17);
+  border-color: rgba(208,59,59,.55);
+  color: #ff8d8d;
+}
+#live-toggle.on .dot {
+  background: var(--lvl-3);
+  animation: pulse 1.7s ease-in-out infinite;
+}
+#live-toggle.loading .dot { animation: pulse .7s linear infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+
+#live-bar {
+  position: absolute; top: 74px; left: 20px; right: 20px; z-index: 18;
+  padding: 8px 13px; border-radius: 8px;
+  background: rgba(26,26,25,.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  font-size: 12px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 7px;
+}
+#live-bar b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+#live-bar code {
+  font: 11.5px var(--mono); background: var(--surface-3);
+  padding: 1px 5px; border-radius: 4px;
+}
+#live-bar .dot {
+  width: 7px; height: 7px; border-radius: 50%; flex: none;
+  background: var(--lvl-3); animation: pulse 1.7s ease-in-out infinite;
+}
+#live-bar.warn { border-color: rgba(255,212,59,.42); color: #ffe08a; }
+
+/* When live, the timeline is not driving anything. */
+#timeline.disabled { opacity: .35; pointer-events: none; filter: grayscale(.6); }
+
+/* --- Recommendation block ------------------------------------------------- */
+.n-advice {
+  margin: 9px 0 0; padding: 10px 11px;
+  background: rgba(57,135,229,.07);
+  border: 1px solid rgba(57,135,229,.26);
+  border-radius: 8px;
+}
+.adv-head {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 8px;
+  padding-bottom: 7px; border-bottom: 1px solid rgba(57,135,229,.18);
+}
+.adv-kind {
+  font: 600 9.5px var(--mono); letter-spacing: .09em; text-transform: uppercase;
+  color: #8fc0ff; background: rgba(57,135,229,.2);
+  padding: 2.5px 7px; border-radius: 4px;
+}
+.adv-zone { font-size: 11px; color: var(--text-muted); }
+
+.adv-row { display: flex; gap: 9px; margin-bottom: 8px; }
+.adv-row:last-child { margin-bottom: 0; }
+.adv-lab {
+  flex: none; width: 60px; padding-top: 2px;
+  font-size: 9.5px; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.adv-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.crop {
+  padding: 2px 7px; border-radius: 4px; font-size: 11px;
+  background: rgba(12,163,12,.15); color: #7fd97f;
+  border: 1px solid rgba(12,163,12,.3);
+}
+.adv-actions { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.adv-actions li {
+  font-size: 11.5px; line-height: 1.45; color: var(--text-secondary);
+  padding-left: 12px; position: relative;
+}
+.adv-actions li::before {
+  content: "→"; position: absolute; left: 0; color: var(--accent); font-size: 10px;
+}
+
+.adv-res { display: grid; gap: 6px; flex: 1; min-width: 0; }
+.res {
+  padding: 6px 8px; border-radius: 6px;
+  background: var(--surface-1); border: 1px solid var(--line);
+}
+.res-t { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+.res-n { font-size: 11.5px; font-weight: 600; color: var(--text-primary); }
+.res-b {
+  font: 9.5px var(--mono); letter-spacing: .04em;
+  color: var(--text-muted); background: var(--surface-3);
+  padding: 1.5px 5px; border-radius: 3px;
+}
+.res-w { font-size: 10.5px; line-height: 1.4; color: var(--text-muted); }
+
+.adv-gap {
+  margin-top: 7px; padding: 6px 8px; border-radius: 6px;
+  font-size: 11px; line-height: 1.4;
+  background: rgba(255,212,59,.09);
+  border: 1px solid rgba(255,212,59,.28);
+  color: #ffe08a;
+}
+
+/* The detail panel reuses the block but has less width. */
+#detail .adv-row { flex-direction: column; gap: 5px; }
+#detail .adv-lab { width: auto; }
+
+/* The live bar occupies the strip the detail panel normally starts in. */
+body.live #detail { top: 118px; max-height: calc(100% - 212px); }
+body.live #hud { top: 118px; }

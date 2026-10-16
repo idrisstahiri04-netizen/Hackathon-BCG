@@ -113,7 +113,7 @@
     .atmosphereColor('#5b8fd0')
     .atmosphereAltitude(0.17)
     .polygonGeoJsonGeometry(d => d.geometry)
-    .polygonsTransitionDuration(380)
+    .polygonsTransitionDuration(260)
     .polygonLabel(() => '')
     .onPolygonHover(p => { hovered = p || null; globeEl.style.cursor = p ? 'pointer' : ''; paintGlobe(); })
     .onPolygonClick(p => { selected = p; smsAudience = null; paintGlobe(); renderDetail(); })
@@ -421,13 +421,13 @@
 
   function play() {
     if (!active || !active.live || liveMode) return;
-    if (now >= ENGINE.N_PERIODS() - 1) setTime(0, { rebuild: true });
+    if (now >= ENGINE.N_STEPS() - 1) setTime(0, { rebuild: true });
     playing = true;
     $('.ic-play').hidden = true; $('.ic-pause').hidden = false;
     timer = setInterval(() => {
-      if (now >= ENGINE.N_PERIODS() - 1) { pause(); return; }
+      if (now >= ENGINE.N_STEPS() - 1) { pause(); return; }
       setTime(now + 1);
-    }, 1500 / speed);
+    }, 420 / speed);
   }
   function pause() {
     playing = false; clearInterval(timer);
@@ -435,7 +435,7 @@
   }
 
   function setTime(t, { rebuild = false } = {}) {
-    const N = ENGINE.N_PERIODS() || 1;
+    const N = ENGINE.N_STEPS() || 1;
     t = Math.max(0, Math.min(N - 1, t));
     const back = t < now;
     now = t;
@@ -443,7 +443,11 @@
     scrub.value = String(t);
     const d = ENGINE.dateAt(t);
     $('#clock-date').textContent = d.label;
-    $('#clock-sub').textContent = `release ${t + 1} of ${N}`;
+    // Be explicit that months between releases carry the last published value.
+    $('#clock-sub').textContent = d.isRelease
+      ? 'FEWS NET release'
+      : `as of ${d.releaseLabel}`;
+    $('#clock').classList.toggle('is-release', d.isRelease);
     if (!active || !active.live || !MODEL) return;
     paintGlobe();
     renderMarkers();
@@ -456,14 +460,26 @@
   function buildTicks() {
     const wrap = $('#track-marks');
     wrap.innerHTML = '';
-    const periods = ENGINE.periods;
+    const axis = ENGINE.axis;
+    const last = Math.max(1, axis.length - 1);
+
+    // A notch per real FEWS NET release, so the publication cadence is visible
+    // on the track rather than implied.
+    ENGINE.periods.forEach((p, r) => {
+      const step = ENGINE.stepOfRelease(r);
+      const n = el('span', 'rel');
+      n.style.left = `${(step / last) * 100}%`;
+      n.title = `FEWS NET release ${p}`;
+      wrap.append(n);
+    });
+
     let lastYear = null;
-    periods.forEach((p, i) => {
-      const y = p.slice(0, 4);
+    axis.forEach((key, i) => {
+      const y = key.slice(0, 4);
       if (y === lastYear) return;
       lastYear = y;
       const m = el('span', 'yr', y);
-      m.style.left = `${(i / Math.max(1, periods.length - 1)) * 100}%`;
+      m.style.left = `${(i / last) * 100}%`;
       wrap.append(m);
     });
   }
@@ -577,14 +593,18 @@
     const top = el('div', 'n-top');
     const chip = el('span', 'chip', `${L.glyph} ${L.ipc}`);
     top.append(chip, el('span', 'n-county', e.unit));
-    top.append(el('span', 'n-date', ENGINE.dateAt(e.t).label));
+    top.append(el('span', 'n-date', e.live ? (e.period || 'current') : ENGINE.dateAt(e.t).label));
     li.append(top);
 
     if (e.county && e.county !== e.unit) {
       li.append(el('div', 'n-move', `${e.county} County`));
     }
-    li.append(el('div', 'n-move',
-      e.escalation
+    li.append(el('div', 'n-move', e.live
+      ? `Currently IPC Phase ${e.toPhase} ${ENGINE.PHASE_NAME[e.toPhase]}` +
+        (e.projection != null
+          ? ` · FEWS NET project Phase ${e.projection} ${ENGINE.PHASE_NAME[e.projection]}`
+          : '')
+      : e.escalation
         ? `FEWS NET raised this area from Phase ${e.fromPhase} to Phase ${e.toPhase}`
         : `FEWS NET lowered this area from Phase ${e.fromPhase} to Phase ${e.toPhase}`));
 
@@ -671,10 +691,21 @@
   // =========================================================================
   // Live data is published at county level, so a sub-county inherits its
   // parent county's current classification rather than inventing one.
+  const normName = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  let liveIndex = null;              // normalised live key -> actual live key
+  function liveLookup(county) {
+    if (!LIVE || !LIVE.current) return null;
+    if (LIVE.current[county]) return county;
+    if (!liveIndex) {
+      liveIndex = new Map(Object.keys(LIVE.current).map(k => [normName(k), k]));
+    }
+    return liveIndex.get(normName(county)) || null;
+  }
   const liveKey = name => {
-    if (resolution === 'county') return name;
-    const f = KENYA_SUBCOUNTIES.features.find(x => x.properties.name === name);
-    return f ? f.properties.county : name;
+    const county = resolution === 'county' ? name
+      : (KENYA_SUBCOUNTIES.features.find(x => x.properties.name === name) || {})
+          .properties?.county || name;
+    return liveLookup(county) || county;
   };
   function liveLevel(name) {
     const e = LIVE && LIVE.current && LIVE.current[liveKey(name)];
@@ -688,6 +719,7 @@
       const r = await fetch('/api/live' + (force ? '?refresh=1' : ''));
       if (!r.ok) throw new Error(r.status);
       LIVE = await r.json();
+      liveIndex = null;
     } catch { LIVE = null; }
     finally {
       btn.classList.remove('loading');
@@ -735,7 +767,7 @@
       feedEl.append(buildNote({
         t: now, unit: r.unit, county: r.unit,
         from: r.level, to: r.level, fromPhase: r.phase, toPhase: r.phase,
-        escalation: true, period: r.as_of,
+        escalation: true, period: r.as_of, live: true,
         projection: proj ? proj.phase : null,
         zones: zonesOf(r.unit),
         audiences: ENGINE.audiencesFor(r.level),
@@ -748,6 +780,27 @@
     }
     $('#feed-empty').hidden = rows.length > 0;
   }
+
+  $('#live-toggle').addEventListener('click', async () => {
+    liveMode = !liveMode;
+    $('#live-toggle').classList.toggle('on', liveMode);
+    document.body.classList.toggle('live', liveMode);
+    $('#timeline').classList.toggle('disabled', liveMode);
+    if (liveMode) { pause(); if (!LIVE) await loadLive(); }
+    renderLiveBar();
+    renderFeed({ rebuild: true });
+    paintGlobe(); renderMarkers(); updateStats(); updateLegend();
+    if (selected) renderDetail();
+  });
+
+  $('#live-refresh').addEventListener('click', async ev => {
+    ev.stopPropagation();
+    await loadLive({ force: true });
+    if (liveMode) {
+      renderFeed({ rebuild: true });
+      paintGlobe(); renderMarkers(); updateStats(); updateLegend();
+    }
+  });
 
   // =========================================================================
   //  Detail panel

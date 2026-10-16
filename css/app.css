@@ -391,6 +391,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
   content: ""; position: absolute; left: 50%; top: -4px;
   width: 1px; height: 3px; background: var(--line);
 }
+/* One notch per real FEWS NET release — the data cadence, made visible. */
+#track-marks .rel {
+  position: absolute; top: -7px; width: 2px; height: 6px;
+  margin-left: -1px; border-radius: 1px;
+  background: rgba(236,131,58,.55);
+}
+#clock.is-release #clock-date { color: var(--lvl-2); }
+#clock-sub { transition: color .2s; }
 
 #scrub {
   position: absolute; left: 0; right: 0; top: 20px;

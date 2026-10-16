@@ -52,16 +52,52 @@ const ENGINE = (() => {
   const audiencesFor = lvl =>
     Object.entries(AUDIENCES).filter(([, a]) => lvl >= a.minLevel).map(([k]) => k);
 
-  let PERIODS = [];
+  let PERIODS = [];        // the real FEWS NET release months
+  let AXIS = [];           // every calendar month those releases span
+  let STEP_RELEASE = [];   // axis step -> index of the release in force
 
-  const N_PERIODS = () => PERIODS.length;
+  // The slider runs on a monthly axis so it moves smoothly, but the data is
+  // never interpolated: each month shows the last classification FEWS NET
+  // actually published on or before it, which is how these are read
+  // operationally. 18 releases, ~69 slider steps.
+  function buildAxis() {
+    AXIS = []; STEP_RELEASE = [];
+    if (!PERIODS.length) return;
+    const [y0, m0] = PERIODS[0].split('-').map(Number);
+    const [y1, m1] = PERIODS[PERIODS.length - 1].split('-').map(Number);
+    const total = (y1 - y0) * 12 + (m1 - m0);
+    let rel = 0;
+    for (let i = 0; i <= total; i++) {
+      const y = y0 + Math.floor((m0 - 1 + i) / 12);
+      const m = ((m0 - 1 + i) % 12) + 1;
+      const key = `${y}-${String(m).padStart(2, '0')}`;
+      while (rel + 1 < PERIODS.length && PERIODS[rel + 1] <= key) rel++;
+      AXIS.push(key);
+      STEP_RELEASE.push(rel);
+    }
+  }
 
-  // Each slider step is a real publication date, not a synthetic month.
-  function dateAt(t) {
-    const p = PERIODS[Math.max(0, Math.min(PERIODS.length - 1, t))];
-    if (!p) return { label: '—', key: null };
-    const [y, m] = p.split('-');
-    return { label: `${MONTHS[+m - 1]} ${y}`, key: p, year: +y, month: +m - 1 };
+  const N_STEPS = () => AXIS.length;
+  const releaseAt = step =>
+    STEP_RELEASE[Math.max(0, Math.min(STEP_RELEASE.length - 1, step))] || 0;
+  // The first slider step on which a given release becomes current.
+  const stepOfRelease = r => Math.max(0, STEP_RELEASE.indexOf(r));
+
+  function dateAt(step) {
+    const key = AXIS[Math.max(0, Math.min(AXIS.length - 1, step))];
+    if (!key) return { label: '—', key: null, isRelease: false };
+    const [y, m] = key.split('-');
+    const rel = releaseAt(step);
+    return {
+      label: `${MONTHS[+m - 1]} ${y}`,
+      key, year: +y, month: +m - 1,
+      release: PERIODS[rel],
+      isRelease: PERIODS[rel] === key,
+      releaseLabel: (() => {
+        const [ry, rm] = PERIODS[rel].split('-');
+        return `${MONTHS[+rm - 1]} ${ry}`;
+      })(),
+    };
   }
 
   // ---- Build ---------------------------------------------------------------
@@ -70,6 +106,7 @@ const ENGINE = (() => {
   // features: the matching GeoJSON features, keyed by properties.name
   function build(features, timeline, resolution) {
     PERIODS = timeline.periods;
+    buildAxis();
     const src = timeline[resolution] || {};
 
     const units = features.map(f => {
@@ -78,25 +115,30 @@ const ENGINE = (() => {
       const phases = rec.phases || {};
       const proj = rec.proj || {};
 
-      // A unit holds its last published classification until superseded.
-      const series = [];
+      // One row per release, holding the last published classification.
+      const byRelease = [];
       let last = null, lastAsOf = null;
-      for (let t = 0; t < PERIODS.length; t++) {
-        const key = PERIODS[t];
-        if (phases[key] != null) { last = phases[key]; lastAsOf = key; }
-        const phase = last;
-        const level = phase != null ? (PHASE_TO_LEVEL[phase] ?? 0) : null;
-        series.push({
-          t,
+      for (let r = 0; r < PERIODS.length; r++) {
+        const key = PERIODS[r];
+        const fresh = phases[key] != null;
+        if (fresh) { last = phases[key]; lastAsOf = key; }
+        byRelease.push({
+          release: r,
           period: key,
-          phase,
-          level,                       // null = this unit has no FEWS coverage
+          phase: last,
+          level: last != null ? (PHASE_TO_LEVEL[last] ?? 0) : null,
           asOf: lastAsOf,
-          carried: phases[key] == null && last != null,
+          fresh,
           projection: proj[key] ?? null,
-          hasData: phase != null,
+          hasData: last != null,
         });
       }
+      // Then projected onto the monthly axis. Nothing new is invented here —
+      // every month simply points at the release that was current for it.
+      const series = AXIS.map((month, step) => {
+        const row = byRelease[releaseAt(step)];
+        return { ...row, t: step, month, carried: month !== row.period };
+      });
       return {
         name,
         props: f.properties,
@@ -111,12 +153,14 @@ const ENGINE = (() => {
     const byName = new Map(units.map(u => [u.name, u]));
 
     // Real transitions only — a unit genuinely reclassified by FEWS NET.
+    // Compared release-to-release, then placed on the month the release landed.
     const events = [];
     for (const u of units) {
-      for (let t = 1; t < PERIODS.length; t++) {
-        const a = u.series[t - 1], b = u.series[t];
+      for (let r = 1; r < PERIODS.length; r++) {
+        const a = u.series[stepOfRelease(r - 1)], b = u.series[stepOfRelease(r)];
         if (a.level == null || b.level == null || a.level === b.level) continue;
-        if (b.carried) continue;               // not a new publication
+        if (!b.fresh) continue;                // not a new publication
+        const t = stepOfRelease(r);
         events.push({
           t, unit: u.name, county: u.county,
           from: a.level, to: b.level,
@@ -132,8 +176,8 @@ const ENGINE = (() => {
     }
     events.sort((x, y) => x.t - y.t || y.to - x.to || x.unit.localeCompare(y.unit));
 
-    // Share of units at Warning or above, per period — the timeline strip.
-    const national = PERIODS.map((_, t) => {
+    // Share of units at Warning or above, per slider step — the timeline strip.
+    const national = AXIS.map((_, t) => {
       const live = units.filter(u => u.series[t].level != null);
       if (!live.length) return 0;
       return live.filter(u => u.series[t].level >= 2).length / live.length;
@@ -190,7 +234,8 @@ const ENGINE = (() => {
 
   return {
     LEVELS, AUDIENCES, PHASE_NAME, PHASE_TO_LEVEL,
-    N_PERIODS, dateAt, build, composeSMS, audiencesFor,
+    N_STEPS, dateAt, releaseAt, stepOfRelease, build, composeSMS, audiencesFor,
     get periods() { return PERIODS; },
+    get axis() { return AXIS; },
   };
 })();

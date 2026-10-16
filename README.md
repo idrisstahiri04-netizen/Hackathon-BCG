@@ -235,6 +235,64 @@ normal-vision separation and 3:1 contrast. Because colour alone is never enough,
 every level also carries its number, its name and a glyph — on the map legend,
 on every notification chip and in the detail panel.
 
+## Country coverage — why only Kenya
+
+The pipeline is country-agnostic; the *data* is not. Everything here rests on
+FEWS NET publishing IPC classifications, and FEWS NET is a famine early-warning
+network for sub-Saharan Africa, Central America, Central Asia, Yemen,
+Afghanistan and Haiti.
+
+Measured directly against `fdw.fews.net/api/ipcphase`:
+
+| Country | IPC records | Addable |
+|---|---|---|
+| Ethiopia | 236,608 | yes |
+| Kenya | 162,508 | **built** |
+| Uganda | 87,846 | yes |
+| Sudan | 69,361 | yes |
+| Somalia | 59,092 | yes |
+| Nigeria | 57,366 | yes |
+| Mozambique | 55,322 | yes |
+| Zimbabwe | 47,019 | yes |
+| Niger | 39,664 | yes |
+| Mali | 28,106 | yes |
+| Malawi | 23,673 | yes |
+| Chad | 22,578 | yes |
+| South Sudan | 20,687 | yes |
+| Burkina Faso | 13,528 | yes |
+| Zambia | 7,543 | yes |
+| **Morocco, Algeria, Tunisia, Egypt, Libya** | **0** | no |
+| Tanzania | 0 | no |
+
+**All of North Africa returns zero.** Morocco is not an IPC or Cadre Harmonisé
+country either, so there are no published phases, no livelihood zones, no
+ground-truth labels and no official projections — the four things this
+prototype is built on. The app's "no coverage" state is the honest answer, and
+it is deliberate.
+
+Morocco's food problem is also different in kind: national cereal shortfall and
+import dependency (3.1 Mt harvested in 2023-24 against 10 Mt+ in good years)
+rather than household famine classification, so IPC phases would not apply
+meaningfully even if they existed. A Morocco product would need its own data
+stack — ERA5 rainfall anomalies via Open-Meteo work there and the drought
+signal is strong, but nothing grades the output.
+
+### Adding a covered country
+
+Roughly an hour per country:
+
+1. `python3 fetch_fews.py` with `country_code=XX`
+2. Download that country's geoBoundaries ADM2 and run `prep_adm2.py`
+3. Check the name join rate (Kenya reached 288/290)
+4. Add the country to `COUNTRIES` in `js/app.js`
+5. Add its livelihood zones to `ZONES` in `js/advice.js` — the only real work,
+   since crop and livestock mappings are country-specific
+
+Zimbabwe is the natural next one: 4,263 records across 84 admin units, periods
+running to **June 2026**, and geoBoundaries ADM2 carries 91 districts sourced
+from ZIMSTAT, the national statistics agency — the same official-grade
+provenance as Kenya's IEBC boundaries.
+
 ## Known gaps
 
 - One country. Adding another needs its admin boundaries, a crop mask and a

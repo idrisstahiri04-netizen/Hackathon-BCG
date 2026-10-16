@@ -11,6 +11,7 @@ NEVER used by cv() - they exist only so a final, once-only check can be run by t
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -19,26 +20,63 @@ import pandas as pd
 from joblib import Parallel, delayed
 
 HERE = Path(__file__).resolve().parent
+OUT = Path(os.environ.get("EXP_OUT", str(HERE)))   # artefacts (caches, OOF, results); HERE = code + small data
+OUT.mkdir(parents=True, exist_ok=True)
 PIPE = HERE.parent
 sys.path.insert(0, str(PIPE))
 
 import lightgbm as lgb                                   # noqa: E402
 import train as T                                        # noqa: E402
 from common import CV_FIRST, CV_LAST, DATA_DIR, EVENTS   # noqa: E402
-from features import attach                              # noqa: E402
+from features import attach, make_xy                     # noqa: E402
+from common import LATENCY                               # noqa: E402
 
 ISO3S = ["ZWE", "KEN", "MWI", "ZMB"]
-ROWS = HERE / "rows_base.parquet"
-FEAT = HERE / "feat_base.parquet"       # unit-month feature table (for adding features)
-N_JOBS = 3                               # main helper may be training at the same time
+ALL_LEADS = list(range(0, 7))            # rows are built for leads 0-6; cv() trains on TRAIN_LEADS by default
+TRAIN_LEADS = tuple(T.TRAIN_LEADS)       # (0, 1, 2, 3) as in train.py
+ROWS = OUT / "rows_base.parquet"
+FEAT = OUT / "feat_base.parquet"       # unit-month feature table (for adding features)
+N_JOBS = 4
 
 
 # ----------------------------------------------------------------------------- dataset
+def centroids(iso3: str, data_dir=DATA_DIR) -> pd.DataFrame:
+    """Unit centroids (mean of ring vertices) from units_<ISO3>.geojson; lat drives the ENSO sign."""
+    g = json.loads((Path(data_dir) / f"units_{iso3}.geojson").read_text())
+    rows = []
+    for ft in g["features"]:
+        pts = []
+
+        def walk(c):
+            if isinstance(c, dict):
+                if "coordinates" in c:
+                    walk(c["coordinates"])
+                elif "geometries" in c:
+                    for x in c["geometries"]:
+                        walk(x)
+                return
+            if isinstance(c[0], (int, float)):
+                pts.append(c[:2])
+            else:
+                for x in c:
+                    walk(x)
+        if ft.get("geometry"):
+            walk(ft["geometry"])
+        a = np.array(pts) if pts else np.full((1, 2), np.nan)
+        rows.append(dict(unit_id=ft["properties"].get("shapeID"), iso3=iso3, lon=a[:, 0].mean(), lat=a[:, 1].mean()))
+    return pd.DataFrame(rows)
+
+
 def build(iso3s=ISO3S, data_dir=DATA_DIR):
     preps = {i: T.prepare_country(i, data_dir) for i in iso3s}
-    rows = pd.concat([T.build_rows(P) for P in preps.values()], ignore_index=True)
+    def _rows(P):
+        X = make_xy(P["feat"], P["targets"], ALL_LEADS, P["plant"], P["bim"])
+        X = T.add_families(X, P["ss"])
+        X["test"] = [T.is_test(P["iso3"], a) for a in X["agyear"]]
+        return X
+    rows = pd.concat([_rows(P) for P in preps.values()], ignore_index=True)
     cols = T.feature_cols(next(iter(preps.values()))["feat"])
-    rows = rows.dropna(subset=["label"]).reset_index(drop=True)
+    rows = rows.reset_index(drop=True)          # keep NaN labels: alternative labels may be defined
     rows.to_parquet(ROWS, index=False)
     feats = []
     for i, P in preps.items():
@@ -46,21 +84,24 @@ def build(iso3s=ISO3S, data_dir=DATA_DIR):
         f["iso3"] = i
         feats.append(f.reset_index())
     pd.concat(feats, ignore_index=True).to_parquet(FEAT, index=False)
-    (HERE / "cols_base.json").write_text(json.dumps(cols))
+    (OUT / "cols_base.json").write_text(json.dumps(cols))
+    cen = [centroids(i, data_dir) for i in iso3s if (Path(data_dir) / f"units_{i}.geojson").exists()]
+    if cen:
+        pd.concat(cen, ignore_index=True).to_parquet(OUT / "unit_centroids.parquet", index=False)
     # also keep the wide signal grid (post crop-fallback) and season info for new features
     wides = []
     for i, P in preps.items():
         w = P["c"].wide.copy()
         w["iso3"] = i
         wides.append(w.reset_index())
-    pd.concat(wides, ignore_index=True).to_parquet(HERE / "wide_base.parquet", index=False)
+    pd.concat(wides, ignore_index=True).to_parquet(OUT / "wide_base.parquet", index=False)
     seas = {}
     for i, P in preps.items():
         for u, ss in P["ss"].items():
             seas[u] = dict(iso3=i, plant=P["plant"][u], bimodal=bool(P["bim"][u]),
                            seasons=[dict(core_start=s.core_start, rainy=s.rainy, planting=s.planting,
                                          crop=s.crop, grass=s.grass) for s in ss])
-    (HERE / "seasons_base.json").write_text(json.dumps(seas))
+    (OUT / "seasons_base.json").write_text(json.dumps(seas))
     print(f"rows={len(rows)} cv={int((~rows.test & rows.agyear.between(CV_FIRST, CV_LAST)).sum())} "
           f"test={int(rows.test.sum())} cols={len(cols)}")
     return rows, cols
@@ -68,7 +109,7 @@ def build(iso3s=ISO3S, data_dir=DATA_DIR):
 
 def load():
     rows = pd.read_parquet(ROWS)
-    cols = json.loads((HERE / "cols_base.json").read_text())
+    cols = json.loads((OUT / "cols_base.json").read_text())
     return rows, cols
 
 
@@ -113,12 +154,16 @@ class _LGBM(T.LGBM):
 
 
 def cv(rows: pd.DataFrame, cols: list, models=("logreg", "lgbm", "ensemble"), lgb_params=None, mono=None,
-       events=EVENTS, n_jobs=N_JOBS, group_fn=None) -> pd.DataFrame:
+       events=EVENTS, n_jobs=N_JOBS, group_fn=None, train_leads=TRAIN_LEADS, label_col="label") -> pd.DataFrame:
     """Leave-one-agyear-out over CV rows; returns OOF frame with raw_<m> and cross-fitted cal_<m>.
 
     group_fn(rows) -> Series of group keys lets a model be fitted per group (e.g. per country);
     folds are still by agyear and calibration still pooled (as in train.py)."""
-    cvr = rows[~rows.test & rows.agyear.between(CV_FIRST, CV_LAST)].copy()
+    cvr = rows[~rows.test & rows.agyear.between(CV_FIRST, CV_LAST) & rows.lead.isin(train_leads)].copy()
+    if label_col != "label":
+        cvr["label"] = cvr[label_col]
+        cvr["prev_label"] = cvr[label_col.replace("label", "prev_label")] if label_col.replace("label", "prev_label") in cvr else np.nan
+    cvr = cvr.dropna(subset=["label"])
     folds = sorted(cvr.agyear.unique())
     outs = []
     for ev in events:
@@ -184,8 +229,8 @@ if __name__ == "__main__":
         rows, cols = load()
         models = ("persistence", "rule", "logreg", "lgbm", "ensemble")
         oof = cv(rows, cols, models=models)
-        oof.to_parquet(HERE / "oof_baseline.parquet", index=False)
+        oof.to_parquet(OUT / "oof_baseline.parquet", index=False)
         tab = table(oof, models=models)
-        (HERE / "cv_baseline.json").write_text(json.dumps(tab, indent=1))
+        (OUT / "cv_baseline.json").write_text(json.dumps(tab, indent=1))
         for m in models:
             print(summary("baseline", tab, model=m))

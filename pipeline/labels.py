@@ -3,8 +3,9 @@
 Per unit and season instance (seasons found per unit from its own rain climatology, see
 common.detect_seasons; bimodal climates get two seasons per year):
 
-  crop_failure : min monthly vci_crop over the crop window (3 wettest months shifted +1) < 35
-  no_grass     : min vci_grass over the 3 months after the rainy season < 35
+  crop_failure : >= 2 of the 3 crop-window months (3 wettest months shifted +1) have vci_crop < 35
+  no_grass     : >= 2 of the 3 months after the rainy season have vci_grass < 35
+  (v1.1, audit M1; the old "minimum month < 35" rule gave ~40-50% prevalence = below-normal, not failure)
   cant_plant   : in any month of the planting window (first 2 rainy-season months)
                  spi_1m < -1 AND sm1_z < -1
 
@@ -23,6 +24,8 @@ from common import (DATA_DIR, EVENTS, WINDOW_LEN, Country, load_country,
                     season_instances, unit_seasons)
 
 VCI_T = 35.0
+MIN_LOW = 2        # v1.1 (audit M1): >= 2 of the 3 window months below VCI_T (was: minimum month < 35)
+MIN_VALID = 2      # need >= 2 valid months, else the label is missing
 
 
 def window_months(start: pd.Timestamp, n: int) -> list:
@@ -32,12 +35,9 @@ def window_months(start: pd.Timestamp, n: int) -> list:
 def event_outcome(w: pd.DataFrame, event: str, months: list) -> float:
     """w: wide frame for one unit indexed by month. Returns 1.0/0.0/NaN."""
     sub = w.reindex(months)
-    if event == "crop_failure":
-        v = sub["vci_crop"].dropna()
-        return np.nan if v.empty else float(v.min() < VCI_T)
-    if event == "no_grass":
-        v = sub["vci_grass"].dropna()
-        return np.nan if v.empty else float(v.min() < VCI_T)
+    if event in ("crop_failure", "no_grass"):
+        v = sub["vci_crop" if event == "crop_failure" else "vci_grass"].dropna()
+        return np.nan if len(v) < MIN_VALID else float((v < VCI_T).sum() >= MIN_LOW)
     if event == "cant_plant":
         both = sub[["spi_1m", "sm1_z"]].dropna()
         return np.nan if both.empty else float(((both.spi_1m < -1) & (both.sm1_z < -1)).any())
@@ -49,7 +49,7 @@ def _outcome_np(a: dict, e: str, i0: int, n: int) -> float:
     if e in ("crop_failure", "no_grass"):
         v = a["vci_crop" if e == "crop_failure" else "vci_grass"][i0:i0 + n]
         v = v[~np.isnan(v)]
-        return np.nan if v.size == 0 else float(v.min() < VCI_T)
+        return np.nan if v.size < MIN_VALID else float((v < VCI_T).sum() >= MIN_LOW)
     s1, sm = a["spi_1m"][i0:i0 + n], a["sm1_z"][i0:i0 + n]
     ok = ~np.isnan(s1) & ~np.isnan(sm)
     return np.nan if not ok.any() else float(((s1[ok] < -1) & (sm[ok] < -1)).any())

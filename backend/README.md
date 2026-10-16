@@ -25,13 +25,28 @@ cd /home/looooo/bcg/Hackathon-BCG
 
 Globe: `python3 -m http.server 8777`, then open `http://localhost:8777/?api=http://localhost:8000`.
 
+## Auth (operator token)
+
+`/sim/inbound`, `/alerts/run`, `/events/{id}/approve`, `/events/{id}/cancel` need header
+`X-API-Key: <ADMIN_TOKEN>`. The token lives in `/home/looooo/bcg/.env`; if missing, the backend
+generates one there on first start (never printed). `/feed/users` and `/feed/messages` work without
+the token but then mask phone numbers (`+263****001`) and drop names. `/feed/alerts` and `/health` are public.
+
+UI: run `python backend/make_ui_config.py` -> writes `js/config.local.js` (gitignored) with
+`window.SMS_API_KEY` / `window.SMS_API_BASE`; `index.html` loads it before `js/live.js`, which sends the header.
+
 Quick check:
 ```bash
+export K=$(grep '^ADMIN_TOKEN=' /home/looooo/bcg/.env | cut -d= -f2)
 curl localhost:8000/health
-curl -XPOST localhost:8000/sim/inbound -H 'content-type: application/json' -d '{"from":"+212600000050","text":"JOIN"}'
-curl -XPOST localhost:8000/alerts/run  -H 'content-type: application/json' -d '{"iso3":"ZWE","t":63}'
-curl -XPOST localhost:8000/events/1/approve -H 'content-type: application/json' -d '{"approved_by":"WHH desk"}'
+curl -XPOST localhost:8000/sim/inbound -H "X-API-Key: $K" -H 'content-type: application/json' -d '{"from":"+212600000050","text":"JOIN"}'
+curl -XPOST localhost:8000/alerts/run  -H "X-API-Key: $K" -H 'content-type: application/json' -d '{"iso3":"ZWE","t":63}'
+curl -XPOST localhost:8000/events/1/approve -H "X-API-Key: $K" -H 'content-type: application/json' -d '{"approved_by":"WHH desk"}'
 ```
+
+Abuse limits: per number 10 inbound/min and 50/day (`INBOUND_PER_MIN`, `INBOUND_PER_DAY`; over the limit:
+no Claude call, no reply; STOP always works); Android mode max `DAILY_SEND_CAP` (500) SMS per 24 h;
+messages older than `RETENTION_DAYS` (90) are purged at startup.
 
 `/alerts/run` refuses (HTTP 409) when `data/risk/<ISO3>.js` is a STUB or has no model output. No fake data.
 Watch (level 1) events are auto-approved and sent to NGO/officer only. Warning/Emergency wait for
@@ -45,9 +60,12 @@ Watch (level 1) events are auto-approved and sent to NGO/officer only. Warning/E
 | `GATEWAY` | `sim` | `sim` (on-screen phone), `log` (log only), `android` (real SMS) |
 | `ANDROID_GW_URL` | - | local: `http://<phone-ip>:8080` / cloud: `https://api.sms-gate.app/3rdparty/v1` |
 | `ANDROID_GW_USER`, `ANDROID_GW_PASS` | - | Basic auth from the app's Home tab (local and cloud credentials differ) |
-| `ANDROID_GW_SIGNING_KEY` | - | optional: verify webhook HMAC (`X-Signature`), app Settings > Webhooks > Signing Key |
+| `ANDROID_GW_SIGNING_KEY` | - | **required for inbound webhooks**: app Settings > Webhooks > Signing Key. Without it `/sms/inbound` rejects unsigned webhooks (fail closed); signatures older than 5 min are rejected |
+| `ADMIN_TOKEN` | generated | operator token (header `X-API-Key`) |
 | `ANDROID_GW_VERIFY_TLS` | `1` | set `0` only for self-signed local certs |
-| `ROUTER_MODEL` / `ADVICE_MODEL` | `claude-haiku-5-5` / `claude-sonnet-5-5` | |
+| `ROUTER_MODEL` / `ADVICE_MODEL` | `claude-haiku-5-5` / `claude-haiku-5-5` | advice pick only runs when local topic ranking is unclear; set `claude-sonnet-5-5` for a stronger, slower pick |
+| `LLM_TIMEOUT_S` | `6` | Claude read timeout (connect 2 s, 1 retry), then keyword fallback |
+| `LLM_WARMUP` | `1` | one tiny Claude call at startup so the first SMS is not cold |
 | `ROUTER_CONF_MIN` | `0.6` | below this the router asks a clarifying question |
 | `MONTHLY_CAP` | `6` | max alert SMS per user per calendar month |
 | `DB_PATH` | `backend/demo.db` | SQLite file (gitignored). Delete it to reset the demo |
@@ -78,10 +96,14 @@ The app is capcom6 "SMS Gateway for Android" (github.com/capcom6/android-sms-gat
    `python backend/check_gateway.py +2126XXXXXXXX` sends one test SMS through the same code path.
 5. Inbound SMS: the phone (local mode) or the cloud (cloud mode) POSTs a webhook to our
    `POST /sms/inbound`. Webhooks need **HTTPS** (only `http://127.0.0.1` is allowed in clear text). Options:
-   - **ngrok / Cloudflare tunnel** (easiest at the venue): `ngrok http 8000` -> `https://<id>.ngrok-free.app`
+   - **ngrok / Cloudflare tunnel**: `ngrok http 8000` -> `https://<id>.ngrok-free.app`. This makes the API public:
+     only do it with `ADMIN_TOKEN` and `ANDROID_GW_SIGNING_KEY` set (both are enforced)
    - **Azure** (our subscription): deploy the app (App Service / Container Apps) -> `https://<app>.azurewebsites.net`
-   - **USB, no internet, local mode only**: `adb reverse tcp:8000 tcp:8000`, webhook URL `http://127.0.0.1:8000/sms/inbound`
-   Register it (sms:received + sent/delivered/failed for delivery status):
+   - **USB, no internet, local mode only** (safest, nothing public; run uvicorn with `--host 127.0.0.1`):
+     `adb reverse tcp:8000 tcp:8000`, webhook URL `http://127.0.0.1:8000/sms/inbound`
+   First copy the app's signing key (Settings > Webhooks > Signing Key) into `ANDROID_GW_SIGNING_KEY`
+   in `.env` - without it every webhook is rejected (401). Then register the URL
+   (sms:received + sent/delivered/failed for delivery status):
    ```bash
    python backend/check_gateway.py --register-webhook https://<public-host>/sms/inbound
    python backend/check_gateway.py --list-webhooks
@@ -102,7 +124,8 @@ Back to sim: set `GATEWAY=sim` and restart. The on-screen phone (`POST /sim/inbo
   ask_help, stop, change_info, unknown`) and extracts district/role/name/language as strict JSON.
 - District accepted only after a fuzzy gazetteer match on `data/geo/<ISO3>.js`; ambiguous ("Gokwe")
   -> numbered choice; unknown -> ask again. Sign-up needs `YES`/`OUI` (consent recorded).
-- `ask_advice`: Claude Sonnet may only pick an entry id from `advice.yaml` for the user's role and current event.
+- `ask_advice`: entries from `advice.yaml` are ranked locally (question topic tags, then role, then current event). A clear match is answered without a second LLM call; otherwise Claude picks one id from the top 4. It never writes advice.
+- Alert sends: an event becomes `sent` only if no SMS failed; failed rows keep `failed:*` status, the feed shows `sent to N users, failed M`, and approving again retries only the failed users.
 - English and French replies; Shona/Ndebele are understood by Claude but replies are English (needs native review).
 
 ## Tests

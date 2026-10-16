@@ -11,7 +11,14 @@
 (() => {
   'use strict';
 
-  const API = (new URLSearchParams(location.search).get('api') || 'http://localhost:8000').replace(/\/$/, '');
+  // Base URL: ?api=... beats window.SMS_API_BASE (js/config.local.js, made by
+  // backend/make_ui_config.py, gitignored) beats the default.
+  const API = (new URLSearchParams(location.search).get('api') || window.SMS_API_BASE ||
+    'http://localhost:8000').replace(/\/$/, '');
+  // Operator key for /sim/inbound, /alerts/run, approve, cancel. Feeds work
+  // without it but come back with masked phone numbers.
+  const API_KEY = window.SMS_API_KEY || null;
+  const KEY_MSG = 'Admin key missing — run python backend/make_ui_config.py';
   const POLL_MS = 2000;
   const LEVELS = (typeof REAL !== 'undefined' && REAL.LEVELS) || [
     { n: 0, label: 'Normal', color: '#0ca30c', glyph: '●' },
@@ -31,15 +38,31 @@
   };
 
   // ---- HTTP -----------------------------------------------------------------
+  // Feeds are quick; the router may call Claude (cold start, advice answers)
+  // and approve may send many SMS, so those get a long timeout.
+  const TIMEOUT = { '/sim/inbound': 20000, '/alerts/run': 30000, approve: 30000 };
   async function api(path, body) {
-    const opt = body === undefined ? {} : {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    const headers = {};
+    if (API_KEY) headers['X-API-Key'] = API_KEY;
+    const opt = body === undefined ? { headers } : {
+      method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     };
     const ctl = new AbortController();
-    const to = setTimeout(() => ctl.abort(), 4000);
+    const ms = TIMEOUT[path] || (path.endsWith('/approve') ? TIMEOUT.approve : 5000);
+    const to = setTimeout(() => ctl.abort(), ms);
     try {
-      const r = await fetch(API + path, { ...opt, signal: ctl.signal });
+      let r;
+      try { r = await fetch(API + path, { ...opt, signal: ctl.signal }); }
+      catch (err) {
+        if (err.name === 'AbortError') { const e = new Error(`no answer after ${ms / 1000} s`); e.timeout = true; throw e; }
+        throw err;
+      }
       const data = await r.json().catch(() => ({}));
+      if (r.status === 401 || r.status === 403) {
+        const e = new Error(API_KEY ? 'Admin key rejected — run python backend/make_ui_config.py and reload' : KEY_MSG);
+        e.auth = true;
+        throw e;
+      }
       if (!r.ok) throw new Error(data.detail || data.error || `HTTP ${r.status}`);
       return data;
     } finally { clearTimeout(to); }
@@ -60,7 +83,7 @@
     if (Number.isNaN(+d)) return String(iso);
     return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
-  const maskPhone = p => (p ? String(p).replace(/^(\+?\d{3,5})\d*(\d{3})$/, '$1 ••• $2') : '');
+  const maskPhone = p => (p && /\*/.test(p) ? String(p) : p ? String(p).replace(/^(\+?\d{3,5})\d*(\d{3})$/, '$1 ••• $2') : '');
   function driversOf(e) {
     if (Array.isArray(e.drivers)) return e.drivers;
     if (e.drivers_json) {
@@ -69,6 +92,22 @@
     }
     return [];
   }
+  // Outgoing SMS status from the gateway: sim / logged / queued / sent /
+  // delivered / failed[:reason] / cancelled.
+  const isFailed = st => /^(failed|error|cancel)/i.test(String(st || ''));
+  function deliveryLabel(st) {
+    const s = String(st || '').toLowerCase();
+    if (isFailed(s)) return { cls: 'failed', txt: 'failed' + (s.includes(':') ? ` (${s.split(':').slice(1).join(':')})` : '') };
+    if (s === 'delivered') return { cls: 'ok', txt: 'delivered' };
+    if (s === 'sent') return { cls: 'ok', txt: 'sent' };
+    if (s === 'sim') return { cls: 'ok', txt: 'sent (simulator)' };
+    if (s === 'logged') return { cls: 'ok', txt: 'logged, no SMS' };
+    if (s === 'queued' || s === 'pending' || s === 'processed') return { cls: 'wait', txt: 'sending…' };
+    return { cls: '', txt: s };
+  }
+  // Failed SMS per event, counted from /feed/messages (backend may also send
+  // failed_count / sent_ok on the event itself; those win).
+  const failedByEvent = new Map();
   const sentOf = e => e.sent_count ?? e.sent_to ?? e.n_sent ?? e.recipients ?? e.sent ?? 0;
   const STATUS = {
     pending_approval: 'Waiting for approval',
@@ -92,8 +131,9 @@
     const s = $('#be-status');
     s.classList.toggle('up', ok);
     s.classList.toggle('down', !ok);
-    s.querySelector('.be-lab').textContent = ok ? `backend online${info && info.mock ? ' (mock)' : ''}` : 'backend offline';
-    s.title = `SMS backend ${API} — ${ok ? 'online' : 'not reachable'}`;
+    s.querySelector('.be-lab').textContent = ok
+      ? `backend online${info && info.mock ? ' (mock)' : ''}${API_KEY ? '' : ' · no admin key'}` : 'backend offline';
+    s.title = ok && !API_KEY ? KEY_MSG : `SMS backend ${API} — ${ok ? 'online' : 'not reachable'}`;
     $$('.lp-offline').forEach(n => { n.hidden = ok; });
     updateRunButton();
   }
@@ -150,7 +190,7 @@
         n ? () => show('alerts') : null);
       poll();
     } catch (err) {
-      toast(`Run alerts failed: ${err.message}`);
+      toast(err.auth ? err.message : `Run alerts failed: ${err.message}`);
     } finally {
       runBtn.classList.remove('busy');
       runBtn.textContent = label;
@@ -205,9 +245,16 @@
     const foot = el('div', 'al-foot');
     const st = el('span', `al-status st-${e.status}`, STATUS[e.status] || e.status || '');
     foot.append(st);
-    const n = sentOf(e);
+    // Backend gives sent_count (delivered OK) and failed_count separately.
+    // Without failed_count, sent_count counts every outgoing SMS, so subtract
+    // the failures seen in /feed/messages.
+    const total = +sentOf(e) || 0;
+    const beFailed = e.failed_count ?? e.n_failed;
+    const failed = +(beFailed ?? failedByEvent.get(e.id) ?? 0) || 0;
+    const ok = e.sent_ok != null ? +e.sent_ok : beFailed != null ? total : Math.max(0, total - failed);
     foot.append(el('span', 'al-sent', e.status === 'pending_approval' ? 'not sent yet'
-      : `sent to ${n} user${+n === 1 ? '' : 's'}`));
+      : `sent to ${ok} user${ok === 1 ? '' : 's'}`));
+    if (failed > 0 && e.status !== 'pending_approval') foot.append(el('span', 'al-failed', `${failed} failed`));
     if (e.approved_by && e.status !== 'pending_approval') foot.append(el('span', 'al-by', `by ${e.approved_by}`));
     if (e.status === 'pending_approval') {
       const b = el('button', 'approve', 'Approve & send');
@@ -228,17 +275,25 @@
     } catch (err) {
       btn.disabled = false;
       btn.textContent = 'Approve & send';
-      toast(`Approve failed: ${err.message}`);
+      toast(err.auth ? err.message : `Approve failed: ${err.message}`);
     }
   }
 
   async function pollAlerts() {
-    const d = await api('/feed/alerts');
+    const [d, dm] = await Promise.all([api('/feed/alerts'), page === 'alerts' ? api('/feed/messages?limit=500') : null]);
+    if (dm) {
+      failedByEvent.clear();
+      for (const m of rowsOf(dm, 'messages')) {
+        if (m.direction === 'out' && m.event_id != null && isFailed(m.status)) {
+          failedByEvent.set(m.event_id, (failedByEvent.get(m.event_id) || 0) + 1);
+        }
+      }
+    }
     const rows = rowsOf(d, 'events', 'alerts').slice().sort((a, b) => b.id - a.id);
     const list = $('#alerts-list');
     // Insert/replace in id order, newest on top.
     for (const e of rows.slice().reverse()) {
-      const sig = `${e.status}|${sentOf(e)}|${e.approved_by || ''}`;
+      const sig = `${e.status}|${sentOf(e)}|${e.approved_by || ''}|${e.failed_count ?? failedByEvent.get(e.id) ?? 0}`;
       const old = alertRows.get(e.id);
       if (old && old.sig === sig) continue;
       const li = buildAlert(e);
@@ -282,6 +337,10 @@
     const [du, dm] = await Promise.all([api('/feed/users'), api('/feed/messages')]);
     rowsOf(du, 'users').forEach(u => { users.set(u.id, u); if (u.phone) usersByPhone.set(u.phone, u); });
     rowsOf(dm, 'messages').forEach(m => messages.set(m.id, m));
+    if (page === 'phone' && phNum.value.trim()) {
+      const dp = await api('/feed/messages?phone=' + encodeURIComponent(phNum.value.trim()));
+      rowsOf(dp, 'messages').forEach(m => messages.set(m.id, m));
+    }
 
     const c = (du && du.counters) || {};
     const active = [...users.values()].filter(u => !u.opted_out_at);
@@ -340,7 +399,7 @@
         tdU.append(el('b', null, u.district_name || u.district_id || '?'),
           el('span', null, ` · ${u.role || '?'} · ${LANG[u.language] || u.language || '?'}`));
       } else if (m.intent === 'subscribe') {
-        tdU.append(el('span', 'muted', 'asked back for details'));
+        tdU.append(el('span', 'muted', 'not saved yet (asked to confirm)'));
       } else tdU.append(el('span', 'muted', '—'));
       tr.append(tdT, tdS, tdI, tdU);
 
@@ -359,13 +418,20 @@
   const phNum = $('#ph-number'), phText = $('#ph-text'), phThread = $('#ph-thread');
   const pending = [];  // optimistic outgoing bubbles not yet seen in the feed
   let phoneSig = '';
+  let thinking = 0;    // requests waiting for the router (Claude)
+  let lastFrom = '';
 
   function renderPhone() {
     const me = phNum.value.trim();
-    const mine = [...messages.values()].filter(m => m.phone === me).sort((a, b) => a.id - b.id);
+    // Without the key the backend masks numbers (+263****001), so match that.
+    const meMasked = me.length > 7 ? me.slice(0, 4) + '****' + me.slice(-3) : '****';
+    const mine = [...messages.values()]
+      .filter(m => m.phone === me || (!API_KEY && m.phone === meMasked))
+      .sort((a, b) => a.id - b.id);
     const left = pending.filter(p => p.phone === me &&
       !mine.some(m => m.direction === 'in' && m.text === p.text && m.id > p.after));
-    const sig = me + '|' + mine.map(m => m.id).join(',') + '|' + left.length;
+    const sig = me + '|' + mine.map(m => `${m.id}:${m.status}`).join(',') + '|' +
+      left.map(p => p.state).join(',') + '|' + thinking;
     if (sig === phoneSig) return;
     phoneSig = sig;
     phThread.innerHTML = '';
@@ -375,12 +441,25 @@
     for (const m of mine) {
       const b = el('div', `ph-msg ${m.direction === 'in' ? 'me' : 'them'}`);
       b.append(el('span', 'ph-txt', m.text || ''));
-      b.append(el('span', 'ph-meta', fmtTime(m.created_at) + (m.direction === 'in' && m.intent ? ` · ${m.intent}` : '')));
+      const meta = el('span', 'ph-meta', fmtTime(m.created_at) + (m.direction === 'in' && m.intent ? ` · ${m.intent}` : ''));
+      if (m.direction === 'out' && m.status) {
+        const d = deliveryLabel(m.status);
+        meta.append(' · ', el('span', `dl ${d.cls}`, d.txt));
+        if (d.cls === 'failed') b.classList.add('failed');
+      }
+      b.append(meta);
       phThread.append(b);
     }
     for (const p of left) {
-      const b = el('div', 'ph-msg me sending');
-      b.append(el('span', 'ph-txt', p.text), el('span', 'ph-meta', 'sending…'));
+      const b = el('div', `ph-msg me ${p.state === 'failed' ? 'failed' : 'sending'}`);
+      const meta = el('span', 'ph-meta');
+      meta.append(p.state === 'failed' ? el('span', 'dl failed', `not delivered: ${p.err}`) : 'sending…');
+      b.append(el('span', 'ph-txt', p.text), meta);
+      phThread.append(b);
+    }
+    if (thinking > 0 && me === lastFrom) {
+      const b = el('div', 'ph-msg them thinking');
+      b.append(el('span', 'ph-txt', 'Claude is thinking…'));
       phThread.append(b);
     }
     phThread.scrollTop = phThread.scrollHeight;
@@ -391,16 +470,24 @@
     const from = phNum.value.trim();
     if (!text || !from) return;
     const after = Math.max(0, ...messages.keys());
-    pending.push({ phone: from, text, after });
+    const p = { phone: from, text, after, state: 'sending' };
+    pending.push(p);
+    lastFrom = from;
+    thinking++;
     renderPhone();
+    let ok = true;
     try {
       await api('/sim/inbound', { from, text });
     } catch (err) {
-      toast(`Send failed: ${err.message}`);
+      // A timeout is not a failure: the router may still answer, and the
+      // reply will appear through polling. Only a real error marks it failed.
+      if (!err.timeout) { ok = false; p.state = 'failed'; p.err = err.message; if (err.auth) toast(err.message); }
+      else toast('Still waiting for the reply. It will appear here when ready.');
+    } finally {
+      thinking--;
     }
     try { await pollUsers(); } catch (_) {}
-    // Drop optimistic bubbles once the feed has them (or after a failed send).
-    for (let i = pending.length - 1; i >= 0; i--) if (pending[i].text === text && pending[i].phone === from) pending.splice(i, 1);
+    if (ok) pending.splice(pending.indexOf(p), 1);
     phoneSig = '';
     renderPhone();
   }

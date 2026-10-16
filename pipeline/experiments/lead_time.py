@@ -20,6 +20,7 @@ Uses CV rows only (the OOF file holds no hold-out rows).
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -27,6 +28,8 @@ import numpy as np
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
+OUT = Path(os.environ.get("EXP_OUT", str(HERE)))   # artefacts (caches, OOF, results); HERE = code + small data
+OUT.mkdir(parents=True, exist_ok=True)
 EVENTS = ["cant_plant", "crop_failure", "no_grass"]
 FPR_BUDGETS = [0.10, 0.20, 0.30]
 
@@ -100,9 +103,9 @@ def main():
     grid = np.round(np.arange(0.05, 0.96, 0.05), 2)
     sws = pd.concat([sweep(oof, pcol, c, grid) for c in ("p_only", "warn", "watch")], ignore_index=True)
     tag = path.stem
-    sws.to_csv(HERE / f"leadtime_sweep_{tag}.csv", index=False)
+    sws.to_csv(OUT / f"leadtime_sweep_{tag}.csv", index=False)
     picks = pd.concat([pick(sws, b) for b in FPR_BUDGETS], ignore_index=True)
-    picks.to_csv(HERE / f"leadtime_picks_{tag}.csv", index=False)
+    picks.to_csv(OUT / f"leadtime_picks_{tag}.csv", index=False)
     # current CONTRACT thresholds for reference
     th = json.loads((HERE.parent / "out" / f"thresholds_{tag.replace('oof_', '')}.json").read_text()) \
         if (HERE.parent / "out" / f"thresholds_{tag.replace('oof_', '')}.json").exists() else {"p_warn": 0.5, "p_watch": 0.35}

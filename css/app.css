@@ -185,9 +185,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* --- County detail panel -------------------------------------------------- */
+/* 20..330px wide so it clears the HUD (starts at 350px), and stops above the
+   legend (bottom 20px, ~150px tall) instead of covering its L0 row. */
 #detail {
-  position: absolute; left: 20px; top: 76px; width: 352px;
-  max-height: calc(100% - 170px); overflow-y: auto; z-index: 15;
+  position: absolute; left: 20px; top: 76px; width: 310px;
+  max-height: calc(100% - 76px - 186px); overflow-y: auto; z-index: 15;
   background: rgba(26,26,25,.95);
   backdrop-filter: blur(16px);
   border: 1px solid var(--line);
@@ -467,3 +469,85 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .note.decl { border-left-color: var(--lvl-3); }
 .note.decl .n-line { color: var(--text-primary); }
+
+/* Official declaration stays visible: sticky at whichever edge of the feed it
+   would scroll past, and never trimmed by app.js. */
+.note.decl {
+  position: sticky; top: 0; bottom: 0; z-index: 2;
+  background: #2a1d1c; box-shadow: 0 4px 14px rgba(0,0,0,.45);
+}
+.note.decl:hover { background: #33211f; }
+
+#decl-mark.flip span { left: auto; right: 4px; }
+.d-head .chip { white-space: nowrap; }
+
+/* Level kept only by hysteresis (row.held). */
+.d-pm .held .big { font-size: 22px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; }
+
+/* ---- Narrow screens (390px phones) --------------------------------------- */
+/* Globe on top, feed below, timeline as two rows (controls, then a full-width
+   slider), unit panel as a bottom sheet over the feed. */
+@media (max-width: 720px) {
+  .viz-root { --time-h: 104px; --feed-h: 36vh; }
+
+  #stage {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) var(--feed-h);
+  }
+  #feed-col { border-left: 0; border-top: 1px solid var(--line); min-height: 0; }
+  #feed-head { padding: 9px 12px; }
+  #feed { padding: 8px; gap: 7px; }
+  .note { padding: 9px 10px; }
+
+  #search-wrap { top: 10px; left: 10px; right: 10px; width: auto; }
+  #search-box { height: 40px; }
+
+  #hud {
+    top: 58px; left: 12px; right: 12px;
+    flex-direction: column; gap: 4px;
+  }
+  #hud-name { font-size: 19px; }
+  #hud-sub { font-size: 11.5px; }
+  #hud-stats { gap: 16px; text-align: left; }
+  .stat-val { font-size: 16px; }
+  .stat-lab { font-size: 9.5px; }
+
+  #legend { left: 8px; bottom: 38px; padding: 6px 8px; }
+  .legend-title { display: none; }
+  #legend ul { grid-template-columns: repeat(2, auto); gap: 3px 12px; }
+  #legend li { font-size: 11px; gap: 5px; }
+  #legend .ct { margin-left: 4px; }
+
+  #empty-hint { inset: auto 12px 40%; }
+
+  /* Bottom sheet over the feed, above the timeline. */
+  #detail {
+    position: fixed; left: 0; right: 0; top: auto; bottom: var(--time-h);
+    width: auto; max-height: 68vh; z-index: 40;
+    border-radius: 14px 14px 0 0; border-bottom: 0;
+    animation: sheet-up .22s ease-out;
+  }
+  @keyframes sheet-up { from { transform: translateY(24px); opacity: 0; } }
+  .d-head { position: sticky; top: 0; z-index: 1; background: rgba(26,26,25,.98); }
+  .d-close { font-size: 24px; padding: 4px 10px; }
+  .fams { gap: 4px; }
+
+  #timeline {
+    flex-wrap: wrap; align-content: center; gap: 6px 10px;
+    padding: 6px 12px 8px;
+  }
+  #play { width: 38px; height: 38px; }
+  #clock { width: auto; flex: 1; text-align: left; }
+  #clock-date { font-size: 14px; display: inline; margin-right: 6px; }
+  #track-wrap { order: 10; flex: 1 1 100%; height: 46px; }
+  #scrub { height: 30px; top: 16px; }
+  #scrub::-webkit-slider-thumb { width: 22px; height: 22px; margin-top: -9px; }
+  #scrub::-moz-range-thumb { width: 22px; height: 22px; }
+  #track-marks .yr { font-size: 9px; }
+
+  #disclaimer {
+    right: 8px; left: 8px; max-width: none;
+    bottom: calc(var(--time-h) + var(--feed-h) + 6px);
+    font-size: 9px; text-align: right;
+  }
+}

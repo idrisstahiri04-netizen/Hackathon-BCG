@@ -20,7 +20,7 @@ mkdir -p "$RUN"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 SITE_PORT="${SITE_PORT:-8777}"
 BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}"
-export GATEWAY="${GATEWAY:-sim}"
+GATEWAY_FROM_SHELL="${GATEWAY:-}"   # shell env > .env > sim (decided after .env is located)
 
 FRESH=0; SEED=1; CHECK_ONLY=0
 for a in "$@"; do
@@ -87,6 +87,9 @@ else
   [ -n "$ENVF" ] && export ENV_FILE="$ENVF"
 fi
 
+if [ -n "$GATEWAY_FROM_SHELL" ]; then export GATEWAY="$GATEWAY_FROM_SHELL"
+elif [ -n "$ENVF" ] && grep -qE '^GATEWAY=' "$ENVF"; then export GATEWAY="$(grep -E '^GATEWAY=' "$ENVF" | tail -1 | cut -d= -f2- | tr -d '"'"'"' \r')"
+else export GATEWAY=sim; fi
 if [ "$GATEWAY" = "android" ]; then
   gw_url="$( [ -n "$ENVF" ] && grep -E '^ANDROID_GW_URL=' "$ENVF" | tail -1 | cut -d= -f2- )"
   [ -n "${ANDROID_GW_URL:-$gw_url}" ] && ok "GATEWAY=android, ANDROID_GW_URL set" || bad "GATEWAY=android but ANDROID_GW_URL not set in .env"
@@ -162,6 +165,12 @@ done
 if [ "$up" = 1 ]; then ok "backend healthy: $(curl -fsS -m 2 "$BE/health")"
 else bad "backend did not answer /health in 20 s. Last log lines:"; tail -n 15 "$RUN/backend.log"; exit 1; fi
 curl -fsS -m 3 -o /dev/null "http://127.0.0.1:$SITE_PORT/index.html" && ok "static site serving index.html" || bad "static site not answering"
+
+# --- warm-up + UI token: the backend now warms the Claude client itself at startup (backend/llm.py
+# warm_up), so no throw-away SMS is needed. Write js/config.local.js (gitignored) so the UI sends X-API-Key.
+"$PY" "$REPO/backend/make_ui_config.py" --api "$BE" >/dev/null \
+  && ok "UI config written (js/config.local.js, token not shown)" \
+  || warn "could not write js/config.local.js (UI operator actions will get 401)"
 
 # --- seed demo users (idempotent: phones are UNIQUE, JOIN is a keyword fast-path) --
 if [ "$SEED" = 1 ]; then

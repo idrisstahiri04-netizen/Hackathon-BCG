@@ -1,4 +1,6 @@
-"""2. Labels depend only on vci_* signals (season windows held fixed)."""
+"""2. Modelled labels depend only on vci_* signals (season windows held fixed).
+cant_plant (spi_1m & sm1_z) is not modelled: rule-based Watch reason only (orchestrator decision);
+test_cv_holdout.py checks that no model is trained on it."""
 import numpy as np
 import pandas as pd
 
@@ -21,10 +23,13 @@ def _scramble(df, types, seed=5):
     return d
 
 
-def test_labels_invariant_to_non_vci_signals(long_df):
+def test_modelled_labels_invariant_to_non_vci_signals(long_df):
     ss = unit_seasons(to_country(long_df, "ZWE"))       # windows fixed from the original rain climatology
     a = _targets(long_df, ss)
     b = _targets(_scramble(long_df, NON_VCI), ss)
+    import train as T
+    a, b = a[a.event.isin(T.MODEL_EVENTS)], b[b.event.isin(T.MODEL_EVENTS)]
+    assert len(a)
     bad = a.label.fillna(-1) != b.label.fillna(-1)
     assert not bad.any(), f"labels changed for events {sorted(a.loc[bad, 'event'].unique())}"
 

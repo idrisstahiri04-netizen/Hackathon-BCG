@@ -51,11 +51,11 @@
         </div>
         <div class="stat">
           <span class="stat-val" id="stat-people">0</span>
-          <span class="stat-lab">people in alerted areas</span>
+          <span class="stat-lab">population at Warning+</span>
         </div>
         <div class="stat">
           <span class="stat-val" id="stat-sms">0</span>
-          <span class="stat-lab">SMS sent to date</span>
+          <span class="stat-lab">escalations this month</span>
         </div>
       </div>
     </header>
@@ -188,6 +188,9 @@
 
 <script src="vendor/globe.gl.min.js"></script>
 <script src="js/real.js"></script>
+<!-- Local operator key + API base (gitignored, made by backend/make_ui_config.py).
+     May be missing: the onerror keeps the page going, live.js then runs without a key. -->
+<script src="js/config.local.js" onerror="void 0"></script>
 <script src="js/live.js"></script>
 <script>
   // Load geometry + risk output per country, then start the app. A country

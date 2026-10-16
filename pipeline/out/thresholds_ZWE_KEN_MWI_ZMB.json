@@ -1,8 +1,16 @@
 {
-  "p_warn": 0.25,
-  "p_watch": 0.25,
-  "p_emerg": 0.75,
-  "cv_f1_warn": 0.252,
-  "cv_f1_watch": 0.587,
-  "cv_f1_warn_default": 0.223
+  "cv_base_rate": 0.245,
+  "watch": {
+    "rate": 0.25,
+    "precision": 0.319,
+    "recall": 0.324,
+    "f1": 0.321
+  },
+  "warn": {
+    "rate": 0.069,
+    "precision": 0.343,
+    "recall": 0.097,
+    "f1": 0.151
+  },
+  "note": "levels come from the spec family rule; p is information only (v1.1, audit B3)"
 }

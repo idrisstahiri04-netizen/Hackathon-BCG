@@ -1,0 +1,5 @@
+baseline                                 persistence PR 0.3727 Brier 0.2121  | cant 0.164/0.1417 crop 0.514/0.2488 no_g 0.44/0.2458
+baseline                                 rule     PR 0.4040 Brier 0.2102  | cant 0.173/0.1441 crop 0.529/0.2501 no_g 0.51/0.2363
+baseline                                 logreg   PR 0.4550 Brier 0.2039  | cant 0.168/0.1448 crop 0.586/0.2459 no_g 0.611/0.221
+baseline                                 lgbm     PR 0.4610 Brier 0.2013  | cant 0.162/0.146 crop 0.581/0.2437 no_g 0.64/0.2141
+baseline                                 ensemble PR 0.4670 Brier 0.2016  | cant 0.168/0.1458 crop 0.593/0.2444 no_g 0.64/0.2145

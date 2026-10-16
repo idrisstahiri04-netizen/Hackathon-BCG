@@ -58,6 +58,21 @@ const REAL = (() => {
     .replace(/[‘’ʼ`´]/g, "'").replace(/[“”]/g, '"')
     .replace(/[–—]/g, '-').normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+  // GSM-7 septets: extension-table chars cost 2 (the "[link]" brackets do).
+  const septets = t => [...t].reduce((k, ch) => k + ('^{}\\[]~|€'.includes(ch) ? 2 : 1), 0);
+
+  // Driver text for a one-segment message: full text if it fits, else drop
+  // the "(...)" gloss, else cut at a word boundary (never mid-phrase).
+  function fitDriver(text, budget) {
+    let d = gsmSafe(text).trim();
+    if (septets(d) <= budget) return d;
+    d = d.replace(/\s*\([^)]*\)?\s*$/, '').trim();
+    if (septets(d) <= budget) return d;
+    const words = d.split(' ');
+    while (words.length && septets(words.join(' ')) > budget) words.pop();
+    return words.join(' ');
+  }
+
   function audiencesFor(lvl, row) {
     const grazing = row && row.event === 'no_grass';
     return Object.entries(AUDIENCES)
@@ -70,8 +85,12 @@ const REAL = (() => {
   function composeSMS(unitName, row, audience) {
     const name = gsmSafe(unitName);
     const L = LEVELS[row.level].label.toUpperCase();
-    const pc = Math.round(row.p * 100);
-    const drv = gsmSafe(row.drivers[0] || "dry conditions").slice(0, 40);
+    const hasP = row.p != null && !Number.isNaN(row.p);   // missing p is null, never 0
+    const pc = hasP ? `${Math.round(row.p * 100)}%` : 'n/a';
+    const pp = hasP ? row.p.toFixed(2) : 'n/a';
+    const agree = row.held
+      ? 'level held, needs 3 calm months'
+      : `${row.agreeing}/3 families agree`;
     const em = row.level >= 3;
     switch (audience) {
       case 'farmer':
@@ -85,15 +104,20 @@ const REAL = (() => {
           ? `EMERGENCY ${name}: no grass left. Sell weak animals now, keep breeding stock, move herds to water. Reply 1 ok 2 poor 3 bad. STOP to quit`
           : `WARNING ${name}: grazing drying fast. Sell weak animals early while prices hold, plan herd moves. Reply 1 ok 2 poor 3 bad. STOP to quit`;
       case 'coop':
-        return `${L} ${name}: shortage risk ${pc}% in ${row.horizon} wks. Advise members to hold grain and buy inputs now. Share with all members. [link]`;
+        // cooperatives forward to farmers: action only, no percentage
+        return `${L} ${name}: crops at risk, satellite and weather agree. Advise members to hold grain, buy inputs now. Share with all members. [link]`;
       case 'foodbank':
-        return `${L} ${name}: shortage risk ${pc}% in ${row.horizon} wks. Raise cereal stock at the nearest branch now, before prices peak. [link]`;
-      case 'ngo':
-        return `${L} ${name}: P(shortage,${row.horizon}wk)=${row.p.toFixed(2)}. ${drv}. ${row.agreeing}/3 families agree, conf ${row.confidence}. [link]`;
+        return `${L} ${name}: shortage risk ${pc} in ${row.horizon} wks. Raise cereal stock at the nearest branch now, before prices peak. [link]`;
+      case 'ngo': {
+        const head = `${L} ${name}: P(shortage,${row.horizon}wk)=${pp}. `;
+        const tail = `${agree}, conf ${row.confidence}. [link]`;
+        const drv = fitDriver(row.drivers[0] || 'dry conditions', 160 - septets(head + tail) - 2);
+        return head + (drv ? `${drv}. ` : '') + tail;
+      }
       case 'gov':
-        return `${L} ${name}: P(shortage,${row.horizon}wk)=${row.p.toFixed(2)}, conf ${row.confidence}. Consider releasing reserves. Src: CHIRPS, MODIS, ERA5. [link]`;
+        return `${L} ${name}: P(shortage,${row.horizon}wk)=${pp}, conf ${row.confidence}. Consider releasing reserves. Src: CHIRPS, MODIS, ERA5. [link]`;
       case 'extension':
-        return `${L} ${name}: ${EVENTS[row.event] || 'drought'}. Prioritise visits to worst-hit wards, push drought-tolerant seed. ${row.agreeing}/3 sources agree. [link]`;
+        return `${L} ${name}: ${EVENTS[row.event] || 'drought'}. Prioritise visits to worst-hit wards, push drought-tolerant seed. ${row.held ? 'Level held.' : `${row.agreeing}/3 sources agree.`} [link]`;
       default:
         return '';
     }
@@ -147,8 +171,7 @@ const REAL = (() => {
             p: row.p, confidence: row.confidence, agreeing: row.agreeing,
             horizon: row.horizon, drivers: row.drivers, event: row.event,
             audiences: cur > prev ? audiencesFor(cur, row) : [],
-            people: u.props.pop == null ? null
-              : Math.round(u.props.pop * (0.25 + 0.20 * cur) * 1000) / 1000,
+            pop: u.props.pop == null ? null : u.props.pop,   // real population, millions
           });
         }
       }

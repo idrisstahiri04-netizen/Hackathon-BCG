@@ -1,0 +1,99 @@
+{
+ "subset": "ZWE agyear 2015-2022, leads 1-3",
+ "n_rows": 6552,
+ "logreg": {
+  "base_pr": 0.461,
+  "feat_pr": 0.4187,
+  "d_pr": -0.0423,
+  "base_brier": 0.2152,
+  "feat_brier": 0.2214,
+  "d_brier": 0.0062,
+  "events": {
+   "cant_plant": {
+    "base_pr": 0.316,
+    "feat_pr": 0.229
+   },
+   "crop_failure": {
+    "base_pr": 0.591,
+    "feat_pr": 0.571
+   },
+   "no_grass": {
+    "base_pr": 0.476,
+    "feat_pr": 0.456
+   }
+  }
+ },
+ "lgbm": {
+  "base_pr": 0.427,
+  "feat_pr": 0.3693,
+  "d_pr": -0.0577,
+  "base_brier": 0.2224,
+  "feat_brier": 0.2376,
+  "d_brier": 0.0152,
+  "events": {
+   "cant_plant": {
+    "base_pr": 0.261,
+    "feat_pr": 0.199
+   },
+   "crop_failure": {
+    "base_pr": 0.553,
+    "feat_pr": 0.486
+   },
+   "no_grass": {
+    "base_pr": 0.467,
+    "feat_pr": 0.423
+   }
+  }
+ },
+ "ensemble": {
+  "base_pr": 0.4497,
+  "feat_pr": 0.396,
+  "d_pr": -0.0537,
+  "base_brier": 0.2177,
+  "feat_brier": 0.2317,
+  "d_brier": 0.014,
+  "events": {
+   "cant_plant": {
+    "base_pr": 0.28,
+    "feat_pr": 0.21
+   },
+   "crop_failure": {
+    "base_pr": 0.586,
+    "feat_pr": 0.531
+   },
+   "no_grass": {
+    "base_pr": 0.483,
+    "feat_pr": 0.447
+   }
+  }
+ },
+ "ensemble_member": {
+  "cant_plant": {
+   "n": 2112,
+   "base_pr": 0.2276,
+   "tfm_only_pr": 0.1797,
+   "mix_pr": 0.1774,
+   "base_brier": 0.1999,
+   "tfm_only_brier": 0.2171,
+   "mix_brier": 0.2041
+  },
+  "crop_failure": {
+   "n": 2112,
+   "base_pr": 0.5538,
+   "tfm_only_pr": 0.4511,
+   "mix_pr": 0.492,
+   "base_brier": 0.2287,
+   "tfm_only_brier": 0.2572,
+   "mix_brier": 0.2334
+  },
+  "no_grass": {
+   "n": 2184,
+   "base_pr": 0.4673,
+   "tfm_only_pr": 0.3984,
+   "mix_pr": 0.4391,
+   "base_brier": 0.2234,
+   "tfm_only_brier": 0.2527,
+   "mix_brier": 0.2302
+  }
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "iso3": "MWI",
+ "docs": 13,
+ "ok": 13,
+ "failed": 0,
+ "statements": 130,
+ "bad_evidence_dropped": 0,
+ "rows": 2753,
+ "unmatched_statements": 1,
+ "match_type_counts": {
+  "province": 2102,
+  "district": 302,
+  "livelihood_zone": 209,
+  "national": 140
+ },
+ "cost": {
+  "docs": 13,
+  "calls": 13,
+  "input_tokens": 81584,
+  "output_tokens": 27862,
+  "usd": 0.442,
+  "by_model": {
+   "claude-sonnet-5-5": {
+    "calls": 13,
+    "usd": 0.441788
+   }
+  }
+ },
+ "generated_at": "2026-10-16T17:48:05+00:00"
+}

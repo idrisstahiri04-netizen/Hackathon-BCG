@@ -4,9 +4,10 @@ from fastapi.testclient import TestClient
 
 from backend import app as appmod
 from backend import db
-from backend.tests.conftest import make_risk, write_risk
+from backend.tests.conftest import AUTH, make_risk, write_risk
 
-client = TestClient(appmod.app)
+client = TestClient(appmod.app, headers=AUTH)
+anon = TestClient(appmod.app)
 
 
 def test_health():
@@ -68,21 +69,23 @@ def test_android_webhook_inbound_and_status():
 
 
 def test_legacy_phoneNumber_field_and_simple_body():
-    client.post("/sms/inbound", json={"event": "sms:received", "payload": {"message": "STOP", "phoneNumber": "+1"}})
-    assert db.q1("SELECT intent FROM messages WHERE phone='+1' AND direction='in'")["intent"] == "stop"
-    r = client.post("/sim/inbound", json={"from": "+2", "text": "JOIN"}).json()
+    client.post("/sms/inbound", json={"event": "sms:received", "payload": {"message": "STOP", "phoneNumber": "+212600000001"}})
+    assert db.q1("SELECT intent FROM messages WHERE phone='+212600000001' AND direction='in'")["intent"] == "stop"
+    r = client.post("/sim/inbound", json={"from": "+212600000002", "text": "JOIN"}).json()
     assert r["ok"] and r["intent"] == "subscribe" and r["intent_confidence"] == 1.0 and r["reply"]
-    r = client.post("/sms/inbound", json={"from": "+3", "text": "2"}).json()
+    r = client.post("/sms/inbound", json={"from": "+212600000003", "text": "2"}).json()
     assert r["intent"] == "report"
 
 
 def test_signature_check(monkeypatch):
     import hashlib, hmac
     monkeypatch.setenv("ANDROID_GW_SIGNING_KEY", "k")
+    import time
     raw = json.dumps({"event": "system:ping", "payload": {}}).encode()
-    assert client.post("/sms/inbound", content=raw, headers={"X-Timestamp": "1", "X-Signature": "bad"}).status_code == 401
-    sig = hmac.new(b"k", raw + b"1", hashlib.sha256).hexdigest()
-    assert client.post("/sms/inbound", content=raw, headers={"X-Timestamp": "1", "X-Signature": sig}).status_code == 200
+    ts = str(int(time.time()))
+    assert anon.post("/sms/inbound", content=raw, headers={"X-Timestamp": ts, "X-Signature": "bad"}).status_code == 401
+    sig = hmac.new(b"k", raw + ts.encode(), hashlib.sha256).hexdigest()
+    assert anon.post("/sms/inbound", content=raw, headers={"X-Timestamp": ts, "X-Signature": sig}).status_code == 200
 
 
 def test_seed_idempotent():
@@ -113,3 +116,27 @@ def test_android_gateway_payload(monkeypatch):
     monkeypatch.setenv("ANDROID_GW_URL", "https://api.sms-gate.app/3rdparty/v1")
     gateway.send("+1", "hi")
     assert seen["url"] == "https://api.sms-gate.app/3rdparty/v1/messages"
+
+
+def test_operator_endpoints_need_token():
+    for path, body in [("/sim/inbound", {"from": "+212600000001", "text": "JOIN"}),
+                       ("/alerts/run", {"iso3": "ZWE", "t": 1}), ("/events/1/approve", {}), ("/events/1/cancel", {})]:
+        assert anon.post(path, json=body).status_code == 401, path
+        assert anon.post(path, json=body, headers={"X-API-Key": "wrong"}).status_code == 401, path
+
+
+def test_feeds_masked_without_token():
+    db.upsert_user("+212600000001", name="Rudo", role="farmer", consent_at=db.now_iso())
+    client.post("/sim/inbound", json={"from": "+212600000001", "text": "2"})
+    u = anon.get("/feed/users").json()["users"][0]
+    assert u["phone"] == "+212****001" and u["name"] is None
+    assert all("+212600000001" not in json.dumps(m) for m in anon.get("/feed/messages").json()["messages"])
+    assert client.get("/feed/users").json()["users"][0]["phone"] == "+212600000001"  # operator sees it
+
+
+def test_inbound_rate_limit(monkeypatch):
+    from backend import router
+    monkeypatch.setattr(router, "PER_MIN", 3)
+    replies = [client.post("/sim/inbound", json={"from": "+212600000005", "text": f"hello {i}"}).json()["reply"] for i in range(6)]
+    assert sum(r is not None for r in replies) == 3
+    assert client.post("/sim/inbound", json={"from": "+212600000005", "text": "STOP"}).json()["intent"] == "stop"

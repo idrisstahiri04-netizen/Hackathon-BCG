@@ -10,7 +10,7 @@ non-STUB copy of data/risk/ZWE.js (RISK_DIR), so the team's running demo on
     ../.venv/bin/python scripts/robustness_tests.py --list
 
 Tests: claude_badkey claude_refused claude_blackhole gateway_down backend_down
-       double_approve burst latency reload
+       double_approve burst latency reload health_during_llm
 """
 from __future__ import annotations
 
@@ -37,6 +37,12 @@ PY = sys.executable
 OUT_DIR = REPO / "pipeline" / "audit" / "out"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 RESULTS: dict[str, dict] = {}
+_prev = OUT_DIR / "robustness_results.json"
+if _prev.is_file():
+    try:
+        RESULTS.update(json.loads(_prev.read_text()))
+    except ValueError:
+        pass
 SITE_PORT = int(os.environ.get("SITE_PORT", "8777"))
 
 
@@ -125,11 +131,11 @@ class Backend:
     # helpers
     def post(self, path, body, timeout=90):
         t0 = time.perf_counter()
-        r = httpx.post(self.base + path, json=body, timeout=timeout)
+        r = httpx.post(self.base + path, json=body, timeout=timeout, headers=_auth())
         return r, time.perf_counter() - t0
 
     def get(self, path, timeout=10):
-        return httpx.get(self.base + path, timeout=timeout)
+        return httpx.get(self.base + path, timeout=timeout, headers=_auth())
 
     def rows(self, path, key):
         d = self.get(path).json()
@@ -139,6 +145,12 @@ class Backend:
             if isinstance(d.get(k), list):
                 return d[k]
         return []
+
+
+def _auth() -> dict:
+    """Operator header (ADMIN_TOKEN from the team .env; never printed)."""
+    tok = os.environ.get("ADMIN_TOKEN")
+    return {"X-API-Key": tok} if tok else {}
 
 
 def record(name: str, ok: bool, **kw):
@@ -169,15 +181,34 @@ def make_pending_event(be: Backend, iso3="ZWE") -> dict | None:
     return None
 
 
+def role_for(ev: dict) -> str:
+    return "herder" if ev.get("event") == "no_grass" else "farmer"
+
+
 def subscribe_users_in(be: Backend, unit_name: str, n: int, role="farmer", prefix="+26377100"):
+    """Keyword-only sign-up (no Claude): JOIN -> district -> role -> YES, answering a
+    'Which district? 1 X, 2 Y' disambiguation with the number of the exact name."""
     phones = []
     for i in range(n):
         ph = f"{prefix}{i:04d}"
-        r, _ = be.post("/sim/inbound", {"from": ph, "text": f"JOIN {unit_name} {role}"})
-        rep = r.json().get("reply", "") if r.status_code == 200 else ""
-        if "YES" in rep.upper():
-            be.post("/sim/inbound", {"from": ph, "text": "YES"})
+        reply = ""
+        for step in ("JOIN", unit_name, role, "YES"):
+            if reply.startswith("Which district?"):
+                opts = re.findall(r"(\d+) ([^,.]+)", reply.split("?", 1)[1])
+                pick = next((num for num, nm in opts if nm.strip().lower() == unit_name.lower()), opts[0][0] if opts else "1")
+                r, _ = be.post("/sim/inbound", {"from": ph, "text": pick})
+                reply = r.json().get("reply", "") if r.status_code == 200 else ""
+                if step == role and "farmer, herder" not in reply:
+                    continue  # role already known? fall through to next step
+            r, _ = be.post("/sim/inbound", {"from": ph, "text": step})
+            reply = r.json().get("reply", "") if r.status_code == 200 else ""
+            if "registered" in reply.lower():
+                break
         phones.append(ph)
+    users = {u.get("phone") for u in be.rows("/feed/users?since=0", "users")}
+    missing = [p for p in phones if p not in users]
+    if missing:
+        print(f"   warning: {len(missing)} sign-ups did not complete for {unit_name!r}: last reply {reply[:90]!r}")
     return phones
 
 
@@ -245,7 +276,7 @@ def test_gateway_down():
         if not ev:
             record("gateway_down", False, reason="no pending_approval event could be created", log=be.logtail(20))
             return
-        subscribe_users_in(be, ev["unit_name"], 3)
+        subscribe_users_in(be, ev["unit_name"], 3, role=role_for(ev))
         r, dt = be.post(f"/events/{ev['id']}/approve", {})
         msgs = [m for m in be.rows("/feed/messages?since=0", "messages") if m.get("event_id") == ev["id"]]
         statuses = sorted({m.get("status") for m in msgs})
@@ -290,7 +321,7 @@ def test_double_approve():
         if not ev:
             record("double_approve", False, reason="no pending_approval event", log=be.logtail(20))
             return
-        phones = subscribe_users_in(be, ev["unit_name"], 5, prefix="+26377500")
+        phones = subscribe_users_in(be, ev["unit_name"], 5, role=role_for(ev), prefix="+26377500")
         codes = []
 
         def hit():
@@ -369,6 +400,36 @@ def test_latency(n=15):
                over_ui_4s_timeout=sum(1 for x in free if x > 4.0), samples=samples, log=be.logtail(5))
 
 
+def test_health_during_llm():
+    """Does /health still answer while one free-text SMS is inside the Claude call? (UI polls it every 2 s, 4 s timeout)."""
+    with Backend("hdl") as be:
+        be.post("/sim/inbound", {"from": "+263770950000", "text": FREE_TEXT[0]})  # warm the anthropic client
+        health_ms: list[float] = []
+        done = threading.Event()
+
+        def probe():
+            while not done.is_set():
+                t0 = time.perf_counter()
+                try:
+                    be.get("/health", timeout=10)
+                except httpx.HTTPError:
+                    pass
+                health_ms.append((time.perf_counter() - t0) * 1000)
+                time.sleep(0.1)
+
+        th = threading.Thread(target=probe)
+        th.start()
+        r, dt = be.post("/sim/inbound", {"from": "+263770950001", "text": FREE_TEXT[2]})
+        done.set()
+        th.join()
+        worst = max(health_ms) if health_ms else None
+        ok = r.status_code == 200 and worst is not None and worst < 1000
+        record("health_during_llm", ok, sms_ms=round(dt * 1000), health_probes=len(health_ms),
+               health_worst_ms=round(worst) if worst else None,
+               note="/sim/inbound is `async def` but calls the blocking Claude SDK -> event loop stalls; "
+                    "the UI health poll (4 s timeout) flips to 'backend offline' if a call runs long" if not ok else "")
+
+
 def test_reload():
     """State lives in SQLite + URL (?page=, ?country&t); a reload re-polls everything."""
     with Backend("reload") as be:
@@ -385,7 +446,7 @@ def test_reload():
         with Backend("reload2", {"DB_PATH": be.env["DB_PATH"], "RISK_DIR": be.env["RISK_DIR"]}, risk_stub_ok=False) as be2:
             after = (len(be2.rows("/feed/users?since=0", "users")), len(be2.rows("/feed/messages?since=0", "messages")),
                      len(be2.rows("/feed/alerts?since=0", "events")))
-        ok = again == (n_users, n_msgs, n_ev) == after and n_users >= 1 and n_ev >= 1
+        ok = again == (n_users, n_msgs, n_ev) == after and n_msgs >= 1 and n_ev >= 1
         record("reload", ok, before=(n_users, n_msgs, n_ev), fresh_client=again, after_backend_restart=after,
                note="browser-side: live.js keeps nothing in memory that is not re-fetched; ?page= and ?country&t survive reload")
 
@@ -400,6 +461,7 @@ TESTS = {
     "burst": test_burst,
     "latency": test_latency,
     "reload": test_reload,
+    "health_during_llm": test_health_during_llm,
 }
 
 

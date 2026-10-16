@@ -1,7 +1,7 @@
 {
  "iso3": "MWI",
- "model_version": "STUB",
- "generated_at": "2026-10-16T15:49:40+00:00",
+ "model_version": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB",
+ "generated_at": "2026-10-16T17:50:29+00:00",
  "unit_match": {
   "our_units": 28,
   "our_units_matched": 28,
@@ -50,22 +50,22 @@
    "transition_warning": {
     "n": 28,
     "tp": 0,
-    "fp": 0,
+    "fp": 13,
     "fn": 2,
-    "tn": 26,
-    "precision": null,
+    "tn": 13,
+    "precision": 0.0,
     "recall": 0.0,
     "f1": null
    },
    "transition_watch": {
     "n": 28,
-    "tp": 0,
-    "fp": 0,
-    "fn": 2,
-    "tn": 26,
-    "precision": null,
-    "recall": 0.0,
-    "f1": null
+    "tp": 2,
+    "fp": 24,
+    "fn": 0,
+    "tn": 2,
+    "precision": 0.077,
+    "recall": 1.0,
+    "f1": 0.143
    },
    "transition_persistence": {
     "n": 28,
@@ -79,13 +79,13 @@
    },
    "ipc3_window_warning": {
     "n": 28,
-    "tp": 0,
-    "fp": 0,
-    "fn": 4,
-    "tn": 24,
-    "precision": null,
-    "recall": 0.0,
-    "f1": null
+    "tp": 2,
+    "fp": 11,
+    "fn": 2,
+    "tn": 13,
+    "precision": 0.154,
+    "recall": 0.5,
+    "f1": 0.235
    },
    "ipc3_window_persistence": {
     "n": 28,
@@ -98,9 +98,31 @@
     "f1": 0.286
    },
    "lead_weeks_warning": null,
-   "lead_weeks_watch": null,
+   "lead_weeks_watch": {
+    "n": 2,
+    "median": 13.0,
+    "min": 8.7,
+    "max": 17.4,
+    "share_ge_4wk": 1.0
+   },
+   "transition_fews_projection": {
+    "n": 28,
+    "tp": 2,
+    "fp": 10,
+    "fn": 0,
+    "tn": 16,
+    "precision": 0.167,
+    "recall": 1.0,
+    "f1": 0.286
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": {
+    "n": 2,
+    "median": 8.7,
+    "share_gt0": 1.0
+   },
    "n_transitions": 2,
-   "n_units_with_warning": 0
+   "n_units_with_warning": 13
   },
   "2020/21": {
    "transition_warning": {
@@ -116,10 +138,10 @@
    "transition_watch": {
     "n": 28,
     "tp": 0,
-    "fp": 0,
+    "fp": 7,
     "fn": 0,
-    "tn": 28,
-    "precision": null,
+    "tn": 21,
+    "precision": 0.0,
     "recall": null,
     "f1": null
    },
@@ -155,6 +177,18 @@
    },
    "lead_weeks_warning": null,
    "lead_weeks_watch": null,
+   "transition_fews_projection": {
+    "n": 28,
+    "tp": 0,
+    "fp": 10,
+    "fn": 0,
+    "tn": 18,
+    "precision": 0.0,
+    "recall": null,
+    "f1": null
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": null,
    "n_transitions": 0,
    "n_units_with_warning": 0
   },
@@ -162,22 +196,22 @@
    "transition_warning": {
     "n": 28,
     "tp": 0,
-    "fp": 0,
+    "fp": 10,
     "fn": 10,
-    "tn": 18,
-    "precision": null,
+    "tn": 8,
+    "precision": 0.0,
     "recall": 0.0,
     "f1": null
    },
    "transition_watch": {
     "n": 28,
-    "tp": 0,
-    "fp": 0,
-    "fn": 10,
-    "tn": 18,
-    "precision": null,
-    "recall": 0.0,
-    "f1": null
+    "tp": 5,
+    "fp": 18,
+    "fn": 5,
+    "tn": 0,
+    "precision": 0.217,
+    "recall": 0.5,
+    "f1": 0.303
    },
    "transition_persistence": {
     "n": 28,
@@ -192,10 +226,10 @@
    "ipc3_window_warning": {
     "n": 28,
     "tp": 0,
-    "fp": 0,
+    "fp": 10,
     "fn": 10,
-    "tn": 18,
-    "precision": null,
+    "tn": 8,
+    "precision": 0.0,
     "recall": 0.0,
     "f1": null
    },
@@ -210,9 +244,31 @@
     "f1": null
    },
    "lead_weeks_warning": null,
-   "lead_weeks_watch": null,
+   "lead_weeks_watch": {
+    "n": 5,
+    "median": 34.8,
+    "min": 4.3,
+    "max": 39.1,
+    "share_ge_4wk": 1.0
+   },
+   "transition_fews_projection": {
+    "n": 28,
+    "tp": 9,
+    "fp": 7,
+    "fn": 1,
+    "tn": 11,
+    "precision": 0.562,
+    "recall": 0.9,
+    "f1": 0.692
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": {
+    "n": 9,
+    "median": 17.4,
+    "share_gt0": 1.0
+   },
    "n_transitions": 10,
-   "n_units_with_warning": 0
+   "n_units_with_warning": 10
   },
   "2022/23": {
    "transition_warning": {
@@ -227,13 +283,13 @@
    },
    "transition_watch": {
     "n": 28,
-    "tp": 0,
-    "fp": 0,
-    "fn": 9,
-    "tn": 19,
-    "precision": null,
-    "recall": 0.0,
-    "f1": null
+    "tp": 1,
+    "fp": 7,
+    "fn": 8,
+    "tn": 12,
+    "precision": 0.125,
+    "recall": 0.111,
+    "f1": 0.118
    },
    "transition_persistence": {
     "n": 28,
@@ -266,30 +322,52 @@
     "f1": 0.69
    },
    "lead_weeks_warning": null,
-   "lead_weeks_watch": null,
+   "lead_weeks_watch": {
+    "n": 1,
+    "median": -8.7,
+    "min": -8.7,
+    "max": -8.7,
+    "share_ge_4wk": 0.0
+   },
+   "transition_fews_projection": {
+    "n": 28,
+    "tp": 9,
+    "fp": 10,
+    "fn": 0,
+    "tn": 9,
+    "precision": 0.474,
+    "recall": 1.0,
+    "f1": 0.643
+   },
+   "warning_vs_fews_wk": null,
+   "fews_proj_lead_wk": {
+    "n": 9,
+    "median": 34.8,
+    "share_gt0": 0.889
+   },
    "n_transitions": 9,
    "n_units_with_warning": 0
   },
   "2023/24": {
    "transition_warning": {
     "n": 28,
-    "tp": 4,
-    "fp": 24,
-    "fn": 0,
-    "tn": 0,
-    "precision": 0.143,
-    "recall": 1.0,
-    "f1": 0.25
+    "tp": 2,
+    "fp": 3,
+    "fn": 2,
+    "tn": 21,
+    "precision": 0.4,
+    "recall": 0.5,
+    "f1": 0.444
    },
    "transition_watch": {
     "n": 28,
-    "tp": 4,
-    "fp": 24,
-    "fn": 0,
-    "tn": 0,
-    "precision": 0.143,
-    "recall": 1.0,
-    "f1": 0.25
+    "tp": 3,
+    "fp": 21,
+    "fn": 1,
+    "tn": 3,
+    "precision": 0.125,
+    "recall": 0.75,
+    "f1": 0.214
    },
    "transition_persistence": {
     "n": 28,
@@ -303,13 +381,13 @@
    },
    "ipc3_window_warning": {
     "n": 28,
-    "tp": 18,
-    "fp": 10,
-    "fn": 0,
-    "tn": 0,
-    "precision": 0.643,
-    "recall": 1.0,
-    "f1": 0.783
+    "tp": 4,
+    "fp": 1,
+    "fn": 14,
+    "tn": 9,
+    "precision": 0.8,
+    "recall": 0.222,
+    "f1": 0.348
    },
    "ipc3_window_persistence": {
     "n": 28,
@@ -322,43 +400,63 @@
     "f1": 0.919
    },
    "lead_weeks_warning": {
-    "n": 4,
-    "median": 34.8,
+    "n": 2,
+    "median": 26.1,
     "min": 17.4,
-    "max": 39.1,
+    "max": 34.8,
     "share_ge_4wk": 1.0
    },
    "lead_weeks_watch": {
-    "n": 4,
-    "median": 52.2,
-    "min": 30.4,
-    "max": 52.2,
+    "n": 3,
+    "median": 34.8,
+    "min": 17.4,
+    "max": 34.8,
     "share_ge_4wk": 1.0
    },
+   "transition_fews_projection": {
+    "n": 28,
+    "tp": 4,
+    "fp": 16,
+    "fn": 0,
+    "tn": 8,
+    "precision": 0.2,
+    "recall": 1.0,
+    "f1": 0.333
+   },
+   "warning_vs_fews_wk": {
+    "n": 2,
+    "median": 17.4,
+    "share_gt0": 1.0
+   },
+   "fews_proj_lead_wk": {
+    "n": 4,
+    "median": 17.4,
+    "share_gt0": 0.75
+   },
    "n_transitions": 4,
-   "n_units_with_warning": 28
+   "n_units_with_warning": 5
   }
  },
  "all_seasons": {
   "transition_warning": {
    "n": 140,
-   "tp": 4,
-   "fp": 24,
-   "fn": 21,
-   "tn": 91,
-   "precision": 0.143,
-   "recall": 0.16,
-   "f1": 0.151
+   "tp": 2,
+   "fp": 26,
+   "fn": 23,
+   "tn": 89,
+   "precision": 0.071,
+   "recall": 0.08,
+   "f1": 0.075
   },
   "transition_watch": {
    "n": 140,
-   "tp": 4,
-   "fp": 24,
-   "fn": 21,
-   "tn": 91,
-   "precision": 0.143,
-   "recall": 0.16,
-   "f1": 0.151
+   "tp": 11,
+   "fp": 77,
+   "fn": 14,
+   "tn": 38,
+   "precision": 0.125,
+   "recall": 0.44,
+   "f1": 0.195
   },
   "transition_persistence": {
    "n": 140,
@@ -372,13 +470,13 @@
   },
   "ipc3_window_warning": {
    "n": 140,
-   "tp": 18,
-   "fp": 10,
-   "fn": 33,
-   "tn": 79,
-   "precision": 0.643,
-   "recall": 0.353,
-   "f1": 0.456
+   "tp": 6,
+   "fp": 22,
+   "fn": 45,
+   "tn": 67,
+   "precision": 0.214,
+   "recall": 0.118,
+   "f1": 0.152
   },
   "ipc3_window_persistence": {
    "n": 140,
@@ -391,18 +489,38 @@
    "f1": 0.617
   },
   "lead_weeks_warning": {
-   "n": 4,
-   "median": 34.8,
+   "n": 2,
+   "median": 26.1,
    "min": 17.4,
-   "max": 39.1,
+   "max": 34.8,
    "share_ge_4wk": 1.0
   },
   "lead_weeks_watch": {
-   "n": 4,
-   "median": 52.2,
-   "min": 30.4,
-   "max": 52.2,
-   "share_ge_4wk": 1.0
+   "n": 11,
+   "median": 34.8,
+   "min": -8.7,
+   "max": 39.1,
+   "share_ge_4wk": 0.909
+  },
+  "transition_fews_projection": {
+   "n": 140,
+   "tp": 24,
+   "fp": 53,
+   "fn": 1,
+   "tn": 62,
+   "precision": 0.312,
+   "recall": 0.96,
+   "f1": 0.471
+  },
+  "warning_vs_fews_wk": {
+   "n": 2,
+   "median": 17.4,
+   "share_gt0": 1.0
+  },
+  "fews_proj_lead_wk": {
+   "n": 24,
+   "median": 17.4,
+   "share_gt0": 0.917
   },
   "n_transitions": 25,
   "n_units_with_warning": 28

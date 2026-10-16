@@ -1,0 +1,29 @@
+oni_lr_only                  logreg   mean2 PR 0.5640 Brier 0.2409  dPR +0.0220 dBrier -0.0035 | cant 0.489/0.193/0.1434(b0.168) crop 0.637/0.615/0.2385(b0.478) no_g 0.59/0.513/0.2432(b0.414)
+oni_lr_only                  lgbm     mean2 PR 0.5340 Brier 0.2445  dPR +0.0000 dBrier +0.0000 | cant 0.438/0.156/0.1421(b0.168) crop 0.554/0.518/0.2518(b0.478) no_g 0.615/0.55/0.2371(b0.414)
+oni_lr_only                  ensemble mean2 PR 0.5655 Brier 0.2407  dPR +0.0160 dBrier -0.0027 | cant 0.485/0.189/0.1441(b0.168) crop 0.621/0.586/0.243(b0.478) no_g 0.608/0.545/0.2383(b0.414)
+oni_both                     logreg   mean2 PR 0.5640 Brier 0.2409  dPR +0.0220 dBrier -0.0035 | cant 0.489/0.193/0.1434(b0.168) crop 0.637/0.615/0.2385(b0.478) no_g 0.59/0.513/0.2432(b0.414)
+oni_both                     lgbm     mean2 PR 0.5375 Brier 0.2457  dPR +0.0035 dBrier +0.0013 | cant 0.476/0.171/0.1444(b0.168) crop 0.627/0.573/0.2429(b0.478) no_g 0.573/0.502/0.2485(b0.414)
+oni_both                     ensemble mean2 PR 0.5650 Brier 0.2404  dPR +0.0155 dBrier -0.0030 | cant 0.489/0.201/0.1439(b0.168) crop 0.649/0.609/0.2382(b0.478) no_g 0.591/0.521/0.2425(b0.414)
+oni_south_only               logreg   mean2 PR 0.5680 Brier 0.2402  dPR +0.0260 dBrier -0.0042 | cant 0.517/0.203/0.144(b0.168) crop 0.636/0.617/0.2385(b0.478) no_g 0.6/0.519/0.242(b0.414)
+oni_south_only               lgbm     mean2 PR 0.5475 Brier 0.2449  dPR +0.0135 dBrier +0.0005 | cant 0.472/0.173/0.1437(b0.168) crop 0.609/0.579/0.2457(b0.478) no_g 0.586/0.516/0.244(b0.414)
+oni_south_only               ensemble mean2 PR 0.5720 Brier 0.2400  dPR +0.0225 dBrier -0.0034 | cant 0.51/0.196/0.1432(b0.168) crop 0.636/0.612/0.24(b0.478) no_g 0.605/0.532/0.24(b0.414)
+Traceback (most recent call last):
+  File "/home/looooo/bcg/Hackathon-BCG/pipeline/experiments/run_experiments3.py", line 165, in <module>
+    line += f"  dPR {rec[m]['d_mean2_pr_auc']:+.4f} dBrier {rec[m]['d_mean2_brier']:+.4f}"
+    
+  File "/home/looooo/bcg/Hackathon-BCG/pipeline/experiments/run_experiments3.py", line 161, in main
+    fh.write(json.dumps(rec) + "\n")
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/looooo/bcg/Hackathon-BCG/pipeline/experiments/run_experiments3.py", line 94, in run
+  File "/home/looooo/bcg/Hackathon-BCG/pipeline/experiments/extra_features.py", line 241, in with_extra
+    need = sorted({c for g in um_groups for c in GROUPS[g]})
+        ^^^^^^^
+  File "/home/looooo/bcg/.venv/lib64/python3.14/site-packages/pandas/core/frame.py", line 4384, in __getitem__
+    indexer = self.columns._get_indexer_strict(key, "columns")[1]
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/looooo/bcg/.venv/lib64/python3.14/site-packages/pandas/core/indexes/base.py", line 6302, in _get_indexer_strict
+    self._raise_if_missing(keyarr, indexer, axis_name)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/looooo/bcg/.venv/lib64/python3.14/site-packages/pandas/core/indexes/base.py", line 6355, in _raise_if_missing
+    raise KeyError(f"{not_found} not in index")
+KeyError: "['nino34', 'nino34_3m', 'nino34_x_south'] not in index"

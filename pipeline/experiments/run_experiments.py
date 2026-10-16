@@ -10,6 +10,7 @@ Hold-out rows are never touched.
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -17,6 +18,8 @@ import numpy as np
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
+OUT = Path(os.environ.get("EXP_OUT", str(HERE)))   # artefacts (caches, OOF, results); HERE = code + small data
+OUT.mkdir(parents=True, exist_ok=True)
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 
@@ -24,7 +27,7 @@ import harness as H                      # noqa: E402
 import extra_features as X               # noqa: E402
 import train as T                        # noqa: E402
 
-RESULTS = HERE / "results.jsonl"
+RESULTS = OUT / "results.jsonl"
 MODELS = ("logreg", "lgbm", "ensemble")
 
 
@@ -71,7 +74,6 @@ EXPERIMENTS = {
     "lgb_bigger": dict(groups=[], lgb=_lgb(num_leaves=31, max_depth=-1, min_child_samples=40)),
     "lgb_slower": dict(groups=[], lgb=_lgb(learning_rate=0.02)),
     "lgb_reg": dict(groups=[], lgb=_lgb(lambda_l2=20.0, min_child_samples=120, feature_fraction=0.5)),
-    "lgb_unbalanced_off": dict(groups=[]),   # placeholder: identical to baseline (sanity for seed noise)
     # ---- combos (filled after singles are known)
 }
 
@@ -81,7 +83,7 @@ def run(name: str, spec: dict, rows: pd.DataFrame, cols: list, base_tab: dict) -
     c = cols + extra
     mono = monotone_map(c) if spec.get("mono") else None
     oof = H.cv(r, c, models=MODELS, lgb_params=spec.get("lgb"), mono=mono, group_fn=spec.get("group_fn"))
-    oof.to_parquet(HERE / f"oof_{name}.parquet", index=False)
+    oof.to_parquet(OUT / f"oof_{name}.parquet", index=False)
     tab = H.table(oof, models=MODELS)
     rec = {"name": name, "n_cols": len(c), "extra": extra}
     for m in MODELS:
@@ -106,7 +108,7 @@ def main():
         print("\n".join(EXPERIMENTS)); return
     names = [a for a in sys.argv[1:] if not a.startswith("--")] or list(EXPERIMENTS)
     rows, cols = H.load()
-    base_tab = json.loads((HERE / "cv_baseline.json").read_text())
+    base_tab = json.loads((OUT / "cv_baseline.json").read_text())
     for n in names:
         run(n, EXPERIMENTS[n], rows, cols, base_tab)
 

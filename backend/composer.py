@@ -3,7 +3,7 @@
 Audience rules (API.md / spec):
   Watch (1)      -> ngo, officer
   Warning (2)    -> + farmer (crop events: cant_plant, crop_failure, none) or herder (no_grass)
-  Emergency (3)  -> + resident
+  Emergency (3)  -> everyone subscribed in the district: ngo, officer, farmer, herder, resident
 Farmers, herders and residents get an action, never a probability. NGO gets p + drivers.
 Skips opted-out users, users without consent, duplicates, and users over the monthly cap.
 """
@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import json
 import os
+import sqlite3
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
 from . import db, gateway
@@ -61,10 +63,10 @@ def audiences(level: int, event: str | None) -> list[str]:
     out = []
     if level >= 1:
         out += ["ngo", "officer"]
-    if level >= 2:
+    if level >= 3:  # Emergency: everyone subscribed in the district (spec)
+        return out + ["farmer", "herder", "resident"]
+    if level >= 2:  # Warning: event-specific
         out.append("herder" if event == "no_grass" else "farmer")
-    if level >= 3:
-        out.append("resident")
     return out
 
 
@@ -82,13 +84,21 @@ def compose(role: str, ev: dict, language: str = "en") -> str:
             if fr:
                 if event == "cant_plant" and not em:
                     return f"{L} {name}: pluies faibles. Attendez 2 bonnes pluies avant de semer, semence a cycle court. Repondez 1 ok 2 moyen 3 perdu. STOP pour arreter"
+                if em and event == "no_grass":
+                    return f"{L} {name}: grave secheresse. Gardez vos grains pour la famille, ne bradez pas vos animaux. Repondez 1 ok 2 moyen 3 perdu. STOP pour arreter"
                 return (f"{L} {name}: recolte perdue. Gardez vos grains, ne vendez pas les animaux a bas prix. Repondez 1 ok 2 moyen 3 perdu. STOP pour arreter" if em else
                         f"{L} {name}: cultures seches. Gardez 2 mois de grains, ne vendez pas a bas prix. Repondez 1 ok 2 moyen 3 perdu. STOP pour arreter")
             if event == "cant_plant" and not em:
                 return f"{L} {name}: rains late and poor. Wait for 2 good rains before planting, use short-season seed. Reply 1 ok 2 poor 3 failed. STOP to quit"
+            if em and event == "no_grass":
+                return f"{L} {name}: severe drought, grazing gone. Keep your grain for the family, do not sell animals cheap. Reply 1 ok 2 poor 3 failed. STOP to quit"
             return (f"{L} {name}: harvest failed. Keep your grain, do not sell animals cheap. Ask chief about relief. Reply 1 ok 2 poor 3 failed. STOP to quit" if em else
                     f"{L} {name}: crops drying, poor harvest likely. Keep 2 months of grain, do not sell cheap. Reply 1 ok 2 poor 3 failed. STOP to quit")
         if role == "herder":
+            if em and event != "no_grass" and not fr:
+                return f"{L} {name}: severe drought, crops failed. Sell weak animals early, keep breeding stock, save water for the herd. Reply 1 ok 2 poor 3 bad. STOP to quit"
+            if em and event != "no_grass" and fr:
+                return f"{L} {name}: grave secheresse. Vendez tot les betes faibles, gardez les reproductrices, gardez l'eau. Repondez 1 ok 2 moyen 3 grave. STOP pour arreter"
             if fr:
                 return (f"{L} {name}: plus d'herbe. Vendez les betes faibles, gardez les reproductrices, allez vers l'eau. Repondez 1 ok 2 moyen 3 grave. STOP pour arreter" if em else
                         f"{L} {name}: paturages secs. Vendez tot les betes faibles, prevoyez les deplacements. Repondez 1 ok 2 moyen 3 grave. STOP pour arreter")
@@ -124,7 +134,8 @@ def monthly_cap() -> int:
 def _alerts_this_month(user_id: int) -> int:
     month = datetime.now(timezone.utc).strftime("%Y-%m")
     r = db.q1("SELECT COUNT(*) n FROM messages WHERE user_id=? AND direction='out' "
-              "AND event_id IS NOT NULL AND substr(created_at,1,7)=?", (user_id, month))
+              "AND event_id IS NOT NULL AND status NOT LIKE 'failed%' AND substr(created_at,1,7)=?",
+              (user_id, month))
     return r["n"] if r else 0
 
 
@@ -144,8 +155,8 @@ def recipients(ev: dict) -> tuple[list[dict], dict]:
             skipped["opted_out"] += 1
         elif not u["consent_at"]:
             skipped["no_consent"] += 1
-        elif db.q1("SELECT 1 FROM messages WHERE user_id=? AND event_id=? AND direction='out'",
-                   (u["id"], ev["id"])):
+        elif db.q1("SELECT 1 FROM messages WHERE user_id=? AND event_id=? AND direction='out' "
+                   "AND status NOT LIKE 'failed%'", (u["id"], ev["id"])):
             skipped["already_sent"] += 1
         elif _alerts_this_month(u["id"]) >= monthly_cap():
             skipped["monthly_cap"] += 1
@@ -160,22 +171,50 @@ def event_dict(row: dict) -> dict:
     return ev
 
 
+def event_counts(event_id: int) -> dict:
+    """Delivery counts for one event: failed rows are never counted as sent."""
+    r = db.q1(
+        "SELECT (SELECT COUNT(*) FROM messages WHERE event_id=:e AND direction='out' AND status NOT LIKE 'failed%') ok, "
+        "(SELECT COUNT(DISTINCT user_id) FROM messages f WHERE f.event_id=:e AND f.direction='out' "
+        " AND f.status LIKE 'failed%' AND NOT EXISTS (SELECT 1 FROM messages g WHERE g.event_id=:e "
+        " AND g.user_id=f.user_id AND g.direction='out' AND g.status NOT LIKE 'failed%')) bad",
+        {"e": event_id}) or {}
+    ok, bad = int(r.get("ok") or 0), int(r.get("bad") or 0)
+    label = f"sent to {ok} users" + (f", failed {bad}" if bad else "")
+    return {"sent_count": ok, "failed_count": bad, "sent_to_label": label}
+
+
+def _send_one(u: dict, ev: dict, event_id: int) -> str:
+    text = compose(u["role"], ev, u.get("language") or "en")
+    try:  # reserve the row first: the unique index makes a concurrent double-approve a no-op
+        mid = db.log_message("out", u["phone"], text, user_id=u["id"], event_id=event_id,
+                             intent=f"alert_{u['role']}", status="sending")
+    except sqlite3.IntegrityError:
+        return "duplicate"
+    status, gid = gateway.send(u["phone"], text)
+    db.ex("UPDATE messages SET status=?, gateway_id=? WHERE id=?", (status, gid, mid))
+    return status
+
+
 def send_event(event_id: int, approved_by: str | None = None) -> dict:
+    """Send an approved event. Status becomes 'sent' only if no send failed;
+    otherwise it stays 'approved' and approving again retries the failed users."""
     row = db.q1("SELECT * FROM events WHERE id=?", (event_id,))
     if not row:
         raise KeyError(event_id)
     if row["status"] == "cancelled":
-        return {"event_id": event_id, "sent": 0, "status": "cancelled"}
+        return {"event_id": event_id, "sent": 0, "failed": 0, "status": "cancelled"}
     ev = event_dict(row)
     users, skipped = recipients(ev)
-    sent = 0
-    for u in users:
-        text = compose(u["role"], ev, u.get("language") or "en")
-        status, gid = gateway.send(u["phone"], text)
-        db.log_message("out", u["phone"], text, user_id=u["id"], event_id=event_id,
-                       intent=f"alert_{u['role']}", status=status, gateway_id=gid)
-        sent += 1
-    db.ex("UPDATE events SET status='sent', approved_by=COALESCE(?, approved_by) WHERE id=?",
-          (approved_by, event_id))
-    return {"event_id": event_id, "sent": sent, "skipped": skipped,
-            "audiences": audiences(int(ev["level"]), ev.get("event"))}
+    workers = max(1, min(8, len(users)))
+    with ThreadPoolExecutor(max_workers=workers) as pool:  # real gateway: parallel, not N x timeout
+        results = list(pool.map(lambda u: _send_one(u, ev, event_id), users))
+    sent = sum(1 for r in results if not r.startswith("failed") and r != "duplicate")
+    failed = sum(1 for r in results if r.startswith("failed"))
+    skipped["already_sent"] += results.count("duplicate")
+    counts = event_counts(event_id)
+    status = "approved" if failed else "sent"
+    db.ex("UPDATE events SET status=?, approved_by=COALESCE(?, approved_by) WHERE id=?",
+          (status, approved_by, event_id))
+    return {"event_id": event_id, "sent": sent, "failed": failed, "skipped": skipped, "status": status,
+            "audiences": audiences(int(ev["level"]), ev.get("event")), **counts}

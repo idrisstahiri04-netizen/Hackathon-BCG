@@ -1,0 +1,31 @@
+{
+ "iso3": "ZWE",
+ "docs": 114,
+ "ok": 114,
+ "failed": 0,
+ "statements": 709,
+ "bad_evidence_dropped": 0,
+ "rows": 61906,
+ "unmatched_statements": 318,
+ "match_type_counts": {
+  "descriptor_map": 51152,
+  "national": 9009,
+  "province": 897,
+  "livelihood_zone": 664,
+  "district": 184
+ },
+ "cost": {
+  "docs": 114,
+  "calls": 114,
+  "input_tokens": 626151,
+  "output_tokens": 142310,
+  "usd": 2.675,
+  "by_model": {
+   "claude-sonnet-5-5": {
+    "calls": 114,
+    "usd": 2.675402
+   }
+  }
+ },
+ "generated_at": "2026-10-16T17:37:24+00:00"
+}

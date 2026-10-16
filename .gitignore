@@ -11,3 +11,8 @@ pipeline/cache/
 # sms backend
 backend/demo.db*
 .pytest_cache/
+scripts/.run/
+js/config.local.js
+
+# FEWS NET outlook raw downloads (pipeline/outlooks/fetch.py)
+pipeline/data/raw_outlooks/

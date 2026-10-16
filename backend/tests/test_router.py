@@ -84,12 +84,13 @@ def test_advice_only_from_yaml(fake_llm):
     def fn(model, system, user, schema):
         if "intent" in schema["properties"]:
             return llm_result(intent="ask_advice", confidence=0.9)
-        assert model == "claude-sonnet-5-5"
-        return {"id": "crop_store_safely"}
+        picked["id"] = schema["properties"]["id"]["enum"][-1]
+        return {"id": picked["id"]}
+    picked = {}
     fake_llm.set(fn)
     db.upsert_user("+8", role="farmer", consent_at=db.now_iso())
-    r = router.handle_inbound("+8", "how do I keep my maize from weevils?")
-    assert r["reply"] == entries["crop_store_safely"]
+    r = router.handle_inbound("+8", "what do you advise?")
+    assert r["reply"] == entries[picked["id"]]
 
 
 def test_advice_invalid_pick_falls_back_to_library(fake_llm):
@@ -133,3 +134,74 @@ def test_all_replies_one_segment():
                              name="Uzumba Maramba Pfungwe", options="1 Gokwe North, 2 Gokwe South, 3 Gokwe South Urban",
                              label="failed")
             assert composer.is_gsm7(txt) and composer.gsm_len(txt) <= 160, (lang, key, txt)
+
+
+def test_goats_question_gets_livestock_advice_without_llm():
+    db.upsert_user("+20", role="farmer", consent_at=db.now_iso())
+    r = router.handle_inbound("+20", "should I sell my goats?")
+    assert r["reply"] == next(e["text"] for e in router.load_advice() if e["id"] == "grass_destock_early")
+
+
+def test_livestock_candidates_offered_to_sonnet(fake_llm):
+    seen = {}
+
+    def fn(model, system, user, schema):
+        if "intent" in schema["properties"]:
+            return llm_result(intent="ask_advice", confidence=0.9)
+        seen["ids"] = schema["properties"]["id"]["enum"]
+        seen["system"] = system
+        return {"id": seen["ids"][0]}
+    fake_llm.set(fn)
+    db.upsert_user("+21", role="farmer", consent_at=db.now_iso())
+    router.handle_inbound("+21", "should I sell my goats?")
+    # clear topic match -> answered locally, no second LLM call
+    assert "ids" not in seen
+    router.handle_inbound("+21", "what should I do now?")  # vague -> LLM picks among top entries
+    assert "User role: farmer" in seen["system"]
+    assert not {"ngo_trigger_check", "officer_prioritise"} & set(seen["ids"])
+
+
+def test_grain_question_gets_crop_advice_without_llm():
+    db.upsert_user("+22", role="herder", consent_at=db.now_iso())
+    r = router.handle_inbound("+22", "how do I store my maize grain?")
+    assert r["reply"] == next(e["text"] for e in router.load_advice() if e["id"] == "crop_store_safely")
+
+
+def test_join_district_role_fast_path(fake_llm):
+    fake_llm.set(lambda *a: (_ for _ in ()).throw(AssertionError("LLM must not be called")))
+    r = router.handle_inbound("+23", "JOIN Mbire farmer")
+    assert r["parsed"]["source"] == "keyword" and "Mbire" in r["reply"] and "YES" in r["reply"]
+    router.handle_inbound("+23", "YES")
+    assert db.get_user("+23")["role"] == "farmer"
+
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize("role,report_word,join_word", [
+    ("farmer", "Crop", "crops"), ("herder", "Grazing", "grazing"), ("resident", "Food and water", "food and water")])
+def test_role_aware_report_and_join(role, report_word, join_word):
+    router.handle_inbound("+30", f"JOIN Binga {role}")
+    r = router.handle_inbound("+30", "YES")
+    assert join_word in r["reply"], r["reply"]
+    if role != "farmer":
+        assert "crops" not in r["reply"]
+    r = router.handle_inbound("+30", "3")
+    assert r["reply"].startswith(f"Thank you. {report_word}"), r["reply"]
+    if role == "herder":
+        assert "'bad'" in r["reply"] and "Crop" not in r["reply"]
+
+
+def test_role_aware_french_herder():
+    db.upsert_user("+31", role="herder", district_name="Hwange", language="fr", consent_at=db.now_iso())
+    r = router.handle_inbound("+31", "2")
+    assert "paturages" in r["reply"] and "cultures" not in r["reply"]
+
+
+def test_role_variants_one_segment():
+    from backend import composer
+    for lang in router.R:
+        for role in router.ROLES:
+            for key in ("joined", "report_thanks"):
+                txt = router.say_role(lang, key, role, district="Uzumba Maramba Pfungwe", label="short")
+                assert composer.is_gsm7(txt) and composer.gsm_len(txt) <= 160 and not txt.endswith("..."), (lang, role, key, len(txt), txt)

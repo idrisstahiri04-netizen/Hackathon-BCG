@@ -10,23 +10,42 @@ from __future__ import annotations
 import json
 import logging
 import os
+import threading
 
 from . import db  # noqa: F401  (ensures .env is loaded)
 
 log = logging.getLogger("llm")
 
 ROUTER_MODEL = os.environ.get("ROUTER_MODEL", "claude-haiku-5-5")
-ADVICE_MODEL = os.environ.get("ADVICE_MODEL", "claude-sonnet-5-5")
+# Advice pick runs only when local ranking is not clear-cut; Haiku keeps it < 4 s end to end.
+# Set ADVICE_MODEL=claude-sonnet-5-5 for the slower, stronger picker.
+ADVICE_MODEL = os.environ.get("ADVICE_MODEL", "claude-haiku-5-5")
+TIMEOUT_S = float(os.environ.get("LLM_TIMEOUT_S", "6"))
 
 _client = None
+_client_lock = threading.Lock()
 
 
 def client():
+    """Short timeouts: a black-holed network falls back to keywords in ~2x connect timeout."""
     global _client
-    if _client is None:
-        import anthropic
-        _client = anthropic.Anthropic(timeout=20.0, max_retries=1)
-    return _client
+    with _client_lock:
+        if _client is None:
+            import anthropic
+            _client = anthropic.Anthropic(timeout=anthropic.Timeout(TIMEOUT_S, connect=2.0), max_retries=1)
+        return _client
+
+
+def warm_up() -> None:
+    """Create the client and make one tiny call so the first real SMS is not cold (6-14 s)."""
+    if not available() or os.environ.get("LLM_WARMUP", "1") == "0":
+        return
+    try:
+        client().messages.create(model=ROUTER_MODEL, max_tokens=16, output_config={"effort": "low"},
+                                 messages=[{"role": "user", "content": "ok"}])
+        log.info("Claude client warmed up")
+    except Exception as e:  # never break startup
+        log.warning("Claude warm-up failed: %s", e)
 
 
 def available() -> bool:

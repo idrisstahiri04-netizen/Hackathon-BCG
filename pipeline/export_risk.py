@@ -27,8 +27,9 @@ import alert_engine as ae
 from common import (LATENCY, COUNTRIES, N_MONTHS, OUT_DIR, RISK_DIR, ROOT, START_YEAR, DATA_DIR, WINDOW_LEN,
                     EVENTS, EVENT_PRIORITY, agyear, is_test, months_between, season_instances)
 from features import attach
-from train import SIG_AT_R, add_families, prepare_country
+from train import MODEL_EVENTS, SIG_AT_R, add_families, crop_dominant, prepare_country
 
+FAST_ENTRY = False          # spec: no 1-run escalation; set True only after a spec change
 WARMUP = 12                 # months of hysteresis warm-up before Jan 2019
 
 
@@ -37,7 +38,7 @@ def candidates(P: dict, months: pd.DatetimeIndex) -> pd.DataFrame:
     rows = []
     for u, ss in P["ss"].items():
         inst = season_instances(ss, months.min().year, months.max().year + 1)
-        wins = [(e, getattr(it, e), int(it.agyear)) for it in inst.itertuples(index=False) for e in EVENTS]
+        wins = [(e, getattr(it, e), int(it.agyear)) for it in inst.itertuples(index=False) for e in MODEL_EVENTS]
         for r in months:
             cand = []
             for e, W0, ag in wins:
@@ -58,7 +59,7 @@ def candidates(P: dict, months: pd.DatetimeIndex) -> pd.DataFrame:
 def score(bundle: dict, X: pd.DataFrame, iso3: str) -> np.ndarray:
     win = bundle["winner"]
     p = np.full(len(X), np.nan)
-    for e in EVENTS:
+    for e in MODEL_EVENTS:
         E = bundle["events"][e]
         me = (X["event"] == e).values
         for ag in np.unique(X.loc[me, "agyear"]):
@@ -69,6 +70,17 @@ def score(bundle: dict, X: pd.DataFrame, iso3: str) -> np.ndarray:
                 mdl, cal = E["final"][win], E["final_cal"][win]
             p[m] = cal.predict(mdl.raw(X.loc[m]))
     return p
+
+
+def horizon_weeks(d, event) -> int:
+    """Weeks from the issue date until the predicted window: 4 per month of lead (lead 1/2/3 ->
+    4/8/12). Inside an ongoing window: 4 per remaining window month (min 4). The issue date already
+    sits one month after the newest data (latency), so this is time-to-impact for the reader."""
+    if d is None or (isinstance(d, float) and np.isnan(d)):
+        return 4
+    d = int(d)
+    months = d if d >= 1 else WINDOW_LEN[event] + d - 1
+    return int(4 * max(1, months))
 
 
 def rnd(v, k=2):
@@ -86,12 +98,11 @@ def geo_ids(iso3: str):
 def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
     country, ddate, dlabel, _ = COUNTRIES[iso3]
     P = prepare_country(iso3, data_dir)
-    th = bundle["thresholds"]
     start = pd.Timestamp(START_YEAR, 1, 1)
     months = pd.date_range(start - pd.DateOffset(months=WARMUP), periods=N_MONTHS + WARMUP, freq="MS")
     C = candidates(P, months)
     X = attach(P["feat"], C, P["plant"], P["bim"])
-    X = add_families(X, P["ss"])
+    X = add_families(X, P["ss"], crop_dominant(P["c"]))
     X["p"] = score(bundle, X, iso3)
     # one row per (unit, r): the candidate with highest p (ties -> event priority)
     X["prio"] = X["event"].map(EVENT_PRIORITY)
@@ -100,9 +111,10 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
 
     decl = pd.Timestamp(ddate)
     decl_t = months_between(start, decl)
-    decl_agm = (decl.month - 7) % 12
 
     disp = P["display"]
+    crop_dom = crop_dominant(P["c"])
+    decl_m = pd.Timestamp(decl.year, decl.month, 1)
     units = []
     order = geo_ids(iso3) or list(P["c"].names.index)
     missing_geo = [u for u in order if u not in P["c"].names.index]
@@ -110,13 +122,20 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
     order += [u for u in P["c"].names.index if u not in order]       # units without geometry go last
     for u in order:
         b = best.loc[u].reindex(months)
-        sig = disp.loc[u].reindex(months)[SIG_AT_R]
-        # families from the original (non-fallback) signals; fmin handles units without cropland
-        fam = ae.families(sig, b["in_season"].fillna(False).values.astype(bool), _rainy(P, u, months))
-        after = np.array([(m.month - 7) % 12 >= decl_agm for m in months])
-        p = b["p"].values
-        raw = ae.raw_levels(fam, np.nan_to_num(p, nan=0.0), sig, after, th)
-        lvl = ae.hysteresis(raw)
+        du = disp.loc[u].reindex(months)
+        sig = du[SIG_AT_R]
+        fsig = sig.assign(vci_crop_l1=du["vci_crop"].shift(1), vci_grass_l1=du["vci_grass"].shift(1))
+        # families from the original (non-fallback) signals
+        fam = ae.families(fsig, b["in_season"].fillna(False).values.astype(bool), _rainy(P, u, months),
+                          np.full(len(months), crop_dom[u]))
+        p = b["p"].values                      # information only (NGO / food-bank text), not used for levels
+        dif = np.array([(m >= decl_m) and (agyear(m) == agyear(decl_m)) for m in months])
+        raw = ae.raw_levels(fam, dif)
+        lvl, held = ae.hysteresis(raw)         # spec: 2 runs up, 3 runs down, no fast entry
+        plant = plant_months(P["ss"][u])
+        st = P["c"].static.loc[u]
+        default_ev = "no_grass" if (st["grass_frac"] or 0) > (st["crop_frac"] or 0) else "crop_failure"
+        lag = LATENCY["chirps"]
         series = []
         for k, m in enumerate(months):
             if m < start:
@@ -132,10 +151,13 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
                 conf = "low"
             d = b["delta"].iloc[k]
             series.append({
-                "t": t, "level": int(lvl[k]), "p": round(float(np.nan_to_num(p[k], nan=0.0)), 3),
+                "t": t, "level": int(lvl[k]), "held": bool(held[k]), "p": None if np.isnan(p[k]) else round(float(p[k]), 3),
                 "confidence": conf, "agreeing": int(fam["agreeing"].iloc[k]), "families": f,
-                "event": b["event"].iloc[k] if lvl[k] > 0 else "none",
-                "horizon": int(max(2, round(4.35 * max(d, 0)))) if not np.isnan(d) else 4,
+                "event": ("none" if lvl[k] == 0 else
+                          "cant_plant" if (bool(fam["strong_weather"].iloc[k]) and
+                                           (m - pd.DateOffset(months=lag)).month in plant and lvl[k] == 1)
+                          else b["event"].iloc[k] if isinstance(b["event"].iloc[k], str) else default_ev),
+                "horizon": horizon_weeks(d, b["event"].iloc[k]),
                 "drivers": ae.drivers(s, f), "signals": s})
         units.append({"id": u, "name": str(P["c"].names[u]), "series": series})
 
@@ -150,8 +172,17 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
         "cv_mean_pr_auc_by_model": {m: v.get("mean_pr_auc") for m, v in (mj.get("cv_pooled") or {}).items()},
         "holdout_winner": (mj.get("holdout") or {}).get(win),
         "holdout_persistence": (mj.get("holdout") or {}).get("persistence"),
-        "thresholds": th,
+        "alert_rule": "v1.1 spec mode: Watch = any one family (rain/vegetation/soil) or strong rain+soil "
+                      "dryness; Warning = vegetation + (rain or soil); Emergency = Warning + official "
+                      "declaration in force (declaration month to end of that agricultural year). "
+                      "Hysteresis 2 up / 3 down, no fast entry. p is information only.",
+        "spec_rule_cv_stats": mj.get("thresholds"),
+        "fast_entry": False,
         "data_latency_months": LATENCY,
+        "issue_convention": "level/p for month t are issued at the end of month t from data of month t-1 "
+                            "(latency already applied; do not add latency again)",
+        "events": "crop_failure / no_grass from the model; cant_plant = rule-based Watch reason only "
+                  "(strong rain+soil dryness in the planting window; the cant_plant model had no skill)",
         "signals_note": "signals and families at month t are the latest data published by the end of "
                         "month t (i.e. describe month t-1); see data_latency_months",
         "no_cropland_units_use_grass": P["no_crop"],
@@ -166,6 +197,10 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
                      "metrics": meta_metrics,
                      "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")},
             "units": units}
+
+
+def plant_months(ss) -> set:
+    return {m for s in ss for m in s.planting}
 
 
 def _rainy(P, u, months):

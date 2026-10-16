@@ -294,3 +294,17 @@
   #run-alerts { padding: 0 9px; font-size: 11px; }
   .has-tabs #speeds { display: none; }
 }
+
+/* --- Delivery status (sent / failed) ------------------------------------- */
+.al-failed {
+  font: 600 12px var(--mono); color: #ef8d8d;
+  background: rgba(208,59,59,.16); padding: 3px 9px; border-radius: 5px;
+}
+.dl.ok { color: #5fd35f; }
+.dl.wait { color: var(--lvl-1); }
+.dl.failed { color: #ef8d8d; font-weight: 600; }
+.ph-msg.failed .ph-txt { outline: 1.5px solid var(--lvl-3); }
+.ph-msg.me.failed .ph-txt { background: #5a2a2a; }
+.ph-msg.thinking .ph-txt { color: var(--text-muted); font-style: italic; animation: think 1.2s ease-in-out infinite; }
+@keyframes think { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .ph-msg.thinking .ph-txt { animation: none; } }

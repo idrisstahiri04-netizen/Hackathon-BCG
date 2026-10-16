@@ -10,7 +10,14 @@ import json
 import logging
 import os
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
+import re
+import secrets
+import threading
+import time
+from contextlib import asynccontextmanager
+
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -19,7 +26,38 @@ from . import composer, db, gateway, router
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 log = logging.getLogger("app")
 
-app = FastAPI(title="Drought SMS backend", version="0.1")
+db.ensure_admin_token()  # generates ADMIN_TOKEN into /home/looooo/bcg/.env if missing (never printed)
+
+
+# ------------------------------------------------------------------ auth
+def is_admin(x_api_key: str | None) -> bool:
+    tok = os.environ.get("ADMIN_TOKEN", "")
+    return bool(tok and x_api_key and secrets.compare_digest(x_api_key.encode(), tok.encode()))
+
+
+def require_admin(x_api_key: str | None = Header(default=None)) -> None:
+    """Operator endpoints need header X-API-Key: <ADMIN_TOKEN>. Fails closed if no token is configured."""
+    if not is_admin(x_api_key):
+        raise HTTPException(401, "admin token required (header X-API-Key)")
+
+
+SIM_PHONE = re.compile(r"^\+[1-9][0-9]{6,14}$")       # E.164
+GW_PHONE = re.compile(r"^\+?[0-9]{6,15}$")            # gateway may send national format
+
+
+@asynccontextmanager
+async def lifespan(_app):
+    """Build the Claude client and pay the cold-start cost before the first SMS (background thread)."""
+    from . import llm
+    threading.Thread(target=llm.warm_up, daemon=True).start()
+    try:
+        db.purge_old()
+    except Exception as e:  # pragma: no cover
+        log.warning("retention purge failed: %s", e)
+    yield
+
+
+app = FastAPI(title="Drought SMS backend", version="0.1", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
@@ -45,10 +83,16 @@ class ApproveIn(BaseModel):
 
 # ------------------------------------------------------------------ inbound
 def _verify_signature(raw: bytes, request: Request) -> bool:
+    """capcom6 webhook HMAC-SHA256(key, body + X-Timestamp), timestamp within +-5 min. No key -> False."""
     key = os.environ.get("ANDROID_GW_SIGNING_KEY")
     if not key:
-        return True  # signing optional for the demo
+        return False
     ts, sig = request.headers.get("X-Timestamp", ""), request.headers.get("X-Signature", "")
+    try:
+        if abs(time.time() - int(ts)) > 300:
+            return False
+    except ValueError:
+        return False
     exp = hmac.new(key.encode(), raw + ts.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(exp, sig)
 
@@ -68,9 +112,11 @@ def _android_items(body: dict) -> tuple[list[tuple[str, str]], list[tuple[str, s
 
 @app.post("/sms/inbound")
 async def sms_inbound(request: Request, background: BackgroundTasks):
+    """Gateway webhook. Needs a valid gateway signature (ANDROID_GW_SIGNING_KEY) or the admin token.
+    Fail closed: with no signing key configured, unsigned webhooks are rejected."""
     raw = await request.body()
-    if not _verify_signature(raw, request):
-        raise HTTPException(401, "bad webhook signature")
+    if not (_verify_signature(raw, request) or is_admin(request.headers.get("X-API-Key"))):
+        raise HTTPException(401, "bad or missing webhook signature")
     try:
         body = json.loads(raw or b"{}")
     except ValueError:
@@ -81,26 +127,32 @@ async def sms_inbound(request: Request, background: BackgroundTasks):
             if gid:
                 db.ex("UPDATE messages SET status=? WHERE gateway_id=?", (st, gid))
         # reply in the background so the phone gets its 2xx within 30 s
+        sms = [(p.strip(), t) for p, t in sms if p and t and GW_PHONE.match(p.strip())]
         for phone, text in sms:
-            if phone and text:
-                background.add_task(router.handle_inbound, phone, text)
+            background.add_task(router.handle_inbound, phone, text)
         return {"ok": True, "queued": len(sms), "status_updates": len(updates)}
     s = SimIn.parse(body)
     if not s.from_ or not s.text:
         raise HTTPException(422, "need {from, text}")
-    return router.handle_inbound(s.from_, s.text)
+    if not GW_PHONE.match(s.from_.strip()):
+        raise HTTPException(422, "from must be a phone number")
+    # Claude calls block: run them in the threadpool so /health and other SMS never wait
+    return await run_in_threadpool(router.handle_inbound, s.from_, s.text)
 
 
-@app.post("/sim/inbound")
-async def sim_inbound(request: Request):
-    s = SimIn.parse(await request.json())
+@app.post("/sim/inbound", dependencies=[Depends(require_admin)])
+def sim_inbound(body: dict):
+    """Sync handler -> FastAPI runs it in the threadpool (never blocks the event loop)."""
+    s = SimIn.parse(body)
     if not s.from_ or not s.text:
         raise HTTPException(422, "need {from, text}")
+    if not SIM_PHONE.match(s.from_.strip()):
+        raise HTTPException(422, "from must be an E.164 number, e.g. +212600000001")
     return router.handle_inbound(s.from_, s.text)
 
 
 # ------------------------------------------------------------------ alerts broker
-@app.post("/alerts/run")
+@app.post("/alerts/run", dependencies=[Depends(require_admin)])
 def alerts_run(body: RunIn):
     try:
         risk = db.load_risk(body.iso3)
@@ -139,7 +191,7 @@ def alerts_run(body: RunIn):
     for eid in created:
         e = db.q1("SELECT * FROM events WHERE id=?", (eid,))
         e["drivers"] = json.loads(e.pop("drivers_json") or "[]")
-        e["sent_count"] = db.q1("SELECT COUNT(*) n FROM messages WHERE event_id=? AND direction='out'", (eid,))["n"]
+        e.update(composer.event_counts(eid))
         events.append(e)
     return {"created": len(created), "events": events, "iso3": body.iso3.upper(), "t": body.t, "month": db.month_label(body.t, start),
             "model_version": meta.get("model_version"),
@@ -147,7 +199,7 @@ def alerts_run(body: RunIn):
             "pending_approval": len(created) - len(auto_sent)}
 
 
-@app.post("/events/{event_id}/approve")
+@app.post("/events/{event_id}/approve", dependencies=[Depends(require_admin)])
 def approve(event_id: int, body: ApproveIn | None = None):
     row = db.q1("SELECT status FROM events WHERE id=?", (event_id,))
     if not row:
@@ -159,11 +211,11 @@ def approve(event_id: int, body: ApproveIn | None = None):
     res = composer.send_event(event_id, by)
     e = db.q1("SELECT * FROM events WHERE id=?", (event_id,))
     e["drivers"] = json.loads(e.pop("drivers_json") or "[]")
-    e["sent_count"] = db.q1("SELECT COUNT(*) n FROM messages WHERE event_id=? AND direction='out'", (event_id,))["n"]
+    e.update(composer.event_counts(event_id))
     return {"ok": True, "event": e, **res}
 
 
-@app.post("/events/{event_id}/cancel")
+@app.post("/events/{event_id}/cancel", dependencies=[Depends(require_admin)])
 def cancel(event_id: int, body: ApproveIn | None = None):
     if not db.q1("SELECT 1 FROM events WHERE id=?", (event_id,)):
         raise HTTPException(404, "no such event")
@@ -175,20 +227,32 @@ def cancel(event_id: int, body: ApproveIn | None = None):
 # ------------------------------------------------------------------ feeds (polled by the globe)
 @app.get("/feed/alerts")
 def feed_alerts(since: int = 0, limit: int = 100):
-    rows = db.q("SELECT e.*, (SELECT COUNT(*) FROM messages m WHERE m.event_id=e.id AND m.direction='out') AS sent_to "
+    rows = db.q("SELECT e.* "
                 "FROM events e WHERE e.id>? ORDER BY e.id DESC LIMIT ?", (since, limit))
     for r in rows:
         r["drivers"] = json.loads(r.pop("drivers_json") or "[]")
-        r["sent_count"] = r["sent_to"]
-        r["sent_to_label"] = f"sent to {r['sent_to']} users"
+        r.update(composer.event_counts(r["id"]))
+        r["sent_to"] = r["sent_count"]
         r["audiences"] = composer.audiences(r["level"], r["event"])
     return {"events": rows, "last_id": max([r["id"] for r in rows], default=since)}
 
 
+def mask_phone(p: str | None) -> str:
+    """+263771000001 -> +263****001 (big-screen safe)."""
+    p = p or ""
+    return p[:4] + "****" + p[-3:] if len(p) > 7 else "****"
+
+
 @app.get("/feed/users")
-def feed_users(since: int = 0, limit: int = 100):
+def feed_users(since: int = 0, limit: int = 100, x_api_key: str | None = Header(default=None)):
+    """Without the admin token, phone numbers are masked and names dropped."""
+    admin = is_admin(x_api_key)
     rows = db.q("SELECT id, phone, name, district_id, district_name, iso3, role, language, consent_at, opted_out_at, "
                 "created_at FROM users WHERE id>? ORDER BY id DESC LIMIT ?", (since, limit))
+    for r in rows:
+        r["phone_masked"] = mask_phone(r["phone"])
+        if not admin:
+            r["phone"], r["name"] = r["phone_masked"], None
     counts = db.q("SELECT role, COUNT(*) n FROM users WHERE consent_at IS NOT NULL AND opted_out_at IS NULL GROUP BY role")
     today = db.now_iso()[:10]
     n_today = db.q1("SELECT COUNT(*) n FROM users WHERE consent_at IS NOT NULL AND opted_out_at IS NULL "
@@ -199,7 +263,12 @@ def feed_users(since: int = 0, limit: int = 100):
 
 
 @app.get("/feed/messages")
-def feed_messages(since: int = 0, limit: int = 100, phone: str | None = None):
+def feed_messages(since: int = 0, limit: int = 100, phone: str | None = None,
+                  x_api_key: str | None = Header(default=None)):
+    """Without the admin token, phone numbers are masked and the `phone` filter is ignored."""
+    admin = is_admin(x_api_key)
+    if not admin:
+        phone = None
     if phone:
         rows = db.q("SELECT * FROM messages WHERE id>? AND phone=? ORDER BY id DESC LIMIT ?", (since, phone, limit))
     else:
@@ -208,14 +277,19 @@ def feed_messages(since: int = 0, limit: int = 100, phone: str | None = None):
         r["parsed"] = json.loads(r.pop("parsed_json") or "null")
         r["chars"] = composer.gsm_len(r["text"])
         r["gsm7"] = composer.is_gsm7(r["text"])
-        r["phone_masked"] = r["phone"][:5] + "***" + r["phone"][-3:]  # for the big screen
+        r["phone_masked"] = mask_phone(r["phone"])
+        if not admin:
+            r["phone"] = r["phone_masked"]
+            if isinstance(r["parsed"], dict):
+                r["parsed"].pop("name", None)
     return {"messages": rows, "last_id": max([r["id"] for r in rows], default=since)}
 
 
 @app.get("/health")
 def health():
     from . import llm
-    return {"ok": True, "gateway": gateway.mode(), "db": db.db_path(), "llm": llm.available(),
+    return {"ok": True, "gateway": gateway.mode(), "llm": llm.available(),
+            "auth": "X-API-Key" if os.environ.get("ADMIN_TOKEN") else "NOT CONFIGURED",
             "router_model": llm.ROUTER_MODEL, "advice_model": llm.ADVICE_MODEL,
             "users": db.q1("SELECT COUNT(*) n FROM users")["n"],
             "events": db.q1("SELECT COUNT(*) n FROM events")["n"]}

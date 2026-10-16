@@ -29,3 +29,15 @@ def test_live_haiku_intents():
         assert got.get("source") in ("llm", "keyword"), "Claude call failed, fell back to keywords"
         hits += got["intent"] == want
     assert hits >= 5
+
+
+@pytest.mark.live
+def test_live_sonnet_advice_goats():
+    if not llm.available():
+        pytest.skip("no ANTHROPIC_API_KEY")
+    from backend import db
+    db.upsert_user("+30", role="farmer", consent_at=db.now_iso())
+    txt = router.pick_advice(db.get_user("+30"), "should I sell my goats now or wait?")
+    print("\nAdvice (farmer, goats):", txt)
+    livestock = {e["text"] for e in router.load_advice() if e["id"].startswith("grass_")}
+    assert txt in livestock

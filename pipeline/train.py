@@ -49,6 +49,9 @@ from labels import build_targets
 
 warnings.filterwarnings("ignore", category=UserWarning)
 MODELS = ["persistence", "rule", "logreg", "lgbm", "ensemble"]
+# cant_plant had no CV skill (ROC < 0.5, Brier worse than climatology) -> no model; it survives only
+# as a rule-based Watch reason (strong weather-only dryness in the planting window), see export_risk.py
+MODEL_EVENTS = ["crop_failure", "no_grass"]
 TRAIN_LEADS = [0, 1, 2, 3]
 EVAL_LEADS = [1, 2, 3]
 SEED = 7
@@ -102,7 +105,13 @@ def prepare_country(iso3: str, data_dir) -> dict:
                 display=display, no_crop=no_crop)
 
 
-def add_families(X: pd.DataFrame, ss: dict) -> pd.DataFrame:
+def crop_dominant(c) -> dict:
+    """Unit counts as cropland for the vegetation family if crop_frac >= 0.2 (else grass)."""
+    cf = c.static["crop_frac"]
+    return {u: bool(v >= 0.2) if pd.notna(v) else False for u, v in cf.items()}
+
+
+def add_families(X: pd.DataFrame, ss: dict, crop_dom: dict | None = None) -> pd.DataFrame:
     seas = {u: in_season_months(v) for u, v in ss.items()}
     rain = {u: rainy_months(v) for u, v in ss.items()}
     # gate on the month the data describe (issue month minus latency)
@@ -110,16 +119,18 @@ def add_families(X: pd.DataFrame, ss: dict) -> pd.DataFrame:
     mrain = (X["r"] - pd.DateOffset(months=LATENCY["chirps"])).dt.month
     ins = np.array([m in seas[u] for u, m in zip(X["unit_id"], mveg)])
     inr = np.array([m in rain[u] for u, m in zip(X["unit_id"], mrain)])
-    fam = ae.families(X[SIG_AT_R], ins, inr)
-    for k in ae.FAMS + ["agreeing"]:
+    cols = SIG_AT_R + [c for c in ("vci_crop_l1", "vci_grass_l1") if c in X]
+    fam = ae.families(X[cols], ins, inr, X["unit_id"].map(crop_dom or {}).fillna(False).values)
+    for k in ae.FAMS + ["agreeing", "strong_weather"]:
         X[k] = fam[k].values
     X["in_season"] = ins
+    X["in_rainy"] = inr
     return X
 
 
 def build_rows(P: dict) -> pd.DataFrame:
     X = make_xy(P["feat"], P["targets"], TRAIN_LEADS, P["plant"], P["bim"])
-    X = add_families(X, P["ss"])
+    X = add_families(X, P["ss"], crop_dominant(P["c"]))
     X["test"] = [is_test(P["iso3"], a) for a in X["agyear"]]
     return X
 
@@ -230,7 +241,7 @@ def run(iso3s, data_dir, out_dir: Path, tag: str):
 
     bundle = {"tag": tag, "iso3s": iso3s, "cols": cols, "events": {}, "train_leads": TRAIN_LEADS}
     oof_all, report = [], {}
-    for ev in EVENTS:
+    for ev in MODEL_EVENTS:
         d = cv[cv.event == ev]
         raw = {m: np.full(len(d), np.nan) for m in MODELS}
         fold_models, best_iters = {}, []
@@ -255,7 +266,8 @@ def run(iso3s, data_dir, out_dir: Path, tag: str):
                 cal[m][va] = ir.predict(raw[m][va])
                 fold_cal[yv][m] = ir
         final_cal = {m: iso(raw[m][~np.isnan(raw[m])], d.label.values[~np.isnan(raw[m])]) for m in MODELS}
-        o = d[["unit_id", "iso3", "agyear", "event", "lead", "label", "W0", "r"] + ae.FAMS + ["agreeing"]].copy()
+        o = d[["unit_id", "iso3", "agyear", "event", "lead", "label", "W0", "r", "anchor", "season"] + ae.FAMS
+              + ["agreeing", "strong_weather"] + SIG_AT_R].copy()
         for m in MODELS:
             o[f"raw_{m}"], o[f"cal_{m}"] = raw[m], cal[m]
         oof_all.append(o)
@@ -272,7 +284,7 @@ def run(iso3s, data_dir, out_dir: Path, tag: str):
         res = {}
         for m in MODELS:
             res[m] = {}
-            for ev in EVENTS:
+            for ev in MODEL_EVENTS:
                 s = df[df.event == ev]
                 if group_iso:
                     s = s[s.iso3 == group_iso]
@@ -281,15 +293,29 @@ def run(iso3s, data_dir, out_dir: Path, tag: str):
                     mr = metrics(s.label, s[f"raw_{m}"], brier=False)
                     mt["roc_auc"], mt["pr_auc"] = mr["roc_auc"], mr["pr_auc"]
                 res[m][ev] = mt
-            vals = [res[m][ev]["pr_auc"] for ev in EVENTS if res[m][ev]["pr_auc"] is not None]
+            vals = [res[m][ev]["pr_auc"] for ev in MODEL_EVENTS if res[m][ev]["pr_auc"] is not None]
             res[m]["mean_pr_auc"] = round(float(np.mean(vals)), 3) if vals else None
-            vals = [res[m][ev]["roc_auc"] for ev in EVENTS if res[m][ev]["roc_auc"] is not None]
+            vals = [res[m][ev]["roc_auc"] for ev in MODEL_EVENTS if res[m][ev]["roc_auc"] is not None]
             res[m]["mean_roc_auc"] = round(float(np.mean(vals)), 3) if vals else None
-            vals = [res[m][ev]["brier"] for ev in EVENTS if res[m][ev]["brier"] is not None]
+            vals = [res[m][ev]["brier"] for ev in MODEL_EVENTS if res[m][ev]["brier"] is not None]
             res[m]["mean_brier"] = round(float(np.mean(vals)), 4) if vals else None
         return res
 
     cv_tab = table(ev_oof)
+    season_tabs = {}
+    for i in iso3s:
+        s_ = ev_oof[ev_oof.iso3 == i]
+        if s_["season"].nunique() > 1:          # bimodal: score each rainy season on its own
+            nm = lambda m: "MAM long rains" if 2 <= m <= 6 else ("OND short rains" if 8 <= m <= 12 else f"core m{m}")
+            season_tabs[i] = {}
+            for key, g in s_.groupby(s_["anchor"].dt.month.map(nm)):
+                season_tabs[i][key] = {m: {ev: metrics(g[g.event == ev].label, g[g.event == ev][f"cal_{m}"])
+                                           for ev in MODEL_EVENTS} for m in MODELS}
+                for m in MODELS:
+                    for ev in MODEL_EVENTS:
+                        mr = metrics(g[g.event == ev].label, g[g.event == ev][f"raw_{m}"], brier=False)
+                        season_tabs[i][key][m][ev]["roc_auc"] = mr["roc_auc"]
+                        season_tabs[i][key][m][ev]["pr_auc"] = mr["pr_auc"]
     winner = max(MODELS, key=lambda m: cv_tab[m]["mean_pr_auc"] or -1)
     bundle["winner"] = winner
     print(f"[{tag}] CV mean PR-AUC:", {m: cv_tab[m]["mean_pr_auc"] for m in MODELS}, "-> winner", winner)
@@ -298,23 +324,23 @@ def run(iso3s, data_dir, out_dir: Path, tag: str):
     by_lead = {}
     for L in EVAL_LEADS:
         s = ev_oof[ev_oof.lead == L]
-        by_lead[L] = {ev: metrics(s[s.event == ev].label, s[s.event == ev][f"cal_{winner}"]) for ev in EVENTS}
-        for ev in EVENTS:
+        by_lead[L] = {ev: metrics(s[s.event == ev].label, s[s.event == ev][f"cal_{winner}"]) for ev in MODEL_EVENTS}
+        for ev in MODEL_EVENTS:
             mr = metrics(s[s.event == ev].label, s[s.event == ev][f"raw_{winner}"], brier=False)
             by_lead[L][ev]["roc_auc"], by_lead[L][ev]["pr_auc"] = mr["roc_auc"], mr["pr_auc"]
 
     # thresholds tuned on CV OOF only (winner, leads 1-3)
     tw = ev_oof.rename(columns={f"cal_{winner}": "p_cal"})
-    th = ae.tune_thresholds(tw)
-    bundle["thresholds"] = {k: th[k] for k in ("p_watch", "p_warn", "p_emerg")}
+    th = ae.rule_stats(tw)          # v1.1: levels come from the spec rule; nothing tuned
+    bundle["thresholds"] = {}
     bundle["latency"] = dict(LATENCY)
-    print(f"[{tag}] thresholds (CV-tuned):", th)
+    print(f"[{tag}] spec-rule CV stats:", th)
 
     # ---------------- hold-out: evaluated once with the final models
     ho = {}
     if len(te):
         parts = []
-        for ev in EVENTS:
+        for ev in MODEL_EVENTS:
             s = te[te.event == ev].copy()
             if not len(s):
                 continue
@@ -341,28 +367,31 @@ def run(iso3s, data_dir, out_dir: Path, tag: str):
               "selection": "highest mean CV PR-AUC over events (leads 1-3)",
               "cv_design": f"leave-one-agricultural-year-out {CV_FIRST}-{CV_LAST}, countries pooled",
               "holdout_design": "agyear>=2023 (2023/24 season) + KEN 2020-2022; final models, evaluated once",
-              "labels": "satellite-only: crop_failure min vci_crop<35 in core+1; no_grass min vci_grass<35 "
-                        "3 months after rains; cant_plant spi_1m<-1 & sm1_z<-1 in first 2 rainy months",
+              "labels": "satellite-only (v1.1): crop_failure >=2 of 3 months vci_crop<35 in core+1; no_grass >=2 of 3 "
+                        "months vci_grass<35 in the 3 months after rains; cant_plant spi_1m<-1 & sm1_z<-1 in first 2 rainy months",
               "cv_pooled": cv_tab, "cv_this_country": table(ev_oof, group_iso=i) if (ev_oof.iso3 == i).any() else None,
               "cv_by_lead_winner": by_lead, "thresholds": th, "data_latency_months": LATENCY,
               "lead_definition": "lead L = months from issue month r to window start; features use only "
                                  "data published by end of r (signals of r-1), so data-to-window gap is L+1",
-              "holdout": ho.get(i), "holdout_pooled": ho.get("all")}
+              "holdout": ho.get(i), "holdout_pooled": ho.get("all"),
+              "cv_by_season": season_tabs.get(i),
+              "dropped": "cant_plant model dropped: no CV skill (pre-latency run: ROC 0.485, PR-AUC 0.168 = base "
+                         "0.168, Brier 0.146 > climatology 0.140). Kept only as a rule-based Watch reason."}
         (out_dir / f"metrics_{i}.json").write_text(json.dumps(mj, indent=2, default=str))
-    write_report(out_dir, tag, iso3s, cv_tab, by_lead, winner, th, ho, cv, te)
+    write_report(out_dir, tag, iso3s, cv_tab, by_lead, winner, th, ho, cv, te, season_tabs)
     return bundle
 
 
 def fmt_row(name, t):
     cells = []
-    for ev in EVENTS:
+    for ev in MODEL_EVENTS:
         x = t[ev]
         cells.append(f"{x['roc_auc'] if x['roc_auc'] is not None else '-'} / "
                      f"{x['pr_auc'] if x['pr_auc'] is not None else '-'} / {x['brier']} (base {x['pos_rate']})")
     return f"| {name} | " + " | ".join(cells) + f" | {t['mean_pr_auc']} |"
 
 
-def write_report(out_dir, tag, iso3s, cv_tab, by_lead, winner, th, ho, cv, te):
+def write_report(out_dir, tag, iso3s, cv_tab, by_lead, winner, th, ho, cv, te, season_tabs=None):
     L = [f"# Model report ({tag})", "",
          f"Generated {dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')}. Countries pooled: {', '.join(iso3s)}.",
          f"CV: leave-one-agricultural-year-out {CV_FIRST}-{CV_LAST} ({cv.agyear.nunique()} folds, {len(cv)} rows incl. lead 0). "
@@ -374,19 +403,29 @@ def write_report(out_dir, tag, iso3s, cv_tab, by_lead, winner, th, ho, cv, te):
          "Metrics: leads 1-3 months. Cells = ROC-AUC / PR-AUC / Brier (base rate). AUCs on raw scores, Brier on "
          "cross-fitted isotonic-calibrated probabilities.", "",
          "## Cross-validation (pooled)", "",
-         "| model | " + " | ".join(EVENTS) + " | mean PR-AUC |", "|---|" + "---|" * (len(EVENTS) + 1)]
+         "| model | " + " | ".join(MODEL_EVENTS) + " | mean PR-AUC |", "|---|" + "---|" * (len(MODEL_EVENTS) + 1)]
     for m in MODELS:
         L.append(fmt_row(m, cv_tab[m]))
     L += ["", f"**Winner (CV PR-AUC): {winner}**", "", "### Winner by lead (CV)", "",
-          "| lead | " + " | ".join(EVENTS) + " |", "|---|" + "---|" * len(EVENTS)]
+          "| lead | " + " | ".join(MODEL_EVENTS) + " |", "|---|" + "---|" * len(MODEL_EVENTS)]
     for ld, t in by_lead.items():
-        L.append(f"| {ld} | " + " | ".join(f"{t[e]['roc_auc']} / {t[e]['pr_auc']} / {t[e]['brier']}" for e in EVENTS) + " |")
-    L += ["", "## Alert thresholds (tuned on CV out-of-fold predictions only)", "", "```", json.dumps(th, indent=1), "```"]
+        L.append(f"| {ld} | " + " | ".join(f"{t[e]['roc_auc']} / {t[e]['pr_auc']} / {t[e]['brier']}" for e in MODEL_EVENTS) + " |")
+    L += ["", "cant_plant: model dropped (no CV skill: pre-latency ROC 0.485, PR-AUC 0.168 = base rate 0.168, "
+          "Brier worse than climatology). It is now only a rule-based Watch reason (strong rain+soil dryness).", ""]
+    for i, tabs in (season_tabs or {}).items():
+        L += [f"### {i} CV by its own rainy seasons (winner {winner})", "",
+              "| season | " + " | ".join(MODEL_EVENTS) + " |", "|---|" + "---|" * len(MODEL_EVENTS)]
+        for key, t in tabs.items():
+            L.append(f"| {key} | " + " | ".join(
+                f"{t[winner][e]['roc_auc']} / {t[winner][e]['pr_auc']} / {t[winner][e]['brier']} (base {t[winner][e]['pos_rate']})"
+                for e in MODEL_EVENTS) + " |")
+        L.append("")
+    L += ["", "## Spec alert rule vs satellite label on CV rows (informational; levels do not use p)", "", "```", json.dumps(th, indent=1), "```"]
     if ho:
         L += ["", "## Hold-out (evaluated once)", ""]
         for k, tab in ho.items():
-            L += [f"### {k}", "", "| model | " + " | ".join(EVENTS) + " | mean PR-AUC |",
-                  "|---|" + "---|" * (len(EVENTS) + 1)]
+            L += [f"### {k}", "", "| model | " + " | ".join(MODEL_EVENTS) + " | mean PR-AUC |",
+                  "|---|" + "---|" * (len(MODEL_EVENTS) + 1)]
             for m in MODELS:
                 L.append(fmt_row(m, tab[m]))
             L.append("")

@@ -34,6 +34,23 @@ def load_env() -> None:
 load_env()
 
 
+def ensure_admin_token() -> None:
+    """Make sure ADMIN_TOKEN exists. If missing, generate one and append it to the team .env
+    (/home/looooo/bcg/.env, outside the repo). The value is never printed or logged."""
+    if os.environ.get("ADMIN_TOKEN"):
+        return
+    import secrets
+    tok = secrets.token_urlsafe(24)
+    env = Path(os.environ.get("ENV_FILE") or REPO_DIR.parent / ".env")
+    try:
+        if env.is_file() and "ADMIN_TOKEN=" not in env.read_text():
+            with env.open("a") as f:
+                f.write(f"\n# operator token for the SMS backend (header X-API-Key)\nADMIN_TOKEN={tok}\n")
+    except OSError:
+        pass  # still works for this process
+    os.environ["ADMIN_TOKEN"] = tok
+
+
 def risk_dir() -> Path:
     return Path(os.environ.get("RISK_DIR", REPO_DIR / "data" / "risk"))
 
@@ -160,6 +177,9 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS ix_messages_phone ON messages(phone);
 CREATE INDEX IF NOT EXISTS ix_messages_gw ON messages(gateway_id);
+-- one live alert SMS per (user, event); failed rows do not block a retry
+CREATE UNIQUE INDEX IF NOT EXISTS ux_alert_once ON messages(user_id, event_id)
+  WHERE direction='out' AND event_id IS NOT NULL AND status NOT LIKE 'failed%';
 CREATE TABLE IF NOT EXISTS help_requests (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   created_at TEXT NOT NULL,
@@ -214,6 +234,22 @@ def ex(sql: str, args: tuple = (), db: sqlite3.Connection | None = None) -> int:
     db = db or connect()
     with _lock:
         return db.execute(sql, args).lastrowid
+
+
+# ---- retention (spec: limited retention; demo default 90 days)
+def purge_old(days: int | None = None) -> dict:
+    """Delete old messages, stale sessions (7 d) and closed help requests. RETENTION_DAYS env."""
+    days = int(days if days is not None else os.environ.get("RETENTION_DAYS", "90"))
+    cut = f"-{days} day"
+    out = {}
+    with _lock:
+        c = connect()
+        out["messages"] = c.execute("DELETE FROM messages WHERE created_at < strftime('%Y-%m-%dT%H:%M:%S', 'now', ?)",
+                                    (cut,)).rowcount
+        out["sessions"] = c.execute("DELETE FROM sessions WHERE updated_at < strftime('%Y-%m-%dT%H:%M:%S', 'now', '-7 day')").rowcount
+        out["help_requests"] = c.execute("DELETE FROM help_requests WHERE status!='open' AND "
+                                         "created_at < strftime('%Y-%m-%dT%H:%M:%S', 'now', ?)", (cut,)).rowcount
+    return out
 
 
 # ---- users

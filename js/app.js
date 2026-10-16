@@ -310,10 +310,19 @@
     if (playing) { pause(); play(); }
   });
 
+  // Text fields keep their keys. The range slider keeps its own arrow keys
+  // (native step + 'input' event) but Space still plays/pauses. On a focused
+  // button, Space is taken over so it toggles play instead of clicking it.
+  const isTextField = t => (t.tagName === 'INPUT' && t.type !== 'range') ||
+    t.tagName === 'TEXTAREA' || t.isContentEditable;
+  document.addEventListener('keyup', ev => {
+    if (ev.code === 'Space' && ev.target.tagName === 'BUTTON') ev.preventDefault();
+  });
   document.addEventListener('keydown', ev => {
-    if (ev.target.tagName === 'INPUT') return;
-    if (ev.code === 'Space') { ev.preventDefault(); playing ? pause() : play(); }
-    else if (ev.key === 'ArrowRight') setTime(now + 1);
+    if (isTextField(ev.target)) return;
+    if (ev.code === 'Space') { ev.preventDefault(); playing ? pause() : play(); return; }
+    if (ev.target === scrub && ev.key.startsWith('Arrow')) return;
+    if (ev.key === 'ArrowRight') setTime(now + 1);
     else if (ev.key === 'ArrowLeft') setTime(now - 1);
     else if (ev.key === 'Escape') closeDetail();
   });
@@ -377,7 +386,9 @@
     if (decl && decl.t >= 0 && decl.t < ENGINE.N_MONTHS) {
       const mk = el('div');
       mk.id = 'decl-mark';
-      mk.style.left = `${(decl.t / (ENGINE.N_MONTHS - 1)) * 100}%`;
+      const frac = decl.t / (ENGINE.N_MONTHS - 1);
+      mk.style.left = `${frac * 100}%`;
+      if (frac > 0.7) mk.classList.add('flip');   // label on the left near the end
       mk.title = `${decl.label} — ${fmtDate(decl.date)}`;
       mk.append(el('span', null, `declared ${fmtDate(decl.date)}`));
       $('#track-wrap').append(mk);
@@ -433,13 +444,9 @@
     const people = warnPlus.reduce((s, u) => s + (u.props.pop || 0), 0);
     const popKnown = MODEL.units.some(u => u.props.pop != null);
 
-    // Cumulative messages: one per subscriber reached, each time a county
-    // escalates. Rough, but it is the number that drives the cost model.
-    let sms = 0;
-    for (const e of MODEL.events) {
-      if (e.t > now || !e.escalation || e.people == null) continue;
-      sms += Math.round(e.people * 1000 * 0.11) * e.audiences.length / 3;
-    }
+    // Escalations this month, straight from the model's level changes. (No
+    // "SMS sent" estimate: real send counts live in the backend, not here.)
+    const escal = MODEL.events.filter(e => e.t === now && e.escalation).length;
 
     const u = $('#stat-units');
     u.textContent = String(warnPlus.length);
@@ -447,14 +454,10 @@
                   : warnPlus.length > 20 ? 'var(--lvl-3)' : 'var(--lvl-2)';
 
     $('#stat-people').textContent = !popKnown ? '—' : people >= 1 ? `${people.toFixed(1)}M` : `${Math.round(people * 1000)}k`;
-    $('#stat-sms').textContent = popKnown ? fmtCompact(Math.round(sms)) : '—';
+    $('#stat-sms').textContent = String(escal);
   }
 
-  function fmtCompact(n) {
-    if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-    if (n >= 1e3) return `${(n / 1e3).toFixed(0)}k`;
-    return String(n);
-  }
+  const fmtPop = m => (m >= 1 ? `${m.toFixed(1)}M` : m > 0 ? `${Math.round(m * 1000)}k` : "0");
 
   (function buildLegend() {
     const ul = $('#legend-items');
@@ -498,7 +501,12 @@
     }
 
     // Keep the DOM bounded during a fast replay.
-    while (feedEl.children.length > 120) feedEl.lastChild.remove();
+    // The OFFICIAL declaration note is never trimmed (and is sticky in CSS).
+    while (feedEl.children.length > 120) {
+      const victim = [...feedEl.children].reverse().find(n => !n.classList.contains('decl'));
+      if (!victim) break;
+      victim.remove();
+    }
     if (!rebuild) feedEl.scrollTop = 0;
   }
 
@@ -536,9 +544,9 @@
     if (e.escalation) {
       const line = el('div', 'n-line');
       line.innerHTML =
-        `Shortage risk <b>${Math.round(e.p * 100)}%</b> at <b>${e.horizon} weeks</b> · ` +
+        `Shortage risk <b>${e.p == null ? '—' : Math.round(e.p * 100) + '%'}</b> at <b>${e.horizon} weeks</b> · ` +
         `<b>${e.agreeing}/${ENGINE.N_FAMILIES}</b> source families agree · confidence ${e.confidence}` +
-        (e.people != null ? ` · <b>${e.people.toFixed(2)}M</b> people` : '');
+        (e.pop != null ? ` · population <b>${fmtPop(e.pop)}</b>` : '');
       li.append(line);
 
       const ul = el('ul', 'n-drivers');
@@ -572,10 +580,22 @@
   // =========================================================================
   //  County detail
   // =========================================================================
-  // GSM 03.38 basic set + extension table (extension chars cost 2, ignored here).
-  const GSM7 = new Set(('@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?' +
-    '¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà^{}\\[~]|€').split(''));
-  const isGsm7 = t => [...t].every(ch => GSM7.has(ch));
+  // GSM 03.38: basic set costs 1 septet, the extension table (^{}\\[~]|€ and
+  // form feed) costs 2 (escape + char). Multi-part messages carry a header:
+  // 153 septets per part for GSM-7, 67 chars for UCS-2.
+  const GSM7_BASIC = new Set(('@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?' +
+    '¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà').split(''));
+  const GSM7_EXT = new Set('^{}\\[~]|€\f'.split(''));
+  function smsCost(text) {
+    const chars = [...text];
+    const gsm = chars.every(ch => GSM7_BASIC.has(ch) || GSM7_EXT.has(ch));
+    if (gsm) {
+      const n = chars.reduce((k, ch) => k + (GSM7_EXT.has(ch) ? 2 : 1), 0);
+      return { gsm, n, unit: 'septets', segs: n <= 160 ? 1 : Math.ceil(n / 153) };
+    }
+    const n = chars.length;
+    return { gsm, n, unit: 'chars', segs: n <= 70 ? 1 : Math.ceil(n / 67) };
+  }
 
   function closeDetail() {
     selected = null;
@@ -605,7 +625,7 @@
     const ht = el('div');
     ht.append(el('h3', null, unit.name));
     const sub = el('div', 'sub', ENGINE.dateAt(now).label +
-      (unit.props.pop != null ? ` · ${unit.props.pop.toFixed(2)}M people` : ''));
+      (unit.props.pop != null ? ` · population ${fmtPop(unit.props.pop)}` : ''));
     if (ENGINE.EVENTS[row.event]) sub.append(el('span', 'evt', ENGINE.EVENTS[row.event]));
     ht.append(sub);
     const chip = el('span', 'chip', `${L.glyph} L${row.level} ${L.label.toUpperCase()}`);
@@ -622,14 +642,22 @@
 
     // --- headline numbers
     const pm = el('div', 'd-pm');
-    const big = el('span', 'big', `${Math.round(row.p * 100)}%`);
+    const big = el('span', 'big', row.p == null ? '—' : `${Math.round(row.p * 100)}%`);
     big.style.color = L.color;
     const pwrap = el('div');
     pwrap.append(big);
     pwrap.append(el('div', 'unit', `probability of shortage at ${row.horizon} weeks`));
     const cwrap = el('div');
-    cwrap.append(el('span', 'big', `${row.agreeing}/${ENGINE.N_FAMILIES}`));
-    cwrap.append(el('div', 'unit', `sources agree · ${row.confidence} confidence`));
+    if (row.held) {
+      // Level kept only by hysteresis: the sources no longer need to agree.
+      cwrap.className = 'held';
+      cwrap.append(el('span', 'big', 'held'));
+      cwrap.append(el('div', 'unit',
+        `needs 3 calm months to stand down · ${row.agreeing}/${ENGINE.N_FAMILIES} sources in alarm now`));
+    } else {
+      cwrap.append(el('span', 'big', `${row.agreeing}/${ENGINE.N_FAMILIES}`));
+      cwrap.append(el('div', 'unit', `sources agree · ${row.confidence} confidence`));
+    }
     pm.append(pwrap, cwrap);
     body.append(pm);
 
@@ -680,10 +708,9 @@
       const text = ENGINE.composeSMS(unit.name, row, smsAudience);
       s3.append(el('div', 'sms', text));
 
-      const gsm = isGsm7(text);
-      const segs = Math.ceil(text.length / (gsm ? 160 : 70));
+      const { gsm, n, unit: cu, segs } = smsCost(text);
       const meta = el('div', 'sms-meta');
-      meta.append(el('span', null, `${text.length} chars · ${gsm ? 'GSM-7' : 'UCS-2'}`));
+      meta.append(el('span', null, `${n} ${cu} · ${gsm ? 'GSM-7' : 'UCS-2'}`));
       meta.append(el('span', segs > 1 ? 'over' : '', `${segs} segment${segs > 1 ? 's' : ''}`));
       s3.append(meta);
     }

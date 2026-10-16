@@ -1,0 +1,9 @@
+feat_oni                                 logreg   PR 0.4780 Brier 0.2017  dPR +0.0230 dBrier -0.0022  | cant 0.204/0.1432 crop 0.627/0.2374 no_g 0.603/0.2245
+feat_oni                                 lgbm     PR 0.4527 Brier 0.2044  dPR -0.0083 dBrier +0.0031  | cant 0.15/0.1475 crop 0.62/0.2369 no_g 0.588/0.2288
+feat_oni                                 ensemble PR 0.4770 Brier 0.2014  dPR +0.0100 dBrier -0.0002  | cant 0.181/0.1467 crop 0.639/0.2347 no_g 0.611/0.2228
+feat_cum_rain                            logreg   PR 0.4583 Brier 0.2034  dPR +0.0033 dBrier -0.0005  | cant 0.162/0.1457 crop 0.6/0.2439 no_g 0.613/0.2205
+feat_cum_rain                            lgbm     PR 0.4610 Brier 0.2015  dPR +0.0000 dBrier +0.0002  | cant 0.16/0.1459 crop 0.585/0.2427 no_g 0.638/0.2159
+feat_cum_rain                            ensemble PR 0.4683 Brier 0.2010  dPR +0.0013 dBrier -0.0006  | cant 0.162/0.1459 crop 0.602/0.2425 no_g 0.641/0.2147
+feat_spi_gated                           logreg   PR 0.4557 Brier 0.2038  dPR +0.0007 dBrier -0.0001  | cant 0.162/0.1458 crop 0.594/0.2447 no_g 0.611/0.221
+feat_spi_gated                           lgbm     PR 0.4577 Brier 0.2012  dPR -0.0033 dBrier -0.0001  | cant 0.157/0.1459 crop 0.58/0.2431 no_g 0.636/0.2145
+feat_spi_gated                           ensemble PR 0.4653 Brier 0.2011  dPR -0.0017 dBrier -0.0005  | cant 0.162/0.1454 crop 0.596/0.2433 no_g 0.638/0.2147

@@ -48,12 +48,22 @@ def _android_send(phone: str, text: str) -> tuple[str, str | None]:
         return f"failed:{type(e).__name__}", None
 
 
+def _daily_sent() -> int:
+    from . import db
+    r = db.q1("SELECT COUNT(*) n FROM messages WHERE direction='out' AND status IN ('queued','sent','delivered') "
+              "AND created_at >= strftime('%Y-%m-%dT%H:%M:%S', 'now', '-1 day')")
+    return r["n"] if r else 0
+
+
 def send(phone: str, text: str) -> tuple[str, str | None]:
     """Send one SMS. Returns (status, gateway_id). Never raises."""
     m = mode()
     if m == "android":
+        if _daily_sent() >= int(os.environ.get("DAILY_SEND_CAP", "500")):  # protects the SIM / budget
+            log.warning("daily send cap reached; not sending")
+            return "failed:daily_cap", None
         return _android_send(phone, text)
     if m == "log":
-        log.info("SMS to %s: %s", phone, text)
+        log.info("SMS to %s****%s (%d chars)", phone[:4], phone[-3:], len(text))
         return "logged", None
     return "sim", None

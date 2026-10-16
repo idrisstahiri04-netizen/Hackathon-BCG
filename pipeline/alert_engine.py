@@ -1,30 +1,34 @@
-"""Alert engine: source families, raw levels, hysteresis, event choice and human drivers.
+"""Alert engine (v1.1 "spec mode"): source families, levels, hysteresis, drivers.
 
-Families (from signals at the reference month only, never future data):
+Families (signals as published at the issue month, i.e. after data latency; never future data):
   rain       rainy season (+1 month) only: spi_3m <= -1  or  spi_1m <= -1.5
-  vegetation in-season only: min(ndvi_z_crop, ndvi_z_grass) <= -1  or  min(vci_crop, vci_grass) < 35
-  soil       sm1_z <= -1
-  heat       t2m_z >= 1.5            (supporting only, never counts toward Warning)
-A missing signal never raises a family (missing is missing, not an alarm and not a zero).
+  soil       rainy season (+1 month) only: sm1_z <= -1          (audit M5: dry-season z is noise)
+  vegetation in-season only, dominant land cover (crop if crop_frac >= 0.2 and crop data exist, else
+             grass): VCI < 35 in the current AND previous published month, or ndvi_z <= -1 in both
+             crop and grass (grass only where no crop data). Tightened on CV years 2001-2022 only:
+             the old min(crop,grass) "z<=-1 or VCI<35" fired in 28% of in-season months of normal
+             seasons; this rule 15.5% (and 37% in label-positive seasons).
+  heat       t2m_z >= 1.5            (supporting only, never counts toward any level)
+A missing signal never raises a family (missing is missing).
 
-Raw level per month (p = calibrated model probability):
-  1 Watch    any family (rain/vegetation/soil) or p >= P_WATCH
-  2 Warning  vegetation and (rain or soil) and p >= P_WARN
-  3 Emerg.   Warning and ((p >= P_EMERG and agricultural-year month >= declaration month)
-                          or (min vci < 20 and spi_3m <= -2))
-Hysteresis: a level is entered after 2 consecutive runs at or above it, left after 3 runs below.
-
-P_WATCH / P_WARN defaults come from CONTRACT/brief; train.py may tune them on CV predictions only
-(never the hold-out) and saves them to pipeline/out/thresholds_<tag>.json.
+Levels (spec rule only; the model probability p is NOT used for levels, audit B3; p is exported as
+information for NGO / food-bank text):
+  1 Watch    any one of rain / vegetation / soil, or strong rain+soil dryness (spi_3m <= -1.5 and sm1_z <= -1.5)
+  2 Warning  vegetation and (rain or soil)      (two independent families: EO + weather)
+  3 Emerg.   Warning and an official declaration in force (from the declaration month to the end of
+             that agricultural year only, never other years). No satellite-only Emergency (audit B1).
+Hysteresis (spec): go up to the level held for the last 2 runs; go down only after 3 runs below
+(to the highest of those 3). No fast entry, no one-step limit. held = level kept only by hysteresis.
 """
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 
-DEFAULT_THRESHOLDS = {"p_watch": 0.35, "p_warn": 0.50, "p_emerg": 0.75}
+DEFAULT_THRESHOLDS = {"p_watch": 0.35, "p_warn": 0.50, "p_emerg": 0.75, "p_fast": None}
 FAMS = ["rain", "vegetation", "soil", "heat"]
 CORE_FAMS = ["rain", "vegetation", "soil"]
+STRONG_SPI3, STRONG_SM1 = -1.5, -1.5
 
 
 def _lt(x, t):
@@ -48,48 +52,70 @@ def nanmin2(a, b):
         return np.fmin(a, b)          # NaN only if both NaN
 
 
-def families(df: pd.DataFrame, in_season, in_rainy=None) -> pd.DataFrame:
-    """df: signals at the reference month; in_season: vegetation meaningful (rainy/crop/grass windows);
-    in_rainy: rainy season + 1 month (SPI on tiny dry-season totals is noise, so rain is gated)."""
-    if in_rainy is None:
-        in_rainy = np.ones(len(df), bool)
-    rain = (_le(df["spi_3m"], -1.0) | _le(df["spi_1m"], -1.5)) & np.asarray(in_rainy, bool)
-    ndz = nanmin2(df["ndvi_z_crop"], df["ndvi_z_grass"])
-    vci = nanmin2(df["vci_crop"], df["vci_grass"])
-    veg = (_le(ndz, -1.0) | _lt(vci, 35.0)) & np.asarray(in_season, bool)
-    soil = _le(df["sm1_z"], -1.0)
+
+
+def families(df: pd.DataFrame, in_season, in_rainy=None, crop_dom=None) -> pd.DataFrame:
+    """df: signals at the issue month (+ vci_crop_l1 / vci_grass_l1 = previous published month).
+    in_season: vegetation meaningful; in_rainy: rainy season + 1 month; crop_dom: unit is cropland."""
+    n = len(df)
+    inr = np.ones(n, bool) if in_rainy is None else np.asarray(in_rainy, bool)
+    cd = np.zeros(n, bool) if crop_dom is None else np.asarray(crop_dom, bool)
+    col = lambda k: np.asarray(df[k], float) if k in df else np.full(n, np.nan)
+    rain = (_le(df["spi_3m"], -1.0) | _le(df["spi_1m"], -1.5)) & inr
+    vc, vg = col("vci_crop"), col("vci_grass")
+    vcp, vgp = col("vci_crop_l1"), col("vci_grass_l1")
+    use_c = cd & ~np.isnan(vc)
+    vci = np.where(use_c, vc, vg)
+    vprev = np.where(use_c, vcp, vgp)
+    zc, zg = col("ndvi_z_crop"), col("ndvi_z_grass")
+    zboth = np.where(~np.isnan(zc), _le(zc, -1.0) & _le(zg, -1.0), _le(zg, -1.0))
+    veg = ((_lt(vci, 35.0) & _lt(vprev, 35.0)) | zboth) & np.asarray(in_season, bool)
+    soil = _le(df["sm1_z"], -1.0) & inr
     heat = _ge(df["t2m_z"], 1.5)
     out = pd.DataFrame({"rain": rain, "vegetation": veg, "soil": soil, "heat": heat}, index=df.index)
     out["agreeing"] = out[CORE_FAMS].sum(axis=1).astype(int)
+    out["strong_weather"] = _le(df["spi_3m"], STRONG_SPI3) & _le(df["sm1_z"], STRONG_SM1) & inr
     return out
 
 
-def raw_levels(fam: pd.DataFrame, p, sig: pd.DataFrame, after_decl, th: dict) -> np.ndarray:
-    p = np.asarray(p, float)
-    anyfam = fam[CORE_FAMS].any(axis=1).values
-    warn_fam = (fam["vegetation"] & (fam["rain"] | fam["soil"])).values
-    lvl = np.zeros(len(p), int)
-    lvl[anyfam | _ge(p, th["p_watch"])] = 1
-    warn = warn_fam & _ge(p, th["p_warn"])
-    lvl[warn] = 2
-    vci = nanmin2(sig["vci_crop"], sig["vci_grass"])
-    extreme = _lt(vci, 20.0) & _le(sig["spi_3m"], -2.0)
-    emerg = warn & ((_ge(p, th["p_emerg"]) & np.asarray(after_decl, bool)) | extreme)
-    lvl[emerg] = 3
+def conditions(fam: pd.DataFrame, decl_in_force=None) -> dict:
+    n = len(fam)
+    dif = np.zeros(n, bool) if decl_in_force is None else np.asarray(decl_in_force, bool)
+    warn = (fam["vegetation"] & (fam["rain"] | fam["soil"])).values.astype(bool)
+    watch = fam[CORE_FAMS].any(axis=1).values.astype(bool) | fam["strong_weather"].values.astype(bool)
+    return {"watch": watch | warn, "warn": warn, "emerg": warn & dif}
+
+
+def raw_levels(fam: pd.DataFrame, decl_in_force=None) -> np.ndarray:
+    c = conditions(fam, decl_in_force)
+    lvl = np.zeros(len(fam), int)
+    lvl[c["watch"]] = 1
+    lvl[c["warn"]] = 2
+    lvl[c["emerg"]] = 3
     return lvl
 
 
-def hysteresis(raw, up: int = 2, down: int = 3) -> np.ndarray:
-    """raw: monthly raw levels for one unit (chronological). 2 runs up, 3 runs down."""
-    level, out, hist = 0, [], []
-    for r in raw:
-        hist.append(int(r))
-        if r > level and len(hist) >= up and all(h > level for h in hist[-up:]):
-            level = min(hist[-up:])
+def hysteresis(raw, fast=None, up: int = 2, down: int = 3, one_step: bool = False):
+    """raw: monthly raw levels for one unit (chronological). Returns (levels, held).
+
+    Up: to the level held for the last `up` runs (min of them). Down: after `down` runs below, to the
+    highest of those runs. fast (1-run entry) and one_step are off by default (spec v1.1).
+    held[k] = True when the displayed level is kept only by hysteresis (raw level < displayed level).
+    """
+    raw = [int(r) for r in raw]
+    fast = np.zeros(len(raw), bool) if fast is None else np.asarray(fast, bool)
+    level, out, held, hist = 0, [], [], []
+    for k, r in enumerate(raw):
+        hist.append(r)
+        if r > level and fast[k]:
+            level = r
+        elif r > level and len(hist) >= up and all(h > level for h in hist[-up:]):
+            level = level + 1 if one_step else min(hist[-up:])
         elif r < level and len(hist) >= down and all(h < level for h in hist[-down:]):
-            level = max(hist[-down:])
+            level = level - 1 if one_step else max(hist[-down:])
         out.append(level)
-    return np.array(out, int)
+        held.append(r < level)
+    return np.array(out, int), np.array(held, bool)
 
 
 def drivers(row: dict, fam: dict) -> list:
@@ -137,34 +163,20 @@ def confidence(agreeing: int, n_missing: int) -> str:
     return "high" if agreeing >= 3 else "medium" if agreeing == 2 else "low"
 
 
-def tune_thresholds(oof: pd.DataFrame, grid_watch=None, grid_warn=None) -> dict:
-    """oof: CV out-of-fold rows (leads 1-3) with columns p_cal, label, rain/vegetation/soil.
 
-    Warning threshold: maximise F1 of the raw Warning condition against the label.
-    Watch threshold: maximise F1 of (any family or p >= t) (F2 drove Watch to near-always-on).
-    Uses CV predictions only.
-    """
-    grid_watch = grid_watch or [round(x, 2) for x in np.arange(0.15, 0.51, 0.05)]
-    grid_warn = grid_warn or [round(x, 2) for x in np.arange(0.25, 0.71, 0.05)]
-    d = oof.dropna(subset=["label", "p_cal"])
+
+def rule_stats(oof: pd.DataFrame) -> dict:
+    """CV out-of-fold rows (leads 1-3): how well the spec Watch / Warning conditions at the issue
+    month anticipate the satellite label. Informational only (nothing is tuned on it)."""
+    d = oof.dropna(subset=["label"]).reset_index(drop=True)
     y = d["label"].values.astype(bool)
-    wf = (d["vegetation"] & (d["rain"] | d["soil"])).values
-    anyf = d[CORE_FAMS].any(axis=1).values
+    c = conditions(d)
 
-    def fb(pred, beta):
+    def st(pred):
         tp = (pred & y).sum(); fp = (pred & ~y).sum(); fn = (~pred & y).sum()
-        if tp == 0:
-            return 0.0
-        pr, rc = tp / (tp + fp), tp / (tp + fn)
-        return (1 + beta ** 2) * pr * rc / (beta ** 2 * pr + rc)
-
-    res = {}
-    sw = {t: fb(wf & (d.p_cal.values >= t), 1.0) for t in grid_warn}
-    res["p_warn"] = float(max(sw, key=sw.get))
-    sa = {t: fb(anyf | (d.p_cal.values >= t), 1.0) for t in grid_watch}
-    res["p_watch"] = float(min(max(sa, key=sa.get), res["p_warn"]))
-    res["p_emerg"] = max(DEFAULT_THRESHOLDS["p_emerg"], res["p_warn"] + 0.15)
-    res["cv_f1_warn"] = round(float(sw[res["p_warn"]]), 3)
-    res["cv_f1_watch"] = round(float(sa[res["p_watch"]]), 3)
-    res["cv_f1_warn_default"] = round(float(fb(wf & (d.p_cal.values >= 0.5), 1.0)), 3)
-    return res
+        return {"rate": round(float(pred.mean()), 3),
+                "precision": round(float(tp / (tp + fp)), 3) if tp + fp else None,
+                "recall": round(float(tp / (tp + fn)), 3) if tp + fn else None,
+                "f1": round(float(2 * tp / (2 * tp + fp + fn)), 3) if tp else 0.0}
+    return {"cv_base_rate": round(float(y.mean()), 3), "watch": st(c["watch"]), "warn": st(c["warn"]),
+            "note": "levels come from the spec family rule; p is information only (v1.1, audit B3)"}

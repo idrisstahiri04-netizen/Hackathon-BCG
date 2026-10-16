@@ -23,8 +23,8 @@ pipeline/make_stub_risk.py        -> data/risk/*.js    placeholder (model_versio
 MWI, ZMB, then starts `js/app.js`. A country is `LIVE` when its geometry loaded
 **and** `RISK_DATA[iso3].meta.model_version` is not `STUB`. Stub files
 (`make_stub_risk.py`, for pipeline/dev work only) are never displayed; the
-country shows `DATA IN PROGRESS`. `data/risk/KEN.js` is an empty placeholder
-(avoids a 404) until the model writes real Kenya output. Live countries show
+country shows `DATA IN PROGRESS`. All four countries now have real output
+(`pipeline/export_risk.py`). Live countries show
 "Real satellite + weather data (CHIRPS, MODIS, ERA5). Risk levels from our model."
 
 ```bash
@@ -55,14 +55,17 @@ the demo.
 1. **Open on the spinning globe.** Search box is focused, the country list is
    already open. Countries with real model output are `LIVE`, the others in
    the pipeline say `DATA IN PROGRESS`, everything else `NO COVERAGE`.
-2. **Type Zimbabwe, hit enter.** Districts appear, all green. The red dashed
-   line on the timeline is the national disaster declaration (3 Apr 2024) —
-   the point to beat.
+2. **Type Zimbabwe, hit enter.** Districts appear in their Jan 2019 levels
+   (not all green: some districts already start at Watch or above). The red
+   dashed line on the timeline is the national disaster declaration
+   (3 Apr 2024) — the point to beat. The OFFICIAL note stays pinned in the feed.
 3. **Press play** (or `space`) and watch which districts turn yellow, then
    orange, before the declaration. That lead time is the product.
 4. **Click a red district.** Event type (can't plant / crop failure / no
    grass), drivers, which of the 3 families (rain, vegetation, soil) agree, and
-   the SMS each audience would receive, with character and segment count.
+   the SMS each audience would receive, with its GSM-7 septet count (`[`, `]`
+   etc. cost 2) and segment count. A level kept only by hysteresis shows
+   "held (needs 3 calm months to stand down)" instead of an agreement count.
 5. **Click the Farmers or Herders tab.** One GSM-7 segment, an action not a
    probability. Herders get the message when the event is "no grass".
 6. **Scrub past the crisis.** Levels stand down slowly (hysteresis: 3 runs).
@@ -71,7 +74,7 @@ the demo.
 
 | Input | Action |
 |---|---|
-| `space` | play / pause |
+| `space` | play / pause (also with the slider focused) |
 | `←` `→` | step one month |
 | `esc` | close the county panel |
 | click a county | open its detail panel |
@@ -174,11 +177,19 @@ on every notification chip and in the detail panel.
 
 - Adding a country: add it to the ISO3 list in `index.html` and `COUNTRIES` in
   `app.js`, run `prep_geo.py`, then the model.
-- No population per district yet for ZWE/MWI/ZMB (`pop` null), so "people" and
-  "SMS sent" show `—`.
+- HUD numbers are real only: units at Warning+, real population (WorldPop /
+  census in `data/geo`) of those units, and model escalations this month.
+  There is no "SMS sent" estimate; real send counts are in the backend pages.
 - Counties are coloured whole. Sub-county cropland patches would look better and
   are the obvious next visual step.
 - The SMS is previewed, not sent. Wiring Africa's Talking (which covers Kenya)
   is Role C's job.
-- Six NGO-audience messages run to 2 segments on the longest county names. The
-  UI shows the real count rather than hiding it.
+- Every template fits one GSM-7 segment on current data (audit:
+  `node tests/e2e/sms_audit.js`). The NGO driver is shortened at a word
+  boundary to fit. `[link]` is a placeholder; a real URL must stay short.
+
+## Small screens
+
+At 720 px and below (tested at 390 px) the globe sits on top, the feed below,
+the unit panel opens as a bottom sheet, and the timeline wraps so the slider
+gets the full width.

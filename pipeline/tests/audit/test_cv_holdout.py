@@ -23,8 +23,8 @@ def _run(tmp, tag, monkeypatch, df=None, garbage_rows=False, spy=None):
     d = tmp / tag
     (d / "data").mkdir(parents=True)
     (df if df is not None else make_long(n_units=4, seed=1)).to_parquet(d / "data" / "signals_ZWE.parquet")
-    monkeypatch.setattr(T, "Parallel", SeqParallel)
     if spy is not None:
+        monkeypatch.setattr(T, "Parallel", SeqParallel)
         orig_fit = T.fit_all
 
         def fit_spy(dd, cols, n_iter=None):
@@ -110,3 +110,12 @@ def test_folds_leave_one_agyear_out_and_never_see_holdout(runs):
         held = [allyrs - s["years"] for s in folds]
         assert all(len(h) == 1 for h in held), "each fold must drop exactly one agricultural year"
         assert len({next(iter(h)) for h in held}) == len(folds), "fold years must be distinct"
+
+
+def test_no_model_trained_on_cant_plant(runs):
+    import joblib
+    assert "cant_plant" not in T.MODEL_EVENTS
+    assert not any(s["event"] == "cant_plant" for s in runs["spy"]), "fit_all called on cant_plant rows"
+    b = joblib.load(runs["clean"]["out"] / "model_T.joblib")
+    assert "cant_plant" not in b["events"]
+    assert set(runs["clean"]["oof"].event.unique()) <= set(T.MODEL_EVENTS)

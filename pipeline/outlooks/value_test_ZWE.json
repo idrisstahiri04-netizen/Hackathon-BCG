@@ -1,0 +1,623 @@
+{
+ "n_units": 91,
+ "rows_outlook": 61906,
+ "match_type_counts": {
+  "descriptor_map": 51152,
+  "national": 9009,
+  "province": 897,
+  "livelihood_zone": 664,
+  "district": 184
+ },
+ "seasons": {
+  "2023/24 (El Nino drought)": {
+   "model_first_warning_n": 34,
+   "model_units_watch": 88,
+   "model_watch_month_hist": {
+    "2023-06": 7,
+    "2023-08": 2,
+    "2023-09": 5,
+    "2023-10": 4,
+    "2024-01": 1,
+    "2024-02": 1,
+    "2024-03": 11,
+    "2024-04": 42,
+    "2024-05": 14,
+    "2024-06": 1
+   },
+   "model_warning_month_hist": {
+    "2023-06": 2,
+    "2024-04": 8,
+    "2024-05": 17,
+    "2024-06": 7
+   },
+   "gazetteer_only": {
+    "units_text_crisis_postharvest": 8,
+    "text_crisis_postharvest_month_hist": {
+     "2024-03": 8
+    },
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 8,
+     "median_lead_months": -5.5,
+     "mean_lead_months": -3.5,
+     "share_a_earlier": 0.38,
+     "share_same": 0.0
+    },
+    "units_text_watch": 29,
+    "units_text_crisis": 29,
+    "units_text_below_rain": 29,
+    "text_crisis_month_hist": {
+     "2023-06": 1,
+     "2023-10": 20,
+     "2024-03": 8
+    },
+    "text_below_rain_month_hist": {
+     "2023-06": 1,
+     "2023-10": 20,
+     "2024-03": 8
+    },
+    "text_watch_month_hist": {
+     "2023-06": 1,
+     "2023-10": 20,
+     "2024-03": 8
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 29,
+     "median_lead_months": 6.0,
+     "mean_lead_months": 2.62,
+     "share_a_earlier": 0.69,
+     "share_same": 0.0
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 12,
+     "median_lead_months": 7.0,
+     "mean_lead_months": 5.67,
+     "share_a_earlier": 1.0,
+     "share_same": 0.0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 29,
+     "median_lead_months": 6.0,
+     "mean_lead_months": 2.62,
+     "share_a_earlier": 0.69,
+     "share_same": 0.0
+    },
+    "text_crisis_lead_vs_declaration_months": {
+     "median": 6.0,
+     "min": 1,
+     "max": 10
+    },
+    "model_watch_lead_vs_declaration_months": {
+     "median": 0.0
+    }
+   },
+   "gazetteer+descriptor_map": {
+    "units_text_crisis_postharvest": 59,
+    "text_crisis_postharvest_month_hist": {
+     "2024-03": 59
+    },
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 57,
+     "median_lead_months": 1.0,
+     "mean_lead_months": -1.0,
+     "share_a_earlier": 0.63,
+     "share_same": 0.07
+    },
+    "units_text_watch": 76,
+    "units_text_crisis": 59,
+    "units_text_below_rain": 76,
+    "text_crisis_month_hist": {
+     "2023-06": 59
+    },
+    "text_below_rain_month_hist": {
+     "2023-06": 59,
+     "2023-09": 17
+    },
+    "text_watch_month_hist": {
+     "2023-06": 59,
+     "2023-09": 17
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 57,
+     "median_lead_months": 10.0,
+     "mean_lead_months": 8.0,
+     "share_a_earlier": 0.91,
+     "share_same": 0.09
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 19,
+     "median_lead_months": 11.0,
+     "mean_lead_months": 11.21,
+     "share_a_earlier": 1.0,
+     "share_same": 0.0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 73,
+     "median_lead_months": 9.0,
+     "mean_lead_months": 7.78,
+     "share_a_earlier": 0.93,
+     "share_same": 0.07
+    },
+    "text_crisis_lead_vs_declaration_months": {
+     "median": 10.0,
+     "min": 10,
+     "max": 10
+    },
+    "model_watch_lead_vs_declaration_months": {
+     "median": 0.0
+    }
+   }
+  },
+  "2015/16 (El Nino drought, declared 2016-02)": {
+   "model_first_warning_n": 0,
+   "model_units_watch": 0,
+   "model_watch_month_hist": {},
+   "model_warning_month_hist": {},
+   "gazetteer_only": {
+    "units_text_crisis_postharvest": 15,
+    "text_crisis_postharvest_month_hist": {
+     "2016-02": 8,
+     "2016-03": 7
+    },
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 0
+    },
+    "units_text_watch": 30,
+    "units_text_crisis": 23,
+    "units_text_below_rain": 30,
+    "text_crisis_month_hist": {
+     "2015-07": 8,
+     "2016-02": 8,
+     "2016-03": 7
+    },
+    "text_below_rain_month_hist": {
+     "2015-07": 8,
+     "2015-10": 9,
+     "2016-01": 6,
+     "2016-02": 7
+    },
+    "text_watch_month_hist": {
+     "2015-07": 8,
+     "2015-10": 9,
+     "2016-01": 6,
+     "2016-02": 7
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 0
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 0
+    }
+   },
+   "gazetteer+descriptor_map": {
+    "units_text_crisis_postharvest": 15,
+    "text_crisis_postharvest_month_hist": {
+     "2016-02": 8,
+     "2016-03": 7
+    },
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 0
+    },
+    "units_text_watch": 71,
+    "units_text_crisis": 23,
+    "units_text_below_rain": 71,
+    "text_crisis_month_hist": {
+     "2015-07": 8,
+     "2016-02": 8,
+     "2016-03": 7
+    },
+    "text_below_rain_month_hist": {
+     "2015-07": 8,
+     "2015-10": 9,
+     "2015-12": 41,
+     "2016-01": 6,
+     "2016-02": 7
+    },
+    "text_watch_month_hist": {
+     "2015-07": 8,
+     "2015-10": 9,
+     "2015-12": 41,
+     "2016-01": 6,
+     "2016-02": 7
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 0
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 0
+    }
+   }
+  },
+  "2018/19 (dry season, Cyclone Idai Mar-2019)": {
+   "model_first_warning_n": 2,
+   "model_units_watch": 52,
+   "model_watch_month_hist": {
+    "2019-01": 51,
+    "2019-04": 1
+   },
+   "model_warning_month_hist": {
+    "2019-01": 2
+   },
+   "gazetteer_only": {
+    "units_text_crisis_postharvest": 13,
+    "text_crisis_postharvest_month_hist": {
+     "2019-02": 13
+    },
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 12,
+     "median_lead_months": -1.0,
+     "mean_lead_months": -0.75,
+     "share_a_earlier": 0.08,
+     "share_same": 0.0
+    },
+    "units_text_watch": 52,
+    "units_text_crisis": 13,
+    "units_text_below_rain": 13,
+    "text_crisis_month_hist": {
+     "2019-02": 13
+    },
+    "text_below_rain_month_hist": {
+     "2019-02": 13
+    },
+    "text_watch_month_hist": {
+     "2019-02": 13,
+     "2019-03": 30,
+     "2019-04": 9
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 12,
+     "median_lead_months": -1.0,
+     "mean_lead_months": -0.75,
+     "share_a_earlier": 0.08,
+     "share_same": 0.0
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 30,
+     "median_lead_months": -2.0,
+     "mean_lead_months": -1.7,
+     "share_a_earlier": 0.03,
+     "share_same": 0.0
+    }
+   },
+   "gazetteer+descriptor_map": {
+    "units_text_crisis_postharvest": 13,
+    "text_crisis_postharvest_month_hist": {
+     "2019-02": 13
+    },
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 12,
+     "median_lead_months": -1.0,
+     "mean_lead_months": -0.75,
+     "share_a_earlier": 0.08,
+     "share_same": 0.0
+    },
+    "units_text_watch": 83,
+    "units_text_crisis": 67,
+    "units_text_below_rain": 80,
+    "text_crisis_month_hist": {
+     "2018-08": 59,
+     "2019-02": 8
+    },
+    "text_below_rain_month_hist": {
+     "2018-08": 59,
+     "2018-09": 17,
+     "2019-02": 4
+    },
+    "text_watch_month_hist": {
+     "2018-08": 76,
+     "2019-02": 4,
+     "2019-03": 2,
+     "2019-04": 1
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 38,
+     "median_lead_months": 5.0,
+     "mean_lead_months": 3.82,
+     "share_a_earlier": 0.79,
+     "share_same": 0.0
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 1,
+     "median_lead_months": 5.0,
+     "mean_lead_months": 5.0,
+     "share_a_earlier": 1.0,
+     "share_same": 0.0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 47,
+     "median_lead_months": 5.0,
+     "mean_lead_months": 4.23,
+     "share_a_earlier": 0.87,
+     "share_same": 0.0
+    }
+   }
+  },
+  "2020/21 (good rains)": {
+   "model_first_warning_n": 2,
+   "model_units_watch": 57,
+   "model_watch_month_hist": {
+    "2020-06": 52,
+    "2020-07": 1,
+    "2020-08": 1,
+    "2020-09": 1,
+    "2021-04": 1,
+    "2021-05": 1
+   },
+   "model_warning_month_hist": {
+    "2020-06": 2
+   },
+   "gazetteer_only": {
+    "units_text_crisis_postharvest": 0,
+    "text_crisis_postharvest_month_hist": {},
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 0
+    },
+    "units_text_watch": 18,
+    "units_text_crisis": 18,
+    "units_text_below_rain": 0,
+    "text_crisis_month_hist": {
+     "2020-10": 9,
+     "2020-11": 9
+    },
+    "text_below_rain_month_hist": {},
+    "text_watch_month_hist": {
+     "2020-10": 9,
+     "2020-11": 9
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 10,
+     "median_lead_months": -4.0,
+     "mean_lead_months": -3.3,
+     "share_a_earlier": 0.1,
+     "share_same": 0.0
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 10,
+     "median_lead_months": -4.0,
+     "mean_lead_months": -3.3,
+     "share_a_earlier": 0.1,
+     "share_same": 0.0
+    }
+   },
+   "gazetteer+descriptor_map": {
+    "units_text_crisis_postharvest": 0,
+    "text_crisis_postharvest_month_hist": {},
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 0
+    },
+    "units_text_watch": 77,
+    "units_text_crisis": 60,
+    "units_text_below_rain": 0,
+    "text_crisis_month_hist": {
+     "2020-06": 59,
+     "2020-10": 1
+    },
+    "text_below_rain_month_hist": {},
+    "text_watch_month_hist": {
+     "2020-06": 76,
+     "2020-10": 1
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 38,
+     "median_lead_months": 0.0,
+     "mean_lead_months": 0.32,
+     "share_a_earlier": 0.11,
+     "share_same": 0.89
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 2,
+     "median_lead_months": 0.0,
+     "mean_lead_months": 0.0,
+     "share_a_earlier": 0.0,
+     "share_same": 1.0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 47,
+     "median_lead_months": 0.0,
+     "mean_lead_months": 0.26,
+     "share_a_earlier": 0.09,
+     "share_same": 0.91
+    }
+   }
+  },
+  "2021/22 (mixed, late start)": {
+   "model_first_warning_n": 1,
+   "model_units_watch": 58,
+   "model_watch_month_hist": {
+    "2021-06": 10,
+    "2021-08": 39,
+    "2021-09": 9
+   },
+   "model_warning_month_hist": {
+    "2022-01": 1
+   },
+   "gazetteer_only": {
+    "units_text_crisis_postharvest": 0,
+    "text_crisis_postharvest_month_hist": {},
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 0
+    },
+    "units_text_watch": 10,
+    "units_text_crisis": 9,
+    "units_text_below_rain": 0,
+    "text_crisis_month_hist": {
+     "2021-06": 9
+    },
+    "text_below_rain_month_hist": {},
+    "text_watch_month_hist": {
+     "2021-06": 9,
+     "2022-06": 1
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 7,
+     "median_lead_months": 2.0,
+     "mean_lead_months": 1.14,
+     "share_a_earlier": 0.57,
+     "share_same": 0.43
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 1,
+     "median_lead_months": 7.0,
+     "mean_lead_months": 7.0,
+     "share_a_earlier": 1.0,
+     "share_same": 0.0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 8,
+     "median_lead_months": 1.0,
+     "mean_lead_months": -0.12,
+     "share_a_earlier": 0.5,
+     "share_same": 0.38
+    }
+   },
+   "gazetteer+descriptor_map": {
+    "units_text_crisis_postharvest": 0,
+    "text_crisis_postharvest_month_hist": {},
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 0
+    },
+    "units_text_watch": 77,
+    "units_text_crisis": 60,
+    "units_text_below_rain": 76,
+    "text_crisis_month_hist": {
+     "2021-06": 9,
+     "2021-08": 51
+    },
+    "text_below_rain_month_hist": {
+     "2021-12": 76
+    },
+    "text_watch_month_hist": {
+     "2021-06": 9,
+     "2021-08": 51,
+     "2021-09": 17
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 41,
+     "median_lead_months": 0.0,
+     "mean_lead_months": 0.29,
+     "share_a_earlier": 0.24,
+     "share_same": 0.73
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 1,
+     "median_lead_months": 7.0,
+     "mean_lead_months": 7.0,
+     "share_a_earlier": 1.0,
+     "share_same": 0.0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 49,
+     "median_lead_months": 0.0,
+     "mean_lead_months": 0.04,
+     "share_a_earlier": 0.2,
+     "share_same": 0.65
+    }
+   }
+  },
+  "2022/23 (good rains)": {
+   "model_first_warning_n": 2,
+   "model_units_watch": 25,
+   "model_watch_month_hist": {
+    "2022-06": 3,
+    "2022-08": 2,
+    "2022-11": 7,
+    "2022-12": 4,
+    "2023-01": 4,
+    "2023-02": 1,
+    "2023-03": 1,
+    "2023-05": 1,
+    "2023-06": 2
+   },
+   "model_warning_month_hist": {
+    "2023-05": 1,
+    "2023-06": 1
+   },
+   "gazetteer_only": {
+    "units_text_crisis_postharvest": 0,
+    "text_crisis_postharvest_month_hist": {},
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 0
+    },
+    "units_text_watch": 18,
+    "units_text_crisis": 18,
+    "units_text_below_rain": 0,
+    "text_crisis_month_hist": {
+     "2022-06": 9,
+     "2023-02": 9
+    },
+    "text_below_rain_month_hist": {},
+    "text_watch_month_hist": {
+     "2022-06": 9,
+     "2023-02": 9
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 3,
+     "median_lead_months": 9.0,
+     "mean_lead_months": 4.33,
+     "share_a_earlier": 0.67,
+     "share_same": 0.0
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 3,
+     "median_lead_months": 9.0,
+     "mean_lead_months": 4.33,
+     "share_a_earlier": 0.67,
+     "share_same": 0.0
+    }
+   },
+   "gazetteer+descriptor_map": {
+    "units_text_crisis_postharvest": 0,
+    "text_crisis_postharvest_month_hist": {},
+    "lead_text_crisis_postharvest_vs_model_watch": {
+     "n_both": 0
+    },
+    "units_text_watch": 76,
+    "units_text_crisis": 59,
+    "units_text_below_rain": 76,
+    "text_crisis_month_hist": {
+     "2022-06": 9,
+     "2022-08": 50
+    },
+    "text_below_rain_month_hist": {
+     "2022-09": 48,
+     "2023-01": 28
+    },
+    "text_watch_month_hist": {
+     "2022-06": 54,
+     "2022-08": 22
+    },
+    "lead_text_crisis_vs_model_watch": {
+     "n_both": 17,
+     "median_lead_months": 4.0,
+     "mean_lead_months": 4.0,
+     "share_a_earlier": 0.76,
+     "share_same": 0.12
+    },
+    "lead_text_crisis_vs_model_warning": {
+     "n_both": 0
+    },
+    "lead_text_watch_vs_model_watch": {
+     "n_both": 18,
+     "median_lead_months": 5.0,
+     "mean_lead_months": 4.78,
+     "share_a_earlier": 0.78,
+     "share_same": 0.11
+    }
+   }
+  }
+ }
+}

@@ -18,7 +18,9 @@ def test_audiences():
     assert composer.audiences(2, "crop_failure") == ["ngo", "officer", "farmer"]
     assert composer.audiences(2, "cant_plant") == ["ngo", "officer", "farmer"]
     assert composer.audiences(2, "no_grass") == ["ngo", "officer", "herder"]
-    assert composer.audiences(3, "no_grass") == ["ngo", "officer", "herder", "resident"]
+    everyone = ["ngo", "officer", "farmer", "herder", "resident"]
+    assert composer.audiences(3, "no_grass") == everyone
+    assert composer.audiences(3, "crop_failure") == everyone
 
 
 @pytest.mark.parametrize("role", ["farmer", "herder", "resident", "ngo", "officer"])
@@ -51,11 +53,14 @@ def _user(phone, role, district, **kw):
                           district_name=district, consent_at=db.now_iso(), **kw)
 
 
+_T = iter(range(100, 10_000))
+
+
 def _event(level, event="crop_failure", district="Binga"):
     ids = {u["name"]: u["id"] for u in db.geo_units("ZWE")}
     return db.ex("INSERT INTO events (created_at, iso3, unit_id, unit_name, t, level, event, p, drivers_json, status) "
                  "VALUES (?,?,?,?,?,?,?,?,?,?)",
-                 (db.now_iso(), "ZWE", ids[district], district, 60, level, event, 0.6, '["dry"]', "approved"))
+                 (db.now_iso(), "ZWE", ids[district], district, next(_T), level, event, 0.6, '["dry"]', "approved"))
 
 
 def test_matching_rules():
@@ -70,10 +75,14 @@ def test_matching_rules():
     phones = {m["phone"] for m in db.q("SELECT phone FROM messages WHERE direction='out'")}
     assert phones == {"+f", "+n", "+N"}
     assert r["skipped"]["opted_out"] == 1
-    # no_grass emergency -> herder + resident, not farmer
+    # no_grass Warning -> herder, not farmer
+    composer.send_event(_event(2, "no_grass"))
+    assert {m["phone"] for m in db.q("SELECT phone FROM messages WHERE event_id=2")} == {"+h", "+n", "+N"}
+    # Emergency -> everyone subscribed in the district (farmer too, even for no_grass)
     composer.send_event(_event(3, "no_grass"))
-    last = {m["phone"] for m in db.q("SELECT phone FROM messages WHERE event_id=2")}
-    assert last == {"+h", "+n", "+N", "+r"}
+    msgs = {m["phone"]: m["text"] for m in db.q("SELECT phone, text FROM messages WHERE event_id=3")}
+    assert set(msgs) == {"+f", "+h", "+n", "+N", "+r"}
+    assert "grain" in msgs["+f"] and "%" not in msgs["+f"]
 
 
 def test_no_double_send_and_monthly_cap(monkeypatch):
@@ -85,3 +94,30 @@ def test_no_double_send_and_monthly_cap(monkeypatch):
     monkeypatch.setenv("MONTHLY_CAP", "1")
     r = composer.send_event(_event(3))
     assert r["sent"] == 0 and r["skipped"]["monthly_cap"] == 1
+
+
+def test_failed_sends_not_marked_sent(monkeypatch):
+    from backend import gateway
+    _user("+f", "farmer", "Binga")
+    _user("+n", "ngo", "Binga")
+    monkeypatch.setattr(gateway, "send", lambda phone, text: ("failed:ConnectError", None) if phone == "+f" else ("queued", "g"))
+    e = _event(2)
+    r = composer.send_event(e)
+    assert r["sent"] == 1 and r["failed"] == 1 and r["status"] == "approved"
+    assert db.q1("SELECT status FROM events WHERE id=?", (e,))["status"] == "approved"
+    assert composer.event_counts(e) == {"sent_count": 1, "failed_count": 1, "sent_to_label": "sent to 1 users, failed 1"}
+    assert db.q1("SELECT status FROM messages WHERE phone='+f'")["status"] == "failed:ConnectError"
+    # retry after the gateway is back: only the failed user is re-sent
+    monkeypatch.setattr(gateway, "send", lambda phone, text: ("queued", "g2"))
+    r = composer.send_event(e)
+    assert r["sent"] == 1 and r["status"] == "sent"
+    assert composer.event_counts(e)["failed_count"] == 0
+
+
+def test_unique_index_blocks_double_send():
+    import sqlite3
+    uid = _user("+f", "farmer", "Binga")
+    e = _event(2)
+    db.log_message("out", "+f", "x", user_id=uid, event_id=e, status="sending")
+    with pytest.raises(sqlite3.IntegrityError):
+        db.log_message("out", "+f", "x", user_id=uid, event_id=e, status="sending")

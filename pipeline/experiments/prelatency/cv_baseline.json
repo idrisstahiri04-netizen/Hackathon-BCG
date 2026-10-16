@@ -1,0 +1,132 @@
+{
+ "persistence": {
+  "cant_plant": {
+   "n": 20118,
+   "pos_rate": 0.168,
+   "roc_auc": 0.471,
+   "pr_auc": 0.164,
+   "brier": 0.1417
+  },
+  "crop_failure": {
+   "n": 20184,
+   "pos_rate": 0.478,
+   "roc_auc": 0.562,
+   "pr_auc": 0.514,
+   "brier": 0.2488
+  },
+  "no_grass": {
+   "n": 20184,
+   "pos_rate": 0.414,
+   "roc_auc": 0.547,
+   "pr_auc": 0.44,
+   "brier": 0.2458
+  },
+  "mean_pr_auc": 0.3727,
+  "mean_roc_auc": 0.5267,
+  "mean_brier": 0.2121
+ },
+ "rule": {
+  "cant_plant": {
+   "n": 20118,
+   "pos_rate": 0.168,
+   "roc_auc": 0.518,
+   "pr_auc": 0.173,
+   "brier": 0.1441
+  },
+  "crop_failure": {
+   "n": 20184,
+   "pos_rate": 0.478,
+   "roc_auc": 0.545,
+   "pr_auc": 0.529,
+   "brier": 0.2501
+  },
+  "no_grass": {
+   "n": 20184,
+   "pos_rate": 0.414,
+   "roc_auc": 0.619,
+   "pr_auc": 0.51,
+   "brier": 0.2363
+  },
+  "mean_pr_auc": 0.404,
+  "mean_roc_auc": 0.5607,
+  "mean_brier": 0.2102
+ },
+ "logreg": {
+  "cant_plant": {
+   "n": 20118,
+   "pos_rate": 0.168,
+   "roc_auc": 0.493,
+   "pr_auc": 0.168,
+   "brier": 0.1448
+  },
+  "crop_failure": {
+   "n": 20184,
+   "pos_rate": 0.478,
+   "roc_auc": 0.593,
+   "pr_auc": 0.586,
+   "brier": 0.2459
+  },
+  "no_grass": {
+   "n": 20184,
+   "pos_rate": 0.414,
+   "roc_auc": 0.697,
+   "pr_auc": 0.611,
+   "brier": 0.221
+  },
+  "mean_pr_auc": 0.455,
+  "mean_roc_auc": 0.5943,
+  "mean_brier": 0.2039
+ },
+ "lgbm": {
+  "cant_plant": {
+   "n": 20118,
+   "pos_rate": 0.168,
+   "roc_auc": 0.455,
+   "pr_auc": 0.162,
+   "brier": 0.146
+  },
+  "crop_failure": {
+   "n": 20184,
+   "pos_rate": 0.478,
+   "roc_auc": 0.609,
+   "pr_auc": 0.581,
+   "brier": 0.2437
+  },
+  "no_grass": {
+   "n": 20184,
+   "pos_rate": 0.414,
+   "roc_auc": 0.708,
+   "pr_auc": 0.64,
+   "brier": 0.2141
+  },
+  "mean_pr_auc": 0.461,
+  "mean_roc_auc": 0.5907,
+  "mean_brier": 0.2013
+ },
+ "ensemble": {
+  "cant_plant": {
+   "n": 20118,
+   "pos_rate": 0.168,
+   "roc_auc": 0.485,
+   "pr_auc": 0.168,
+   "brier": 0.1458
+  },
+  "crop_failure": {
+   "n": 20184,
+   "pos_rate": 0.478,
+   "roc_auc": 0.609,
+   "pr_auc": 0.593,
+   "brier": 0.2444
+  },
+  "no_grass": {
+   "n": 20184,
+   "pos_rate": 0.414,
+   "roc_auc": 0.712,
+   "pr_auc": 0.64,
+   "brier": 0.2145
+  },
+  "mean_pr_auc": 0.467,
+  "mean_roc_auc": 0.602,
+  "mean_brier": 0.2016
+ }
+}

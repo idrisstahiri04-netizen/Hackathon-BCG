@@ -1,0 +1,1 @@
+{"url": "https://psl.noaa.gov/gcos_wgsp/Timeseries/Data/dmi.had.long.data", "fetched_at": "2026-10-16T17:05:13Z", "sha256": "42c1000e221addacac4451b8b9ddfbc5ee732b99ee69b0be5105e69ebe881e05", "licence": "NOAA PSL public (HadISST1.1 derived)", "note": "Dipole Mode Index monthly, year rows x 12 months, -9999 missing. At issue month r use month r-1."}

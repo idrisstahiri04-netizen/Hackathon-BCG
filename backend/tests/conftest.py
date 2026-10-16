@@ -5,6 +5,8 @@ import pytest
 
 from backend import db, llm
 
+TEST_TOKEN = "test-admin-token"
+AUTH = {"X-API-Key": TEST_TOKEN}
 ZWE_IDS = {u["name"]: u["id"] for u in db.geo_units("ZWE")}
 
 
@@ -36,6 +38,8 @@ def isolated(tmp_path, monkeypatch, request):
     monkeypatch.setenv("DB_PATH", str(tmp_path / "test.db"))
     monkeypatch.setenv("GATEWAY", "sim")
     monkeypatch.setenv("RISK_DIR", str(tmp_path))
+    monkeypatch.setenv("ADMIN_TOKEN", TEST_TOKEN)
+    monkeypatch.delenv("ANDROID_GW_SIGNING_KEY", raising=False)
     if "live" not in request.keywords:
         monkeypatch.setattr(llm, "call_json", lambda *a, **k: None)  # no network in unit tests
     yield tmp_path

@@ -20,7 +20,7 @@ FastAPI app `backend/app.py`, SQLite `backend/demo.db`. Runs on http://localhost
 
 ## Router (Claude Haiku `claude-haiku-5-5`, key from /home/looooo/bcg/.env ANTHROPIC_API_KEY)
 Intents are a registry list (name, description, examples, handler): subscribe, report (1/2/3), ask_advice, ask_help, stop, change_info, unknown. STOP/1/2/3/JOIN keyword fast-path without LLM. Low confidence → clarify question. District must match a known unit name (fuzzy, from data/geo/<iso3>.js); ambiguous → ask back. Confirm sign-up ("Reply YES"). Response text blocks only (Haiku may return thinking blocks first).
-Advice answers ONLY from backend/advice.yaml (approved, short, per event+role); Claude (claude-sonnet-5-5) may only pick/shorten one entry, never invent. ask_help → help_requests row + "An officer will contact you".
+Advice answers ONLY from backend/advice.yaml (approved, short, per event+role); Claude (default claude-haiku-5-5 for speed, `ADVICE_MODEL=claude-sonnet-5-5` optional; only when local topic ranking is unclear) may only pick one entry, never invent. ask_help → help_requests row + "An officer will contact you".
 
 ## Gateway
 `GATEWAY=android|sim|log` env. Android = capcom6 "SMS Gateway for Android" REST API (local or cloud mode; ANDROID_GW_URL, ANDROID_GW_USER, ANDROID_GW_PASS in .env). sim/log = no real SMS, stored in messages for the on-screen phone. Max 160 GSM-7 chars per SMS; per-user monthly cap.

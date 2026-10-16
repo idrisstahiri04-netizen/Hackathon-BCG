@@ -61,6 +61,7 @@
       <button data-res="subcounty" class="on">Sub-county</button>
     </div>
 
+
     <div id="live-bar" hidden></div>
 
     <header id="hud" hidden>
@@ -73,9 +74,9 @@
           <span class="stat-val" id="stat-units">0</span>
           <span class="stat-lab">units at Crisis+</span>
         </div>
-        <div class="stat">
-          <span class="stat-val" id="stat-alerts">0</span>
-          <span class="stat-lab">alerts this period</span>
+        <div class="stat" id="stat-fc-wrap">
+          <span class="stat-val" id="stat-forecast">0</span>
+          <span class="stat-lab" id="stat-forecast-lab">forecast to worsen</span>
         </div>
         <div class="stat">
           <span class="stat-val" id="stat-sms">0</span>
@@ -91,6 +92,9 @@
     </div>
 
     <aside id="detail" hidden></aside>
+
+    <!-- Caption for the active horizon, next to the colours it explains -->
+    <div id="hz-note" hidden></div>
 
     <!-- Hover card for the pulsing alert markers -->
     <div id="marker-tip" hidden></div>
@@ -135,6 +139,14 @@
   <div id="clock">
     <span id="clock-date">—</span>
     <span id="clock-sub">FEWS NET release</span>
+  </div>
+
+  <!-- What the colours mean: observed now, or FEWS NET's own forecast -->
+  <div id="horizon" role="group" aria-label="Forecast horizon">
+    <span class="hz-lab">Showing</span>
+    <button data-view="now" class="on">Now</button>
+    <button data-view="ml1">+1.5 mo</button>
+    <button data-view="ml2">+5 mo</button>
   </div>
 
   <div id="speeds" role="group" aria-label="Playback speed">

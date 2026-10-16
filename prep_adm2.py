@@ -108,13 +108,14 @@ def fews_subcounties():
         raw = json.load(fh)
     BASE = re.compile(r"^(.*?\b(?:Zone|Fishing|Farming))\b", re.I)
     phases = collections.defaultdict(dict)
-    proj = collections.defaultdict(dict)
+    proj = collections.defaultdict(dict)       # ML1, ~1.5 months ahead
+    proj2 = collections.defaultdict(dict)      # ML2, ~5 months ahead
     zones = collections.defaultdict(collections.Counter)
     for r in raw:
         if r.get("unit_type") != "fsc_admin_lhz":
             continue
         sc = r.get("scenario")
-        if sc not in ("CS", "ML1"):
+        if sc not in ("CS", "ML1", "ML2"):
             continue
         d = r.get("reporting_date")
         v = PHASE.get(r.get("description"))
@@ -133,17 +134,20 @@ def fews_subcounties():
         if sc == "CS":
             phases[key][month] = max(phases[key].get(month, 0), v)
             zones[key][zone] += 1
-        else:
-            # ML1 is FEWS NET's own near-term projection, issued alongside the
+        elif sc == "ML1":
+            # FEWS NET's own near-term projection, issued alongside the
             # current-situation classification. Keep it so the UI can show
             # "they expect this to hold / worsen" without us modelling anything.
             proj[key][month] = max(proj[key].get(month, 0), v)
-    return phases, proj, zones
+        else:
+            # ML2, the medium-term projection - a real ~5-month forecast.
+            proj2[key][month] = max(proj2[key].get(month, 0), v)
+    return phases, proj, proj2, zones
 
 
 def main():
     counties = load_counties()
-    phases, projections, zones = fews_subcounties()
+    phases, projections, projections2, zones = fews_subcounties()
 
     by_county = collections.defaultdict(list)
     for (c, s) in phases:
@@ -231,26 +235,35 @@ def main():
     # NET publication; a unit simply holds its last classification until the
     # next release, which is how these classifications are read operationally.
     sub, county_roll = {}, collections.defaultdict(lambda: collections.defaultdict(int))
-    sub_proj, county_proj = {}, collections.defaultdict(lambda: collections.defaultdict(int))
+    county_proj = collections.defaultdict(lambda: collections.defaultdict(int))
+    county_proj2 = collections.defaultdict(lambda: collections.defaultdict(int))
     for f in feats:
         p_ = f["properties"]
         if not p_["fews"]:
             continue
         key = (p_["county"], p_["fews"])
-        ser, pr = phases[key], projections.get(key, {})
+        ser = phases[key]
+        pr = projections.get(key, {})
+        pr2 = projections2.get(key, {})
         sub[p_["name"]] = {"county": p_["county"], "zones": p_["zones"],
-                           "phases": ser, "proj": pr}
+                           "phases": ser, "proj": pr, "proj2": pr2}
         for m, v in ser.items():
             county_roll[p_["county"]][m] = max(county_roll[p_["county"]][m], v)
         for m, v in pr.items():
             county_proj[p_["county"]][m] = max(county_proj[p_["county"]][m], v)
+        for m, v in pr2.items():
+            county_proj2[p_["county"]][m] = max(county_proj2[p_["county"]][m], v)
 
     periods = sorted({m for v in sub.values() for m in v["phases"]})
     out = {
         "meta": {
             "source": "FEWS NET Data Warehouse (fdw.fews.net), IPC phase",
-            "scenarios": {"phases": "CS - Current Situation (observed)",
-                          "proj": "ML1 - FEWS NET near-term projection"},
+            "scenarios": {
+                "phases": "CS - Current Situation (observed, 0-1 months)",
+                "proj":   "ML1 - FEWS NET near-term projection (median 1.5 months ahead)",
+                "proj2":  "ML2 - FEWS NET medium-term projection (median 5.0 months ahead)",
+            },
+            "horizons": {"now": 0, "ml1": 1.5, "ml2": 5.0},
             "scale": {1: "Minimal", 2: "Stressed", 3: "Crisis",
                       4: "Emergency", 5: "Famine"},
             "level_map": {1: 0, 2: 1, 3: 2, 4: 3, 5: 3},
@@ -261,7 +274,9 @@ def main():
         },
         "periods": periods,
         "subcounty": sub,
-        "county": {c: {"phases": dict(v), "proj": dict(county_proj.get(c, {}))}
+        "county": {c: {"phases": dict(v),
+                       "proj": dict(county_proj.get(c, {})),
+                       "proj2": dict(county_proj2.get(c, {}))}
                    for c, v in county_roll.items()},
     }
     with open(OUT_IPC, "w") as fh:
@@ -275,7 +290,8 @@ def main():
     nobs = sum(len(v["phases"]) for v in sub.values())
     print(f"timeline: {len(sub)} sub-counties + {len(county_roll)} counties "
           f"x {len(periods)} real FEWS NET periods = {nobs} observations")
-    print(f"          {sum(len(v['proj']) for v in sub.values())} ML1 projections included")
+    print(f"          {sum(len(v['proj']) for v in sub.values())} ML1 (~1.5mo) "
+          f"+ {sum(len(v['proj2']) for v in sub.values())} ML2 (~5mo) projections")
     print(f"          periods {periods[0]} -> {periods[-1]}  (all observed, none interpolated)")
     print(f"wrote {OUT_IPC} ({os.path.getsize(OUT_IPC)/1024:.0f} KB)")
 

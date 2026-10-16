@@ -23,19 +23,15 @@ def _places(units: list[dict]) -> list[str]:
 
 def _events(cls_evidence: list[dict]) -> dict[str, list[dict]]:
     """{shortage|response|good_news: [{type, quote}]}, one entry per event type with its
-    best supporting sentence; empty groups are left out. Sentences about another country or a
-    past year are ignored; a denied shortage ("no food shortage") becomes good_news/shortage_denied."""
+    best supporting sentence; empty groups are left out. Sentences about another country, a
+    past year, or a denied problem ("no food shortage") are ignored."""
     groups: dict[str, list[dict]] = {}
     seen, used_quotes = set(), set()
     candidates = []
     for e in cls_evidence:  # already sorted: live shortage first, most severe first
-        if e["historical"] or e["foreign"] or e["event_type"] in SKIP_EVENTS:
-            continue
-        if e["polarity"] == "shortage" and e["negated"]:
-            g, t = "good_news", "shortage_denied"
-        else:
-            g, t = GROUP[e["polarity"]], e["event_type"]
-        candidates.append((g, t, e))
+        if e["historical"] or e["foreign"] or e["negated"] or e["event_type"] in SKIP_EVENTS:
+            continue  # denied problems ("no food shortage") are not a signal either way
+        candidates.append((GROUP[e["polarity"]], e["event_type"], e))
     # prefer a sentence not already used for another event, so each quote adds information
     for g, t, e in candidates:
         if (g, t) in seen:

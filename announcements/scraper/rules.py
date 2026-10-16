@@ -60,18 +60,23 @@ EVENT_RULES = [
      r"|(?:drought|famine|hunger)\w*\s+(?:\w+\s+){0,3}(?:declared|gazetted)\s+(?:a\s+)?(?:national\s+)?disaster"
      r"|declar\w*\s+(?:a\s+)?state\s+of\s+emergency"
      r"|declar\w*\s+(?:a\s+)?(?:national\s+)?(?:drought|food)\s+(?:emergency|disaster)"),
-    # "(Catastrophe/Famine (Phase 5)" in IPC scale definitions is not a famine report
-    ("famine", "shortage", 3, r"(?<!/)\bfamine\b(?!\s*\(?\s*phase)|\bstarvation\b|\bstarving\b|(?:died|deaths?)\s+(?:of|from|due\s+to)\s+hunger"),
-    ("drought_alarm_phase", "shortage", 2, r"\b(?:alarm|emergency)\s+(?:phase|stage)\b|\bsevere\s+drought\b|\bIPC\s+phase\s+[345]\b"),
+    # NDMA "emergency" drought phase / IPC 4-5: the official top of the scale
+    ("drought_emergency_phase", "shortage", 3, r"\bemergency\s+(?:phase|stage)\b|\bIPC\s+phase\s+[45]\b"),
+    # Kenyan news uses "famine"/"starvation" loosely for hunger, so it is impact (2), not the official top level.
+    # "(Catastrophe/Famine (Phase 5)" in IPC scale definitions is not a famine report.
+    ("famine", "shortage", 2, r"(?<!/)\bfamine\b(?!\s*\(?\s*phase)|\bstarvation\b|\bstarving\b|(?:died|deaths?)\s+(?:of|from|due\s+to)\s+hunger"),
+    ("drought_alarm_phase", "shortage", 2, r"\balarm\s+(?:phase|stage)\b|\bsevere\s+drought\b|\bIPC\s+phase\s+3\b"),
     ("food_shortage", "shortage", 2,
      r"food\s+shortages?|shortages?\s+of\s+(?:food|maize|unga|flour|grains?|wheat|rice|beans)|food\s+insecur\w+"
      r"|\bhunger\b|in\s+need\s+of\s+(?:relief\s+)?food|acute\s+food|food\s+crisis|food\s+deficit"),
     ("crop_failure", "shortage", 2,
      r"crop\s+failure|crops?\s+(?:have\s+|had\s+)?(?:failed|wither\w*|dried\s+up)|failed\s+harvests?|poor\s+harvests?"
-     r"|low\s+yields?|reduced\s+(?:yields?|harvests?)|(?:decline|drop|fall)\s+in\s+(?:\w+\s+)?(?:production|yields?|output)"),
+     r"|low\s+yields?|reduced\s+(?:yields?|harvests?)|(?:decline|drop|fall)\s+in\s+(?:\w+\s+)?(?:production|yields?|output)"
+     r"|(?:ruined|destroyed|wiped\s+out|lost)\s+(?:\w+\s+){0,2}(?:harvests?|crops?)"),
     ("livestock_deaths", "shortage", 2,
      r"livestock\s+deaths?|(?:livestock|cattle|goats|sheep|camels|animals|herds?)\s+(?:have\s+)?(?:died|dying|perish\w*)"
-     r"|loss\s+of\s+(?:\d[\d,]*\s+)?(?:livestock|animals|cattle)"),
+     r"|loss\s+of\s+(?:\d[\d,]*\s+)?(?:livestock|animals|cattle)"
+     r"|(?:killed|wiped\s+out|lost)\s+(?:\d[\d,]*\s+)?(?:\w+\s+){0,2}(?:livestock|animals|cattle|goats|camels|herds?)"),
     ("drought_conditions", "shortage", 1,
      # "drought-resistant", "drought mitigation", ... are not drought conditions
      r"(?<!-)\bdrought\b(?![- ](?:resistant|tolerant|resilien\w*|mitigation|preparedness|management|relief|response"
@@ -100,19 +105,55 @@ EVENT_RULES = [
     ("livestock_offtake", "mitigation", 0, r"livestock\s+off-?take"),
     ("policy_announcement", "mitigation", 0, r"\b(?:policy|bill|regulations?|strategy|directive|gazette\s+notice)\b"),
     # reassurance / positive supply news
+    # only things that actually happened ("production increased"), not plans ("to increase production"),
+    # and only food prices falling (not electricity, fuel...)
     ("production_increase", "reassurance", 0,
-     r"bumper\s+harvests?|increased?\s+(?:\w+\s+){0,2}(?:production|yields?|harvests?|output)|food\s+surplus|surplus\s+(?:maize|food|grain)"
-     r"|adequate\s+food\s+(?:stocks?|supply)|(?:prices?|cost)\s+of\s+(?:\w+\s+){0,3}(?:dropped|dropping|fell|fallen|declined|reduced|decreased)"
-     r"|food\s+secure\b|self[- ]sufficien\w+"),
+     r"bumper\s+harvests?|increased\s+(?:\w+\s+){0,2}(?:production|yields?|harvests?|output)"
+     r"|(?:increase|rise|growth)\s+in\s+(?:\w+\s+){0,2}(?:production|yields?|harvests?|output)"
+     r"|(?:production|yields?|harvests?|output)\s+(?:has\s+|have\s+)?(?:increased|rose|risen|doubled|improved|grew)"
+     r"|food\s+surplus|surplus\s+(?:maize|food|grain)|adequate\s+food\s+(?:stocks?|supply)"
+     rf"|(?:prices?|cost)\s+of\s+(?:\w+\s+){{0,2}}{FOOD}\s+(?:\w+\s+){{0,2}}(?:dropped|dropping|fell|fallen|declined|reduced|decreased)"
+     rf"|{FOOD}\s+prices\s+(?:have\s+)?(?:dropped|fell|fallen|declined|decreased|gone\s+down)"
+     r"|(?:food|maize|grain|cereal)\s+self[- ]sufficien\w+|self[- ]sufficien\w+\s+in\s+(?:food|maize|grains?|cereals?)"),
 ]
 _EVENTS = [(e, pol, sev, re.compile(rx, I)) for e, pol, sev, rx in EVENT_RULES]
 
+# A real denial right before the problem word ("no food shortage", "dismissed reports of famine").
+# Searched only in the ~25 characters before the match, so a "not" elsewhere in the sentence does not count.
+# Action words (tackle, combat, prevent, address...) are NOT negations: they usually mean the problem exists.
 NEGATION = re.compile(
-    r"\b(?:no|not|never|nor|without|dismiss\w*|den(?:y|ied|ies)|dispel\w*|unfounded|rule[sd]?\s+out|ruled\s+out"
-    r"|avert\w*|prevent\w*|avoid\w*|end(?:ing|ed)?|eradicat\w*|eliminat\w*|zero|free(?:dom)?\s+from|combat\w*"
-    r"|fight\w*\s+against|overcome|confront\w*|challenges?\s+of|tackl\w*)\b",
+    r"\b(?:no|not|never|nor|without|dismiss\w*|den(?:y|ied|ies)|dispel\w*|unfounded|rule[sd]?\s+out)\b"
+    r"(?:\s+\w+){0,3}\s*$",
     I,
 )
+# Slogans and programme names: ignored entirely, they describe goals, not conditions
+SLOGAN = re.compile(
+    r"zero\s+hunger|end(?:ing)?\s+(?:hunger|food\s+insecurity|famine)|eradicat\w*\s+(?:hunger|food\s+insecurity)"
+    r"|fight\w*\s+against\s+(?:hunger|famine|food\s+insecurity|drought)|war\s+(?:on|against)\s+(?:hunger|drought)"
+    r"|hunger[- ]free|free(?:dom)?\s+from\s+hunger|food[- ]secure\s+nation|Hunger\s+Safety\s+Net",
+    I,
+)
+# "leaders urge the President to declare..." is a demand, not a declaration
+DECLARATION_DEMAND = re.compile(
+    r"\b(?:urg\w*|call\w*\s+(?:on|upon|for)|ask\w*|appeal\w*|plead\w*|push\w*|lobby\w*|petition\w*|demand\w*|want\w*"
+    r"|should|propos\w*|wants?|time\s+for|need\w*|must)\b[^!?]{0,80}$"  # "." allowed: "urge Dr. Ruto to declare"
+    r"|\bto\s*$",  # "...for the President to declare": an infinitive, not a past declaration
+    I,
+)
+# "drought nears the emergency phase", "projected to reach IPC phase 4": not there yet -> alarm level
+NOT_YET = re.compile(
+    r"\b(?:near\w*|approach\w*|verge|brink|risk|could|may|might|will|likely|projected|expected|forecast\w*|predict\w*)\b",
+    I,
+)
+# sentences that define a scale ("IPC ... classify the severity ... ranging from Minimal to Famine") are not events
+DEFINITION = re.compile(r"ranging\s+from|is\s+a\s+set\s+of|standardi[sz]ed\s+tools?|five-phase\s+scale|classif\w*\s+the\s+severity", I)
+# good news must have happened: plans, aims and expectations are not good news yet
+PLANNED = re.compile(r"\b(?:will|would|can|could|may|aims?|aimed|aiming|expect\w*|anticipat\w*|target\w*|plans?|"
+                     r"planned|seeks?|intends?|hopes?|promis\w*|striving|projected|envisag\w*|"
+                     r"(?:to|for)\s+(?:support\s+)?(?:increase|increased|boost|enhance|achieve|elevate))\b", I)
+# starvation of animals is livestock loss, not human famine
+LIVESTOCK_CTX = re.compile(r"\b(?:livestock|cattle|goats|sheep|camels|animals|herds?|donkeys|cows)\b", I)
+HUMAN_CTX = re.compile(r"\b(?:people|residents|families|households|children|pupils|persons|villagers|communities|Kenyans)\b", I)
 # shortage language about other countries / the whole continent is not a Kenyan district signal
 FOREIGN = re.compile(
     r"\b(?:Sudan|Somalia|Ethiopia|Uganda|Tanzania|Rwanda|Burundi|DRC|Congo|Gaza|Ukraine|Yemen|Afghanistan|Haiti|Malawi"
@@ -170,16 +211,28 @@ def extract_events(text: str, title: str, pub_year: int | None) -> list[Evidence
     seen = set()
     for src, offset_base in ((title or "", None), (text or "", 0)):
         for start, sent in sentences(src):
+            # slogans are blanked (same length, so offsets stay valid) before looking for problems
+            no_slogan = SLOGAN.sub(lambda s: " " * len(s.group(0)), sent)
             for etype, pol, sev, rx in _EVENTS:
-                m = rx.search(sent)
+                m = rx.search(no_slogan if pol == "shortage" else sent)
                 if not m:
                     continue
+                if etype == "drought_declaration" and DECLARATION_DEMAND.search(sent[:m.start()]):
+                    etype, sev = "drought_conditions", 1  # a demand to declare: the drought exists, no declaration yet
+                if etype in ("drought_emergency_phase", "drought_alarm_phase", "famine") and DEFINITION.search(sent):
+                    continue
+                if pol == "reassurance" and PLANNED.search(sent):
+                    continue
+                if etype == "drought_emergency_phase" and NOT_YET.search(sent):
+                    etype, sev = "drought_alarm_phase", 2
+                if etype == "famine" and LIVESTOCK_CTX.search(sent) and not HUMAN_CTX.search(sent):
+                    etype = "livestock_deaths"  # "livestock dying of starvation"
                 key = (etype, sent[:80])
                 if key in seen:
                     continue
                 seen.add(key)
-                before = sent[max(0, m.start() - 45):m.start()]
-                negated = bool(NEGATION.search(before)) and pol != "mitigation"
+                before = sent[max(0, m.start() - 25):m.start()]
+                negated = bool(NEGATION.search(before)) and pol == "shortage"
                 years = [int(y) for y in YEAR.findall(sent)]
                 historical = bool(pub_year and years and max(years) < pub_year - 1 and pol == "shortage")
                 foreign = pol == "shortage" and bool(FOREIGN.search(sent)) and not KENYA_CTX.search(sent)
@@ -202,12 +255,14 @@ def classify(title: str, text: str, pub_year: int | None) -> dict:
     ev = extract_events(text, title, pub_year)
     live_short = [e for e in ev if e.polarity == "shortage" and not (e.negated or e.historical or e.foreign)]
     mitig = [e for e in ev if e.polarity == "mitigation"]
-    reass = [e for e in ev if e.polarity == "reassurance"] + [e for e in ev if e.polarity == "shortage" and e.negated]
+    # denied problems ("no food shortage") are simply ignored: official reassurances are not a signal
+    reass = [e for e in ev if e.polarity == "reassurance"]
 
     # distinct sentences carrying live shortage evidence (an event stated in the title counts double)
     n_sent = len({e.quote for e in live_short}) + (1 if any(e.start == -1 for e in live_short) else 0)
-    # an explicit declaration is strong evidence even when stated once
-    weak = 0 < n_sent < 2 and not any(e.event_type == "drought_declaration" for e in live_short)
+    # an explicit declaration / official emergency phase is strong evidence even when stated once
+    official = {"drought_declaration", "drought_emergency_phase"}
+    weak = 0 < n_sent < 2 and not any(e.event_type in official for e in live_short)
 
     is_relevant = rel_score >= RELEVANCE_THRESHOLD or bool(n_sent >= 2 and rel_score >= RELEVANCE_THRESHOLD / 2)
 
@@ -216,9 +271,6 @@ def classify(title: str, text: str, pub_year: int | None) -> dict:
         severity = max(e.severity for e in live_short)
         kinds = {e.event_type for e in live_short}
         if severity == 1 and len(kinds) >= 2:
-            severity = 2
-        # level 3 needs an explicit declaration, or famine language backed by several other sentences
-        if severity == 3 and "drought_declaration" not in kinds and n_sent < 3:
             severity = 2
         # only-forecast evidence ("rains expected to be below normal") is an early anomaly, not a confirmed impact
         if all(e.forecast for e in live_short) and severity > 1:

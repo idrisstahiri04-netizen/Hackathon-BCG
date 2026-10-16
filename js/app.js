@@ -1,15 +1,20 @@
 /* ============================================================================
-   app.js — globe, search, timeline and the alert feed.
+   app.js — globe, roles, timeline, markers and the alert feed.
 
-   One piece of state matters: `now`, the month index 0..71. Everything on
-   screen is a pure function of it. Scrubbing backwards is therefore just as
-   valid as playing forwards, which is what makes the demo safe to drive live.
+   State that matters:
+     role        'ngo' | 'gov'        — changes every recommendation shown
+     resolution  'county'|'subcounty' — 47 units or 290
+     now         index into the real FEWS NET publication dates
+     liveMode    replay vs current situation
+
+   Everything on screen is a pure function of those four. No simulated values
+   anywhere: the timeline steps through real FEWS NET releases.
    ============================================================================ */
 
 (() => {
   'use strict';
 
-  const $ = sel => document.querySelector(sel);
+  const $ = s => document.querySelector(s);
   const el = (tag, cls, txt) => {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -17,47 +22,84 @@
     return n;
   };
 
-  // ---- Countries the search knows about ----------------------------------
-  // Only Kenya has a model behind it. The rest are listed so the search is
-  // honest about where coverage does and does not exist yet.
   const COUNTRIES = [
-    { name: 'Kenya',        lat:  0.53, lng: 37.86, alt: 0.38, live: true },
-    { name: 'Ethiopia',     lat:  9.10, lng: 40.50, alt: 0.65 },
-    { name: 'Somalia',      lat:  5.15, lng: 46.20, alt: 0.65 },
-    { name: 'Uganda',       lat:  1.37, lng: 32.29, alt: 0.65 },
-    { name: 'Tanzania',     lat: -6.37, lng: 34.89, alt: 0.65 },
-    { name: 'Zimbabwe',     lat:-19.02, lng: 29.15, alt: 0.65 },
-    { name: 'Zambia',       lat:-13.13, lng: 27.85, alt: 0.65 },
-    { name: 'Malawi',       lat:-13.25, lng: 34.30, alt: 0.65 },
-    { name: 'Niger',        lat: 17.61, lng:  8.08, alt: 0.65 },
-    { name: 'Sudan',        lat: 15.60, lng: 30.22, alt: 0.65 },
-    { name: 'South Sudan',  lat:  7.86, lng: 29.69, alt: 0.65 },
-    { name: 'Nigeria',      lat:  9.08, lng:  8.68, alt: 0.65 },
-    { name: 'Madagascar',   lat:-18.77, lng: 46.87, alt: 0.65 },
-    { name: 'Morocco',      lat: 31.79, lng: -7.09, alt: 0.65 },
+    { name: 'Kenya',       lat:  0.53, lng: 37.86, alt: 0.38, live: true },
+    { name: 'Ethiopia',    lat:  9.10, lng: 40.50, alt: 0.65 },
+    { name: 'Somalia',     lat:  5.15, lng: 46.20, alt: 0.65 },
+    { name: 'Uganda',      lat:  1.37, lng: 32.29, alt: 0.65 },
+    { name: 'Tanzania',    lat: -6.37, lng: 34.89, alt: 0.65 },
+    { name: 'Zimbabwe',    lat:-19.02, lng: 29.15, alt: 0.65 },
+    { name: 'Zambia',      lat:-13.13, lng: 27.85, alt: 0.65 },
+    { name: 'Malawi',      lat:-13.25, lng: 34.30, alt: 0.65 },
+    { name: 'Niger',       lat: 17.61, lng:  8.08, alt: 0.65 },
+    { name: 'Sudan',       lat: 15.60, lng: 30.22, alt: 0.65 },
+    { name: 'South Sudan', lat:  7.86, lng: 29.69, alt: 0.65 },
+    { name: 'Nigeria',     lat:  9.08, lng:  8.68, alt: 0.65 },
+    { name: 'Madagascar',  lat:-18.77, lng: 46.87, alt: 0.65 },
+    { name: 'Morocco',     lat: 31.79, lng: -7.09, alt: 0.65 },
   ];
-
   const WORLD_VIEW = { lat: 6, lng: 24, altitude: 2.3 };
 
-  // ---- Model --------------------------------------------------------------
-  // Built in boot(), once the FEWS NET files have loaded — the official source
-  // family depends on them, so there is no model before then.
+  // Markers are the loud part of the UI, so they must stay legible. Past this
+  // many we show the worst and say how many were held back.
+  const MAX_MARKERS = 22;
+
+  let TIMELINE = null;
   let MODEL = null;
-  let byName = new Map();
-  let LIVE = null;        // latest FEWS NET situation, from /api/live
+  let LIVE = null;
+
+  let role = null;
+  let resolution = 'subcounty';
+  let now = 0;
+  let rendered = -1;
+  let playing = false, speed = 1, timer = null;
+  let active = null, selected = null, hovered = null;
   let liveMode = false;
+  let smsAudience = null;
 
-  let now = 0;            // month index
-  let rendered = -1;      // how far the feed has been filled, for incremental appends
-  let playing = false;
-  let speed = 1;
-  let timer = null;
-  let active = null;      // the selected country, or null
-  let selected = null;    // the county open in the detail panel
-  let hovered = null;
-  let smsAudience = 'farmer';
+  const featuresFor = r =>
+    r === 'county' ? KENYA_COUNTIES.features : KENYA_SUBCOUNTIES.features;
+  const levelColor = n => ENGINE.LEVELS[n].color;
 
-  const levelColor = n => SIM.LEVELS[n].color;
+  // =========================================================================
+  //  Role
+  // =========================================================================
+  function buildRolePicker() {
+    const wrap = $('#role-picker');
+    Object.values(ROLES.DEFS).forEach(r => {
+      const b = el('button', 'role-opt');
+      b.dataset.role = r.id;
+      b.innerHTML =
+        `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${r.icon}"/></svg>` +
+        `<span class="ro-l">${r.label}</span>` +
+        `<span class="ro-b">${r.blurb}</span>` +
+        `<span class="ro-q">${r.question}</span>`;
+      b.addEventListener('click', () => setRole(r.id, true));
+      wrap.append(b);
+    });
+  }
+
+  function setRole(id, dismiss) {
+    role = id;
+    const def = ROLES.DEFS[id];
+    const badge = $('#role-badge');
+    badge.innerHTML =
+      `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${def.icon}"/></svg>` +
+      `<span>${def.label}</span>`;
+    badge.dataset.role = id;
+    document.body.dataset.role = id;
+    if (dismiss) {
+      $('#login').classList.add('gone');
+      setTimeout(() => { $('#login').hidden = true; }, 380);
+      searchInput.focus();
+    }
+    // Everything downstream of role has to be rebuilt, not just restyled.
+    if (MODEL && active) {
+      renderFeed({ rebuild: true });
+      renderMarkers();
+      if (selected) renderDetail();
+    }
+  }
 
   // =========================================================================
   //  Globe
@@ -71,63 +113,177 @@
     .atmosphereColor('#5b8fd0')
     .atmosphereAltitude(0.17)
     .polygonGeoJsonGeometry(d => d.geometry)
-    .polygonsTransitionDuration(420)
-    .polygonLabel(() => '')          // custom hover UI instead of the default tooltip
-    .onPolygonHover(onHover)
-    .onPolygonClick(onPolygonClick);
+    .polygonsTransitionDuration(380)
+    .polygonLabel(() => '')
+    .onPolygonHover(p => { hovered = p || null; globeEl.style.cursor = p ? 'pointer' : ''; paintGlobe(); })
+    .onPolygonClick(p => { selected = p; smsAudience = null; paintGlobe(); renderDetail(); })
+    .htmlElementsData([])
+    .htmlLat(d => d.lat)
+    .htmlLng(d => d.lng)
+    .htmlAltitude(0.04)
+    .htmlElement(markerElement);
 
   world.pointOfView(WORLD_VIEW, 0);
   world.controls().autoRotate = true;
   world.controls().autoRotateSpeed = 0.32;
   world.controls().enableDamping = true;
 
-  function fitGlobe() {
-    world.width(globeEl.clientWidth).height(globeEl.clientHeight);
-  }
-  fitGlobe();
-  new ResizeObserver(fitGlobe).observe(globeEl);
+  const fit = () => world.width(globeEl.clientWidth).height(globeEl.clientHeight);
+  fit();
+  new ResizeObserver(fit).observe(globeEl);
 
-  // Polygon accessors are re-set (new function identity) whenever the month
-  // changes — that is what makes globe.gl recolour and re-tween the counties.
-  // The single source of truth for "what colour is this county right now".
-  // In replay mode that is the model at month `now`; in live mode it is the
-  // current FEWS NET classification.
-  function levelAt(countyName) {
-    if (liveMode) return liveLevel(countyName);
-    const u = byName.get(countyName);
-    return u ? u.series[now].level : 0;
+  const unitAt = name => (MODEL ? MODEL.byName.get(name) : null);
+
+  // Single source of truth for "what level is this unit showing".
+  function levelAt(name) {
+    if (liveMode) return liveLevel(name);
+    const u = unitAt(name);
+    const lv = u ? u.series[now].level : null;
+    return lv == null ? 0 : lv;
+  }
+  function hasData(name) {
+    if (liveMode) return !!(LIVE && LIVE.current && LIVE.current[liveKey(name)]);
+    const u = unitAt(name);
+    return !!(u && u.series[now].hasData);
   }
 
   function paintGlobe() {
     if (!active || !active.live || !MODEL) return;
     world
       .polygonAltitude(d => {
-        const base = 0.008 + levelAt(d.properties.name) * 0.0075;
-        return d === selected || d === hovered ? base + 0.014 : base;
+        const base = 0.006 + levelAt(d.properties.name) * 0.006;
+        return d === selected || d === hovered ? base + 0.012 : base;
       })
       .polygonCapColor(d => {
-        const lvl = levelAt(d.properties.name);
+        const n = d.properties.name;
+        if (!hasData(n)) return '#55555540';            // honest "no coverage"
+        const lvl = levelAt(n);
         const c = levelColor(lvl);
-        if (d === selected) return c;
-        return c + (lvl === 0 ? 'b0' : 'd8');      // healthy counties sit back a little
+        return d === selected ? c : c + (lvl === 0 ? 'a8' : 'd8');
       })
-      .polygonSideColor(d => levelColor(levelAt(d.properties.name)) + '66')
+      .polygonSideColor(d => levelColor(levelAt(d.properties.name)) + '55')
       .polygonStrokeColor(d =>
-        d === selected ? '#ffffff' : d === hovered ? '#ffffffaa' : '#00000055');
+        d === selected ? '#ffffff' : d === hovered ? '#ffffffaa' : '#00000044');
   }
 
-  function onHover(poly) {
-    hovered = poly || null;
-    globeEl.style.cursor = poly ? 'pointer' : '';
-    paintGlobe();
+  // =========================================================================
+  //  Pulsing alert markers
+  // =========================================================================
+  // A colour change on a map is easy to miss, especially across 290 units.
+  // A pulsing marker over a deteriorating area is not.
+  const markerEls = new Map();
+  function markerElement(d) {
+    const wrap = document.createElement('div');
+    wrap.className = `mk lvl-${d.level}`;
+    markerEls.set(d.name, { el: wrap, d });
+    wrap.innerHTML = '<span class="mk-ring"></span><span class="mk-dot"></span>';
+    wrap.addEventListener('mouseenter', () => showTip(d, wrap));
+    wrap.addEventListener('mouseleave', hideTip);
+    wrap.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const f = featuresFor(resolution).find(x => x.properties.name === d.name);
+      if (f) {
+        selected = f;
+        smsAudience = null;
+        world.pointOfView({ lat: d.lat, lng: d.lng, altitude: 0.26 }, 850);
+        paintGlobe();
+        renderDetail();
+      }
+    });
+    return wrap;
   }
 
-  function onPolygonClick(poly) {
-    selected = poly;
-    smsAudience = null;                 // let the panel pick a sensible default
-    paintGlobe();
-    renderDetail();
+  function renderMarkers() {
+    const old = $('#marker-overflow');
+    if (old) old.remove();
+    if (!MODEL || !active || !active.live) { world.htmlElementsData([]); return; }
+    const rows = [];
+    for (const f of featuresFor(resolution)) {
+      const n = f.properties.name;
+      if (!hasData(n)) continue;
+      const lvl = levelAt(n);
+      if (lvl < 2) continue;                       // Crisis and above only
+      rows.push({
+        name: n,
+        county: f.properties.county || n,
+        lat: f.properties.lat, lng: f.properties.lng,
+        level: lvl,
+        zones: f.properties.zones || (unitAt(n) || {}).zones || [],
+      });
+    }
+    rows.sort((a, b) => b.level - a.level || a.name.localeCompare(b.name));
+    const shown = rows.slice(0, MAX_MARKERS);
+    markerEls.clear();
+    world.htmlElementsData(shown);
+    if (rows.length > shown.length) {
+      const n = el('div', null, `+${rows.length - shown.length} more at Crisis+ not pinned`);
+      n.id = 'marker-overflow';
+      $('#globe-col').append(n);
+    }
   }
+
+  // The hover card — role-specific next steps, directly over the area.
+  function showTip(d, anchor) {
+    const tip = $('#marker-tip');
+    const rec = ADVICE.build(d.county, d.level, d.zones);
+    const steps = ROLES.steps(role, rec.kinds, d.level).slice(0, 3);
+    const L = ENGINE.LEVELS[d.level];
+    const def = ROLES.DEFS[role];
+
+    tip.innerHTML = '';
+    tip.style.setProperty('--lvl', L.color);
+
+    const head = el('div', 'tip-head');
+    const chip = el('span', 'chip', `${L.glyph} ${L.ipc}`);
+    chip.style.background = L.color;
+    head.append(chip, el('span', 'tip-name', d.name));
+    if (d.county && d.county !== d.name) head.append(el('span', 'tip-sub', d.county));
+    tip.append(head);
+
+    tip.append(el('div', 'tip-lead', ROLES.headline(role, d.level, d.name)));
+
+    if (rec.crops.length) {
+      const c = el('div', 'tip-crops');
+      c.append(el('span', 'tip-lab', 'At risk'));
+      rec.crops.slice(0, 5).forEach(x => c.append(el('span', 'crop', x)));
+      tip.append(c);
+    }
+
+    const sw = el('div', 'tip-steps');
+    sw.append(el('span', 'tip-lab', `Next steps · ${def.label}`));
+    const ul = el('ul');
+    steps.forEach(s => ul.append(el('li', null, s)));
+    sw.append(ul);
+    tip.append(sw);
+
+    if (rec.resources.length) {
+      const r = el('div', 'tip-res');
+      r.append(el('span', 'tip-lab', 'Who can act'));
+      rec.resources.slice(0, 3).forEach(x => {
+        const b = el('span', 'res-pill');
+        b.append(el('b', null, x.body), el('span', null, x.name));
+        r.append(b);
+      });
+      tip.append(r);
+    }
+    rec.gaps.slice(0, 1).forEach(g => tip.append(el('div', 'tip-gap', g)));
+
+    // Position above the marker, clamped inside the globe column.
+    tip.hidden = false;
+    const a = anchor.getBoundingClientRect();
+    const col = $('#globe-col').getBoundingClientRect();
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    let left = a.left + a.width / 2 - w / 2 - col.left;
+    let top = a.top - h - 14 - col.top;
+    let below = false;
+    if (top < 8) { top = a.bottom + 14 - col.top; below = true; }
+    left = Math.max(8, Math.min(col.width - w - 8, left));
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+    tip.classList.toggle('below', below);
+    tip.style.setProperty('--arrow', `${a.left + a.width / 2 - col.left - left}px`);
+  }
+  const hideTip = () => { $('#marker-tip').hidden = true; };
 
   // =========================================================================
   //  Search
@@ -138,16 +294,12 @@
 
   function openResults(q) {
     const term = q.trim().toLowerCase();
-    const hits = term
-      ? COUNTRIES.filter(c => c.name.toLowerCase().includes(term))
-      : COUNTRIES.slice(0, 6);
-
+    const hits = term ? COUNTRIES.filter(c => c.name.toLowerCase().includes(term))
+                      : COUNTRIES.slice(0, 6);
     resultsEl.innerHTML = '';
     if (!hits.length) {
-      const li = el('li');
-      li.append(el('span', null, 'No match'));
-      li.style.pointerEvents = 'none';
-      resultsEl.append(li);
+      const li = el('li'); li.append(el('span', null, 'No match'));
+      li.style.pointerEvents = 'none'; resultsEl.append(li);
     }
     hits.forEach((c, i) => {
       const li = el('li');
@@ -163,12 +315,8 @@
     markCursor();
     resultsEl.hidden = false;
   }
-
-  function markCursor() {
-    [...resultsEl.children].forEach((li, i) =>
-      li.setAttribute('aria-selected', String(i === cursor)));
-  }
-
+  const markCursor = () => [...resultsEl.children]
+    .forEach((li, i) => li.setAttribute('aria-selected', String(i === cursor)));
   const closeResults = () => { resultsEl.hidden = true; cursor = -1; };
 
   searchInput.addEventListener('input', () => openResults(searchInput.value));
@@ -183,10 +331,8 @@
       if (li && li.dataset.name) { ev.preventDefault(); selectCountry(li.dataset.name); }
     } else if (ev.key === 'Escape') { closeResults(); searchInput.blur(); }
   });
-
   $('#empty-hint').addEventListener('click', ev => {
-    const name = ev.target.dataset.demo;
-    if (name) selectCountry(name);
+    if (ev.target.dataset.demo) selectCountry(ev.target.dataset.demo);
   });
 
   function selectCountry(name) {
@@ -196,55 +342,68 @@
     searchInput.value = c.name;
     searchInput.blur();
     closeResults();
-
     world.controls().autoRotate = false;
     world.pointOfView({ lat: c.lat, lng: c.lng, altitude: c.alt }, 1500);
-
-    selected = null;
-    hovered = null;
+    selected = null; hovered = null; hideTip();
     $('#detail').hidden = true;
     $('#empty-hint').hidden = true;
-
     $('#hud').hidden = false;
     $('#hud-name').textContent = c.name;
-    $('#hud-sub').textContent = c.live
-      ? '47 counties · pilot country'
-      : 'not yet modelled';
 
     if (c.live) {
-      world.polygonsData(KENYA_COUNTIES.features);
-      $('#spark').style.opacity = '1';
+      applyResolution(resolution);
       $('#legend').hidden = false;
-      $('#feed-sub').textContent = 'Kenya · 47 counties';
+      $('#res').hidden = false;
+      $('#spark').style.opacity = '1';
       setTime(0, { rebuild: true });
     } else {
-      // Honest empty state rather than a fake map.
-      world.polygonsData([]);
-      $('#legend').hidden = true;
+      world.polygonsData([]); world.htmlElementsData([]);
+      $('#legend').hidden = true; $('#res').hidden = true;
+      $('#spark').style.opacity = '.18';
+      $('#hud-sub').textContent = 'not yet modelled';
       $('#feed-sub').textContent = `${c.name} · no coverage`;
       $('#feed').innerHTML = '';
-      $('#feed-count').textContent = '0';
-      $('#spark').style.opacity = '.18';   // the curve is Kenya's, not theirs
       $('#feed-empty').hidden = false;
       $('#feed-empty').innerHTML =
-        `<p>No model for ${c.name} yet.</p>` +
-        `<p class="muted">Kenya is the pilot. Adding a country needs its admin boundaries, ` +
-        `a crop mask and one season of price data.</p>`;
-      ['#stat-units', '#stat-people', '#stat-sms'].forEach(s => $(s).textContent = '—');
+        `<p>No FEWS NET coverage wired up for ${c.name} yet.</p>` +
+        `<p class="muted">Adding a country needs its admin boundaries and the ` +
+        `matching FEWS NET livelihood units. The data exists; the join does not.</p>`;
+      ['#stat-units', '#stat-alerts', '#stat-sms'].forEach(s => $(s).textContent = '—');
       pause();
     }
   }
 
   // =========================================================================
-  //  Timeline
+  //  Resolution
+  // =========================================================================
+  $('#res').addEventListener('click', ev => {
+    const b = ev.target.closest('button');
+    if (!b || b.dataset.res === resolution) return;
+    applyResolution(b.dataset.res);
+    setTime(now, { rebuild: true });
+  });
+
+  function applyResolution(r) {
+    resolution = r;
+    [...$('#res').children].forEach(b => b.classList.toggle('on', b.dataset.res === r));
+    const feats = featuresFor(r);
+    MODEL = ENGINE.build(feats, TIMELINE, r);
+    selected = null; hovered = null; hideTip();
+    $('#detail').hidden = true;
+    world.polygonsData(feats);
+    const covered = MODEL.units.filter(u => u.covered).length;
+    const noun = r === 'county' ? 'counties' : 'sub-counties';
+    $('#hud-sub').textContent = `${feats.length} ${noun} · ${covered} with FEWS NET data`;
+    $('#feed-sub').textContent = `Kenya · ${covered} ${noun}`;
+    buildSpark();
+  }
+
+  // =========================================================================
+  //  Timeline — each step is a real FEWS NET release
   // =========================================================================
   const scrub = $('#scrub');
-  scrub.max = String(SIM.N_MONTHS - 1);
-
   scrub.addEventListener('input', () => setTime(+scrub.value));
-
   $('#play').addEventListener('click', () => (playing ? pause() : play()));
-
   $('#speeds').addEventListener('click', ev => {
     const b = ev.target.closest('button');
     if (!b) return;
@@ -252,94 +411,92 @@
     [...$('#speeds').children].forEach(x => x.classList.toggle('on', x === b));
     if (playing) { pause(); play(); }
   });
-
   document.addEventListener('keydown', ev => {
-    if (ev.target.tagName === 'INPUT') return;
+    if (ev.target.tagName === 'INPUT' || !$('#login').hidden) return;
     if (ev.code === 'Space') { ev.preventDefault(); playing ? pause() : play(); }
     else if (ev.key === 'ArrowRight') setTime(now + 1);
     else if (ev.key === 'ArrowLeft') setTime(now - 1);
-    else if (ev.key === 'Escape') closeDetail();
+    else if (ev.key === 'Escape') { closeDetail(); hideTip(); }
   });
 
   function play() {
-    if (!active || !active.live) return;
-    if (now >= SIM.N_MONTHS - 1) setTime(0, { rebuild: true });
+    if (!active || !active.live || liveMode) return;
+    if (now >= ENGINE.N_PERIODS() - 1) setTime(0, { rebuild: true });
     playing = true;
-    $('.ic-play').hidden = true;
-    $('.ic-pause').hidden = false;
+    $('.ic-play').hidden = true; $('.ic-pause').hidden = false;
     timer = setInterval(() => {
-      if (now >= SIM.N_MONTHS - 1) { pause(); return; }
+      if (now >= ENGINE.N_PERIODS() - 1) { pause(); return; }
       setTime(now + 1);
-    }, 950 / speed);
+    }, 1500 / speed);
   }
-
   function pause() {
-    playing = false;
-    clearInterval(timer);
-    $('.ic-play').hidden = false;
-    $('.ic-pause').hidden = true;
+    playing = false; clearInterval(timer);
+    $('.ic-play').hidden = false; $('.ic-pause').hidden = true;
   }
 
   function setTime(t, { rebuild = false } = {}) {
-    t = Math.max(0, Math.min(SIM.N_MONTHS - 1, t));
-    const wentBack = t < now;
+    const N = ENGINE.N_PERIODS() || 1;
+    t = Math.max(0, Math.min(N - 1, t));
+    const back = t < now;
     now = t;
+    scrub.max = String(N - 1);
     scrub.value = String(t);
-
-    const d = SIM.dateAt(t);
+    const d = ENGINE.dateAt(t);
     $('#clock-date').textContent = d.label;
-    $('#clock-sub').textContent = `month ${t + 1} of ${SIM.N_MONTHS}`;
-
-    if (!active || !active.live) return;
-
+    $('#clock-sub').textContent = `release ${t + 1} of ${N}`;
+    if (!active || !active.live || !MODEL) return;
     paintGlobe();
+    renderMarkers();
     updateStats();
-    updateLegendCounts();
-    renderFeed({ rebuild: rebuild || wentBack });
+    updateLegend();
+    renderFeed({ rebuild: rebuild || back });
     if (selected) renderDetail();
   }
 
-  // Year ticks under the slider.
-  (function buildTicks() {
+  function buildTicks() {
     const wrap = $('#track-marks');
-    for (let y = SIM.START_YEAR; y < SIM.START_YEAR + SIM.N_MONTHS / 12; y++) {
-      const t = (y - SIM.START_YEAR) * 12;
-      const m = el('span', 'yr', String(y));
-      m.style.left = `${(t / (SIM.N_MONTHS - 1)) * 100}%`;
+    wrap.innerHTML = '';
+    const periods = ENGINE.periods;
+    let lastYear = null;
+    periods.forEach((p, i) => {
+      const y = p.slice(0, 4);
+      if (y === lastYear) return;
+      lastYear = y;
+      const m = el('span', 'yr', y);
+      m.style.left = `${(i / Math.max(1, periods.length - 1)) * 100}%`;
       wrap.append(m);
-    }
-  })();
+    });
+  }
 
-  // The strip behind the slider: share of counties at Warning or above over
-  // the whole window. One measure, one hue, no axis furniture — it exists to
-  // show you where the crisis is, not to be read off precisely.
+  // Share of units at Crisis+ across the whole window. One measure, one hue.
   function buildSpark() {
+    buildTicks();
     const svg = $('#spark');
     const W = 1000, H = 30;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    const pts = MODEL.national.map((v, i) => [
-      (i / (SIM.N_MONTHS - 1)) * W,
-      H - v * (H - 2) - 1,
-    ]);
-    const line = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L');
-
-    const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    area.setAttribute('d', `M0,${H} L${line} L${W},${H} Z`);
-    area.setAttribute('fill', 'url(#spark-grad)');
-
-    const stroke = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    stroke.setAttribute('d', `M${line}`);
-    stroke.setAttribute('fill', 'none');
-    stroke.setAttribute('stroke', '#ec833a');
-    stroke.setAttribute('stroke-width', '1.5');
-    stroke.setAttribute('vector-effect', 'non-scaling-stroke');
-
     svg.innerHTML =
-      `<defs><linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
+      `<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
          <stop offset="0%" stop-color="#ec833a" stop-opacity=".40"/>
          <stop offset="100%" stop-color="#ec833a" stop-opacity=".03"/>
        </linearGradient></defs>`;
-    svg.append(area, stroke);
+    const n = MODEL.national.length;
+    const pts = MODEL.national.map((v, i) => [
+      (i / Math.max(1, n - 1)) * W, H - v * (H - 2) - 1,
+    ]);
+    const line = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L');
+    const mk = (d, fill, stroke) => {
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('fill', fill);
+      if (stroke) {
+        p.setAttribute('stroke', stroke);
+        p.setAttribute('stroke-width', '1.5');
+        p.setAttribute('vector-effect', 'non-scaling-stroke');
+      }
+      return p;
+    };
+    svg.append(mk(`M0,${H} L${line} L${W},${H} Z`, 'url(#sg)'),
+               mk(`M${line}`, 'none', '#ec833a'));
   }
 
   // =========================================================================
@@ -347,105 +504,129 @@
   // =========================================================================
   function updateStats() {
     if (!MODEL) return;
-    const warnPlus = MODEL.units.filter(u => levelAt(u.name) >= 2);
-    if (liveMode) {
-      const people = warnPlus.reduce((s, u) => s + u.props.pop, 0);
-      const reach = MODEL.units
-        .filter(u => levelAt(u.name) >= 1)
-        .reduce((s, u) => s + u.props.pop * 1000 * 0.11 * SIM.audiencesFor(levelAt(u.name)).length / 3, 0);
-      const el0 = $('#stat-units');
-      el0.textContent = String(warnPlus.length);
-      el0.style.color = warnPlus.length === 0 ? 'var(--lvl-0)'
-                      : warnPlus.length > 20 ? 'var(--lvl-3)' : 'var(--lvl-2)';
-      $('#stat-people').textContent = people >= 1 ? `${people.toFixed(1)}M` : `${Math.round(people * 1000)}k`;
-      $('#stat-sms').textContent = fmtCompact(Math.round(reach));
-      $('#stat-sms').closest('.stat').querySelector('.stat-lab').textContent = 'SMS if sent now';
-      return;
-    }
-    $('#stat-sms').closest('.stat').querySelector('.stat-lab').textContent = 'SMS sent to date';
-    const people = warnPlus.reduce((s, u) => s + u.props.pop, 0);
+    const live = MODEL.units.filter(u => hasData(u.name));
+    const crisis = live.filter(u => levelAt(u.name) >= 2);
+    $('#stat-units').textContent = `${crisis.length}`;
+    $('#stat-units').style.color = crisis.length === 0 ? 'var(--lvl-0)'
+      : crisis.length > live.length * 0.25 ? 'var(--lvl-3)' : 'var(--lvl-2)';
 
-    // Cumulative messages: one per subscriber reached, each time a county
-    // escalates. Rough, but it is the number that drives the cost model.
-    let sms = 0;
-    for (const e of MODEL.events) {
-      if (e.t > now || !e.escalation) continue;
-      sms += Math.round(e.people * 1000 * 0.11) * e.audiences.length / 3;
-    }
+    const alerts = liveMode ? crisis.length
+      : MODEL.events.filter(e => e.t === now && e.escalation).length;
+    $('#stat-alerts').textContent = String(alerts);
 
-    const u = $('#stat-units');
-    u.textContent = String(warnPlus.length);
-    u.style.color = warnPlus.length === 0 ? 'var(--lvl-0)'
-                  : warnPlus.length > 20 ? 'var(--lvl-3)' : 'var(--lvl-2)';
-
-    $('#stat-people').textContent = people >= 1 ? `${people.toFixed(1)}M` : `${Math.round(people * 1000)}k`;
-    $('#stat-sms').textContent = fmtCompact(Math.round(sms));
+    // One message per subscriber reached in each alerted unit. Rough, but it
+    // is the number that drives the cost model.
+    const reach = live
+      .filter(u => levelAt(u.name) >= 1)
+      .reduce((s, u) => s + 11000 * ENGINE.audiencesFor(levelAt(u.name)).length / 3, 0);
+    $('#stat-sms').textContent = fmt(Math.round(reach));
   }
+  const fmt = n => n >= 1e6 ? `${(n / 1e6).toFixed(1)}M`
+                 : n >= 1e3 ? `${(n / 1e3).toFixed(0)}k` : String(n);
 
-  function fmtCompact(n) {
-    if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-    if (n >= 1e3) return `${(n / 1e3).toFixed(0)}k`;
-    return String(n);
-  }
-
-  (function buildLegend() {
+  function buildLegend() {
     const ul = $('#legend-items');
-    SIM.LEVELS.forEach(L => {
+    ul.innerHTML = '';
+    ENGINE.LEVELS.forEach(L => {
       const li = el('li');
       li.dataset.level = L.n;
       const sw = el('span', 'sw', L.glyph);
       sw.style.background = L.color;
-      li.append(sw, el('span', 'n', `L${L.n}`), el('span', null, L.label), el('span', 'ct', '0'));
+      const code = L.ipc.split(' ')[1];                    // "1", "2", "4+"
+      li.append(sw, el('span', 'n', `P${code}`),
+                el('span', null, L.ipc.split(' ').slice(2).join(' ')),
+                el('span', 'ct', '0'));
       ul.append(li);
     });
-  })();
-
-  function updateLegendCounts() {
+  }
+  function updateLegend() {
     if (!MODEL) return;
-    const counts = [0, 0, 0, 0];
-    MODEL.units.forEach(u => counts[levelAt(u.name)]++);
+    const c = [0, 0, 0, 0];
+    MODEL.units.forEach(u => { if (hasData(u.name)) c[levelAt(u.name)]++; });
     [...$('#legend-items').children].forEach(li => {
-      li.querySelector('.ct').textContent = String(counts[+li.dataset.level]);
+      li.querySelector('.ct').textContent = String(c[+li.dataset.level]);
     });
   }
 
   // =========================================================================
-  //  Alert feed
+  //  Feed
   // =========================================================================
   const feedEl = $('#feed');
 
   function renderFeed({ rebuild }) {
+    if (liveMode) return renderLiveFeed();
     if (rebuild) { feedEl.innerHTML = ''; rendered = -1; }
-
     const due = MODEL.events.filter(e => e.t > rendered && e.t <= now);
-    // Newest first, so prepend in reverse.
     for (const e of due) feedEl.prepend(buildNote(e, !rebuild));
     rendered = now;
-
     const total = MODEL.events.filter(e => e.t <= now).length;
-    $('#feed-count').textContent = String(total);
     $('#feed-empty').hidden = total > 0;
-    if (total === 0) {
+    if (!total) {
       $('#feed-empty').innerHTML =
-        '<p>No alerts yet.</p><p class="muted">Press play, or drag the timeline forward.</p>';
+        '<p>No reclassifications yet.</p><p class="muted">Press play, or drag the timeline.</p>';
     }
-
-    // Keep the DOM bounded during a fast replay.
-    while (feedEl.children.length > 120) feedEl.lastChild.remove();
+    while (feedEl.children.length > 150) feedEl.lastChild.remove();
     if (!rebuild) feedEl.scrollTop = 0;
   }
 
-  // Renders the recommendation block: what is grown or herded here, what to
-  // do about it, and who can actually supply the resources.
-  function buildAdvice(rec, countyName) {
+  function buildNote(e, animate) {
+    const L = ENGINE.LEVELS[e.to];
+    const li = el('li', 'note' + (animate ? ' is-new' : '') + (e.escalation ? '' : ' deesc'));
+    li.style.setProperty('--lvl', L.color);
+
+    const top = el('div', 'n-top');
+    const chip = el('span', 'chip', `${L.glyph} ${L.ipc}`);
+    top.append(chip, el('span', 'n-county', e.unit));
+    top.append(el('span', 'n-date', ENGINE.dateAt(e.t).label));
+    li.append(top);
+
+    if (e.county && e.county !== e.unit) {
+      li.append(el('div', 'n-move', `${e.county} County`));
+    }
+    li.append(el('div', 'n-move',
+      e.escalation
+        ? `FEWS NET raised this area from Phase ${e.fromPhase} to Phase ${e.toPhase}`
+        : `FEWS NET lowered this area from Phase ${e.fromPhase} to Phase ${e.toPhase}`));
+
+    if (e.escalation) {
+      const ul = el('ul', 'n-drivers');
+      e.drivers.forEach(d => ul.append(el('li', null, d)));
+      li.append(ul);
+
+      li.append(buildAdvice(ADVICE.build(e.county, e.to, e.zones), e.to, e.unit));
+
+      const nf = el('div', 'n-notify');
+      nf.append(el('span', 'lab', 'Notify'));
+      e.audiences.forEach(a => nf.append(el('span', 'aud', ENGINE.AUDIENCES[a].label)));
+      li.append(nf);
+    } else {
+      li.append(el('div', 'n-line', 'Conditions improved. No new alerts sent.'));
+    }
+
+    li.addEventListener('click', () => {
+      if (!liveMode) setTime(e.t);
+      const f = featuresFor(resolution).find(x => x.properties.name === e.unit);
+      if (f) {
+        selected = f; smsAudience = null;
+        world.pointOfView({ lat: f.properties.lat, lng: f.properties.lng, altitude: 0.26 }, 900);
+        paintGlobe(); renderDetail();
+      }
+    });
+    return li;
+  }
+
+  // The recommendation block — role-aware.
+  function buildAdvice(rec, level, unitName) {
     const box = el('div', 'n-advice');
+    const def = ROLES.DEFS[role];
 
     const head = el('div', 'adv-head');
     head.append(el('span', 'adv-kind', rec.primary));
-    if (rec.zones.length) {
-      head.append(el('span', 'adv-zone', rec.zones[0]));
-    }
+    if (rec.zones.length) head.append(el('span', 'adv-zone', rec.zones[0]));
+    head.append(el('span', 'adv-role', def.label));
     box.append(head);
+
+    box.append(el('div', 'adv-lead', ROLES.headline(role, level, unitName)));
 
     if (rec.crops.length) {
       const r = el('div', 'adv-row');
@@ -456,11 +637,12 @@
       box.append(r);
     }
 
-    if (rec.actions.length) {
+    const steps = ROLES.steps(role, rec.kinds, level).slice(0, 4);
+    if (steps.length) {
       const r = el('div', 'adv-row');
-      r.append(el('span', 'adv-lab', 'Do now'));
+      r.append(el('span', 'adv-lab', 'Next steps'));
       const ul = el('ul', 'adv-actions');
-      rec.actions.forEach(a => ul.append(el('li', null, a)));
+      steps.forEach(a => ul.append(el('li', null, a)));
       r.append(ul);
       box.append(r);
     }
@@ -472,278 +654,33 @@
       rec.resources.forEach(res => {
         const d = el('div', 'res');
         const t = el('div', 'res-t');
-        t.append(el('span', 'res-n', res.name));
-        t.append(el('span', 'res-b', res.body));
-        d.append(t);
-        d.append(el('div', 'res-w', res.what));
+        t.append(el('span', 'res-n', res.name), el('span', 'res-b', res.body));
+        d.append(t, el('div', 'res-w', res.what));
         d.title = `Eligibility: ${res.who}`;
         list.append(d);
       });
       r.append(list);
       box.append(r);
     }
-
-    // Say where help does NOT reach. A planner needs the gap, not just the list.
     rec.gaps.forEach(g => box.append(el('div', 'adv-gap', g)));
     return box;
   }
 
-  function buildNote(e, animate) {
-    const L = SIM.LEVELS[e.to];
-    const li = el('li', 'note' + (animate ? ' is-new' : '') + (e.escalation ? '' : ' deesc'));
-    li.style.setProperty('--lvl', L.color);
-    li.dataset.county = e.county;
-    li.dataset.t = e.t;
-
-    const top = el('div', 'n-top');
-    const chip = el('span', 'chip', `${L.glyph} L${e.to} ${L.label.toUpperCase()}`);
-    top.append(chip, el('span', 'n-county', e.county));
-    top.append(el('span', 'n-date', e.live ? (e.asOf || 'current') : SIM.dateAt(e.t).label));
-    li.append(top);
-
-    li.append(el('div', 'n-move',
-      e.escalation
-        ? `escalated from L${e.from} ${SIM.LEVELS[e.from].label}`
-        : `stood down from L${e.from} ${SIM.LEVELS[e.from].label}`));
-
-    if (e.escalation) {
-      const line = el('div', 'n-line');
-      if (e.live) {
-        // Live mode carries no model probability — this is FEWS NET's own
-        // published classification, so we show that and their projection.
-        const IPCN = ['', 'Minimal', 'Stressed', 'Crisis', 'Emergency', 'Famine'];
-        line.innerHTML =
-          `<b>IPC Phase ${e.ipcPhase} ${IPCN[e.ipcPhase]}</b> as of <b>${e.asOf}</b>` +
-          (e.projection
-            ? ` · FEWS NET near-term projection <b>Phase ${e.projection} ${IPCN[e.projection]}</b>`
-            : '') +
-          ` · <b>${e.people.toFixed(2)}M</b> people`;
-      } else {
-        line.innerHTML =
-          `Shortage risk <b>${Math.round(e.p * 100)}%</b> at <b>${e.horizon} weeks</b> · ` +
-          `<b>${e.agreeing}/5</b> source families agree · confidence ${e.confidence} · ` +
-          `<b>${e.people.toFixed(2)}M</b> people`;
-      }
-      li.append(line);
-
-      const ul = el('ul', 'n-drivers');
-      e.drivers.forEach(d => ul.append(el('li', null, d)));
-      li.append(ul);
-
-      // --- Recommendations: the actionable half of the alert ---------------
-      if (e.advice) li.append(buildAdvice(e.advice, e.county));
-
-      const nf = el('div', 'n-notify');
-      nf.append(el('span', 'lab', 'Notify'));
-      e.audiences.forEach(a => nf.append(el('span', 'aud', SIM.AUDIENCES[a].label)));
-      li.append(nf);
-    } else {
-      li.append(el('div', 'n-line', 'Conditions improved. No new alerts sent.'));
-    }
-
-    li.addEventListener('click', () => {
-      if (!e.live) setTime(e.t);        // live cards have no month to jump to
-      const poly = KENYA_COUNTIES.features.find(f => f.properties.name === e.county);
-      if (poly) {
-        selected = poly;
-        smsAudience = null;
-        world.pointOfView(
-          { lat: poly.properties.lat, lng: poly.properties.lng, altitude: 0.55 }, 900);
-        paintGlobe();
-        renderDetail();
-      }
-    });
-
-    return li;
-  }
-
   // =========================================================================
-  //  County detail
+  //  Live mode
   // =========================================================================
-  const FAMILY_LABELS = {
-    weather: ['Rain', 'CHIRPS'],
-    eo: ['Crop', 'MODIS'],
-    market: ['Price', 'WFP'],
-    official: ['Official', 'ReliefWeb'],
-    crowd: ['Replies', 'SMS'],
+  // Live data is published at county level, so a sub-county inherits its
+  // parent county's current classification rather than inventing one.
+  const liveKey = name => {
+    if (resolution === 'county') return name;
+    const f = KENYA_SUBCOUNTIES.features.find(x => x.properties.name === name);
+    return f ? f.properties.county : name;
   };
-
-  function closeDetail() {
-    selected = null;
-    $('#detail').hidden = true;
-    paintGlobe();
+  function liveLevel(name) {
+    const e = LIVE && LIVE.current && LIVE.current[liveKey(name)];
+    return e ? (ENGINE.PHASE_TO_LEVEL[e.phase] ?? 0) : 0;
   }
 
-  // Shapes the live FEWS NET entry like a model row so the detail panel can
-  // render it without branching everywhere.
-  function liveRow(unit, entry) {
-    const phase = entry ? entry.phase : 1;
-    const level = IPC_TO_LEVEL[phase] ?? 0;
-    const proj = LIVE && LIVE.projection_ml1 && LIVE.projection_ml1[unit.name];
-    const NAMES = ['', 'Minimal', 'Stressed', 'Crisis', 'Emergency', 'Famine'];
-    return {
-      level, p: null, confidence: 'official', agreeing: null,
-      horizon: unit.props.aridity > 0.7 ? 8 : 10,
-      spi: 0, ndvi: 0, price: 0, crowd: 0,
-      annSev: phase >= 3 ? 2 : 0, ipcPhase: phase,
-      asOf: entry ? entry.as_of : null,
-      rainPct: 0,
-      families: { weather: false, eo: false, market: false, official: !!entry, crowd: false },
-      live: true,
-      projection: proj ? proj.phase : null,
-      drivers: [
-        `FEWS NET: IPC Phase ${phase} ${NAMES[phase]}${entry ? ` (${entry.as_of})` : ''}`,
-      ].concat(proj ? [`near-term projection: Phase ${proj.phase} ${NAMES[proj.phase]}`] : []),
-    };
-  }
-
-  function renderDetail() {
-    if (!selected) { $('#detail').hidden = true; return; }
-    const unit = byName.get(selected.properties.name);
-    // In live mode the panel must describe the real FEWS NET classification,
-    // not the replay model sitting at whatever month the slider last held.
-    const liveEntry = liveMode && LIVE && LIVE.current && LIVE.current[unit.name];
-    const row = liveMode
-      ? liveRow(unit, liveEntry)
-      : unit.series[now];
-    const L = SIM.LEVELS[row.level];
-    const auds = SIM.audiencesFor(row.level);
-    // Default to the farmer message. It is the one that shows the product is
-    // about a person with a feature phone, not a dashboard.
-    if (!smsAudience || !auds.includes(smsAudience)) {
-      smsAudience = auds.includes('farmer') ? 'farmer' : (auds[0] || null);
-    }
-
-    const d = $('#detail');
-    d.hidden = false;
-    d.innerHTML = '';
-
-    // --- header
-    const head = el('div', 'd-head');
-    const ht = el('div');
-    ht.append(el('h3', null, unit.name));
-    ht.append(el('div', 'sub',
-      (liveMode ? `FEWS NET ${row.asOf || 'current'}` : SIM.dateAt(now).label) +
-      ` · ${(unit.props.pop).toFixed(2)}M people`));
-    const chip = el('span', 'chip', `${L.glyph} L${row.level} ${L.label.toUpperCase()}`);
-    chip.style.background = L.color;
-    chip.style.alignSelf = 'center';
-    chip.style.marginLeft = 'auto';
-    const close = el('button', 'd-close', '×');
-    close.setAttribute('aria-label', 'Close');
-    close.addEventListener('click', closeDetail);
-    head.append(ht, chip, close);
-    d.append(head);
-
-    const body = el('div', 'd-body');
-
-    // --- headline numbers
-    const pm = el('div', 'd-pm');
-    if (row.live) {
-      const NAMES = ['', 'Minimal', 'Stressed', 'Crisis', 'Emergency', 'Famine'];
-      const big = el('span', 'big', `P${row.ipcPhase}`);
-      big.style.color = L.color;
-      const pwrap = el('div');
-      pwrap.append(big);
-      pwrap.append(el('div', 'unit', `IPC ${NAMES[row.ipcPhase]} — FEWS NET published classification`));
-      pm.append(pwrap);
-      if (row.projection) {
-        const cwrap = el('div');
-        cwrap.append(el('span', 'big', `P${row.projection}`));
-        cwrap.append(el('div', 'unit', 'their near-term projection'));
-        pm.append(cwrap);
-      }
-    } else {
-      const big = el('span', 'big', `${Math.round(row.p * 100)}%`);
-      big.style.color = L.color;
-      const pwrap = el('div');
-      pwrap.append(big);
-      pwrap.append(el('div', 'unit', `probability of shortage at ${row.horizon} weeks`));
-      const cwrap = el('div');
-      cwrap.append(el('span', 'big', `${row.agreeing}/5`));
-      cwrap.append(el('div', 'unit', `sources agree · ${row.confidence} confidence`));
-      pm.append(pwrap, cwrap);
-    }
-    body.append(pm);
-
-    // --- source agreement
-    const s1 = el('div', 'd-sect');
-    s1.hidden = !!row.live;
-    s1.append(el('span', 'd-lab', 'Source families'));
-    const fams = el('div', 'fams');
-    const vals = {
-      weather: `${row.spi.toFixed(1)}`,
-      eo: `${row.ndvi.toFixed(1)}`,
-      market: `${row.price > 0 ? '+' : ''}${Math.round(row.price)}%`,
-      official: row.annSev ? `sev ${row.annSev}` : '—',
-      crowd: `${Math.round(row.crowd * 100)}%`,
-    };
-    for (const [k, [short]] of Object.entries(FAMILY_LABELS)) {
-      const f = el('div', 'fam' + (row.families[k] ? ' hit' : ''));
-      f.append(el('span', 'fn', short), el('span', 'fv', vals[k]));
-      f.title = `${FAMILY_LABELS[k][1]} — ${row.families[k] ? 'anomalous' : 'within normal range'}`;
-      fams.append(f);
-    }
-    s1.append(fams);
-    body.append(s1);
-
-    // --- drivers
-    if (row.drivers.length) {
-      const s2 = el('div', 'd-sect');
-      s2.append(el('span', 'd-lab', 'Top drivers'));
-      const ul = el('ul', 'drivers');
-      row.drivers.forEach((t, i) => {
-        const li = el('li');
-        li.append(el('span', 'rank', `${i + 1}`), el('span', null, t));
-        ul.append(li);
-      });
-      s2.append(ul);
-      body.append(s2);
-    }
-
-    // --- Recommendations
-    if (row.level >= 1) {
-      const sr = el('div', 'd-sect');
-      sr.append(el('span', 'd-lab', 'Recommended response'));
-      sr.append(buildAdvice(ADVICE.build(unit.name, row.level), unit.name));
-      body.append(sr);
-    }
-
-    // --- SMS preview
-    const s3 = el('div', 'd-sect');
-    s3.append(el('span', 'd-lab',
-      auds.length ? 'Message each audience would receive' : 'No alert at this level'));
-
-    if (!auds.length) {
-      s3.append(el('div', 'sms', 'Level 0 — nobody is messaged. A monthly digest is optional.'));
-    } else {
-      const tabs = el('div', 'aud-tabs');
-      auds.forEach(a => {
-        const b = el('button', a === smsAudience ? 'on' : '', SIM.AUDIENCES[a].label);
-        b.addEventListener('click', () => { smsAudience = a; renderDetail(); });
-        tabs.append(b);
-      });
-      s3.append(tabs);
-
-      const text = SIM.composeSMS(unit.name, row, smsAudience);
-      s3.append(el('div', 'sms', text));
-
-      const segs = Math.ceil(text.length / 160);
-      const meta = el('div', 'sms-meta');
-      meta.append(el('span', null, `${text.length} chars · GSM-7`));
-      meta.append(el('span', segs > 1 ? 'over' : '', `${segs} segment${segs > 1 ? 's' : ''}`));
-      s3.append(meta);
-    }
-    body.append(s3);
-
-    d.append(body);
-  }
-
-  // =========================================================================
-  //  Live feed (FEWS NET current situation)
-  // =========================================================================
-  // Served by serve.py, which proxies fdw.fews.net (no CORS header of its own)
-  // and caches the reduced result. Falls back to the committed snapshot.
   async function loadLive({ force = false } = {}) {
     const btn = $('#live-toggle');
     btn.classList.add('loading');
@@ -751,154 +688,236 @@
       const r = await fetch('/api/live' + (force ? '?refresh=1' : ''));
       if (!r.ok) throw new Error(r.status);
       LIVE = await r.json();
-    } catch (err) {
-      LIVE = null;                       // serve.py not running, or offline
-    } finally {
+    } catch { LIVE = null; }
+    finally {
       btn.classList.remove('loading');
       renderLiveBar();
-      if (liveMode) paintGlobe();
+      if (liveMode) { paintGlobe(); renderMarkers(); updateStats(); updateLegend(); }
     }
     return LIVE;
   }
 
   function renderLiveBar() {
-    // The footer disclaimer must follow the mode. In live mode the numbers on
-    // screen are real FEWS NET classifications, and calling them simulated
-    // would be as wrong as the reverse.
     $('#disclaimer').textContent = liveMode
-      ? 'Live FEWS NET IPC classifications \u00b7 recommendations are ours \u00b7 prototype'
-      : 'Simulated risk model \u00b7 real FEWS NET official layer \u00b7 scripted to the 2020\u20132023 Horn of Africa drought';
+      ? 'Live FEWS NET classifications · recommendations are ours · prototype'
+      : 'All classifications from FEWS NET · recommendations are ours · prototype';
     const bar = $('#live-bar');
     if (!liveMode) { bar.hidden = true; return; }
     bar.hidden = false;
     if (!LIVE || !LIVE.n_counties) {
       bar.className = 'warn';
-      bar.innerHTML = '<b>Live feed unavailable.</b> Start the app with ' +
-        '<code>python3 serve.py</code> to proxy FEWS NET, or stay in replay mode.';
+      bar.innerHTML = '<b>Live feed unavailable.</b> Start with ' +
+        '<code>python3 serve.py</code> to proxy FEWS NET, or stay in replay.';
       return;
     }
     const n3 = Object.values(LIVE.current).filter(v => v.phase >= 3).length;
-    const stamp = LIVE.fetched_at
-      ? new Date(LIVE.fetched_at).toLocaleString()
-      : 'cached snapshot';
+    const stamp = LIVE.fetched_at ? new Date(LIVE.fetched_at).toLocaleString() : 'cached';
     bar.className = LIVE.stale ? 'warn' : '';
-    bar.innerHTML =
-      `<span class="dot"></span><b>FEWS NET live</b> · reporting period ` +
-      `<b>${LIVE.reporting_period || '—'}</b> · <b>${n3}</b> of ` +
-      `${LIVE.n_counties} counties at IPC Phase 3+ · fetched ${stamp}` +
-      (LIVE.refreshing ? ' · <i>refreshing…</i>' : '') +
-      (LIVE.stale ? ' · <b>STALE</b>' : '');
+    bar.innerHTML = `<span class="dot"></span><b>FEWS NET live</b> · period ` +
+      `<b>${LIVE.reporting_period || '—'}</b> · <b>${n3}</b> of ${LIVE.n_counties} ` +
+      `counties at IPC Phase 3+ · fetched ${stamp}` +
+      (LIVE.refreshing ? ' · <i>refreshing…</i>' : '') + (LIVE.stale ? ' · <b>STALE</b>' : '');
   }
 
-  // In live mode the globe shows the current real classification rather than
-  // the replayed model. IPC phase 1-5 maps onto our 0-3 ladder.
-  const IPC_TO_LEVEL = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 3 };
-  function liveLevel(countyName) {
-    const e = LIVE && LIVE.current && LIVE.current[countyName];
-    return e ? (IPC_TO_LEVEL[e.phase] ?? 0) : 0;
-  }
-
-  $('#live-toggle').addEventListener('click', async () => {
-    liveMode = !liveMode;
-    $('#live-toggle').classList.toggle('on', liveMode);
-    document.body.classList.toggle('live', liveMode);
-    $('#timeline').classList.toggle('disabled', liveMode);
-    if (liveMode) {
-      pause();
-      if (!LIVE) await loadLive();
-      renderLiveBar();
-      renderLiveFeed();
-    } else {
-      renderLiveBar();
-      renderFeed({ rebuild: true });
-    }
-    paintGlobe();
-    updateStats();
-    updateLegendCounts();
-    if (selected) renderDetail();
-  });
-
-  $('#live-refresh').addEventListener('click', async (ev) => {
-    ev.stopPropagation();
-    await loadLive({ force: true });
-    if (liveMode) { renderLiveFeed(); paintGlobe(); updateStats(); updateLegendCounts(); }
-  });
-
-  // The feed in live mode lists every county currently at Phase 2+, worst
-  // first, with the same recommendations attached.
   function renderLiveFeed() {
-    feedEl.innerHTML = '';
-    rendered = -1;
-    if (!LIVE || !LIVE.current) { $('#feed-count').textContent = '0'; return; }
+    feedEl.innerHTML = ''; rendered = -1;
+    if (!LIVE || !LIVE.current) { $('#feed-empty').hidden = false; return; }
+    const zonesOf = c => {
+      const u = MODEL && MODEL.byName.get(c);
+      return (u && u.zones) || [];
+    };
     const rows = Object.entries(LIVE.current)
-      .map(([county, v]) => ({ county, ...v, level: IPC_TO_LEVEL[v.phase] ?? 0 }))
+      .map(([unit, v]) => ({ unit, ...v, level: ENGINE.PHASE_TO_LEVEL[v.phase] ?? 0 }))
       .filter(r => r.level >= 1)
-      .sort((a, b) => b.phase - a.phase || a.county.localeCompare(b.county));
-
+      .sort((a, b) => b.phase - a.phase || a.unit.localeCompare(b.unit));
     for (const r of rows) {
-      const proj = LIVE.projection_ml1 && LIVE.projection_ml1[r.county];
+      const proj = LIVE.projection_ml1 && LIVE.projection_ml1[r.unit];
       feedEl.append(buildNote({
-        t: now, county: r.county, from: r.level, to: r.level,
-        escalation: true, live: true,
-        p: null, confidence: 'official', agreeing: null,
-        horizon: null, ipcPhase: r.phase, asOf: r.as_of,
+        t: now, unit: r.unit, county: r.unit,
+        from: r.level, to: r.level, fromPhase: r.phase, toPhase: r.phase,
+        escalation: true, period: r.as_of,
         projection: proj ? proj.phase : null,
-        drivers: [`FEWS NET Current Situation, ${r.as_of}`],
-        audiences: SIM.audiencesFor(r.level),
-        people: (byName.get(r.county)?.props.pop || 0) * 0.3,
-        advice: ADVICE.build(r.county, r.level),
+        zones: zonesOf(r.unit),
+        audiences: ENGINE.audiencesFor(r.level),
+        drivers: [
+          `FEWS NET Current Situation, published ${r.as_of}`,
+          proj ? `Their near-term projection: Phase ${proj.phase} ${ENGINE.PHASE_NAME[proj.phase]}`
+               : 'No near-term projection published for this unit',
+        ],
       }, false));
     }
-    $('#feed-count').textContent = String(rows.length);
     $('#feed-empty').hidden = rows.length > 0;
+  }
+
+  // =========================================================================
+  //  Detail panel
+  // =========================================================================
+  const closeDetail = () => { selected = null; $('#detail').hidden = true; paintGlobe(); };
+
+  function renderDetail() {
+    if (!selected) { $('#detail').hidden = true; return; }
+    const name = selected.properties.name;
+    const u = unitAt(name);
+    const county = selected.properties.county || name;
+    const zones = selected.properties.zones || (u && u.zones) || [];
+
+    const covered = hasData(name);
+    const level = levelAt(name);
+    const lk = liveKey(name);
+    const row = liveMode
+      ? { level,
+          phase: (LIVE && LIVE.current[lk] || {}).phase,
+          asOf: (LIVE && LIVE.current[lk] || {}).as_of,
+          projection: (LIVE && LIVE.projection_ml1 && LIVE.projection_ml1[lk])
+            ? LIVE.projection_ml1[lk].phase : null }
+      : (u ? u.series[now] : null);
+
+    const d = $('#detail');
+    d.hidden = false;
+    d.innerHTML = '';
+
+    const L = ENGINE.LEVELS[level];
+    const head = el('div', 'd-head');
+    const ht = el('div');
+    ht.append(el('h3', null, name));
+    ht.append(el('div', 'sub',
+      (county !== name ? `${county} County · ` : '') +
+      (covered ? `FEWS NET ${row.asOf || ENGINE.dateAt(now).label}` : 'no FEWS NET coverage')));
+    const chip = el('span', 'chip', covered ? `${L.glyph} ${L.ipc}` : '— no data');
+    chip.style.background = covered ? L.color : '#55555f';
+    chip.style.alignSelf = 'center';
+    chip.style.marginLeft = 'auto';
+    const close = el('button', 'd-close', '×');
+    close.addEventListener('click', closeDetail);
+    head.append(ht, chip, close);
+    d.append(head);
+
+    const body = el('div', 'd-body');
+
+    if (!covered) {
+      body.append(el('div', 'sms',
+        'FEWS NET does not publish a classification for this unit. We show no ' +
+        'colour rather than guessing one.'));
+      d.append(body);
+      return;
+    }
+
+    const pm = el('div', 'd-pm');
+    const big = el('span', 'big', `P${row.phase}`);
+    big.style.color = L.color;
+    const w1 = el('div');
+    w1.append(big, el('div', 'unit', `IPC ${ENGINE.PHASE_NAME[row.phase]} — FEWS NET published`));
+    pm.append(w1);
+    if (row.projection != null) {
+      const w2 = el('div');
+      const b2 = el('span', 'big', `P${row.projection}`);
+      b2.style.color = ENGINE.LEVELS[ENGINE.PHASE_TO_LEVEL[row.projection] ?? 0].color;
+      w2.append(b2, el('div', 'unit', 'their near-term projection'));
+      pm.append(w2);
+    }
+    body.append(pm);
+
+    if (zones.length) {
+      const s = el('div', 'd-sect');
+      s.append(el('span', 'd-lab', 'FEWS NET livelihood zones'));
+      const w = el('div', 'adv-chips');
+      zones.forEach(z => w.append(el('span', 'crop', z)));
+      s.append(w);
+      body.append(s);
+    }
+
+    if (level >= 1) {
+      const s = el('div', 'd-sect');
+      s.append(el('span', 'd-lab', `Recommended response · ${ROLES.DEFS[role].label}`));
+      s.append(buildAdvice(ADVICE.build(county, level, zones), level, name));
+      body.append(s);
+    }
+
+    const auds = ENGINE.audiencesFor(level);
+    if (!smsAudience || !auds.includes(smsAudience)) {
+      smsAudience = auds.includes('farmer') ? 'farmer' : (auds[0] || null);
+    }
+    const s3 = el('div', 'd-sect');
+    s3.append(el('span', 'd-lab', auds.length ? 'Message each audience receives' : 'No alert at this level'));
+    if (!auds.length) {
+      s3.append(el('div', 'sms', 'IPC Phase 1 — nobody is messaged. A monthly digest is optional.'));
+    } else {
+      const tabs = el('div', 'aud-tabs');
+      auds.forEach(a => {
+        const b = el('button', a === smsAudience ? 'on' : '', ENGINE.AUDIENCES[a].label);
+        b.addEventListener('click', () => { smsAudience = a; renderDetail(); });
+        tabs.append(b);
+      });
+      s3.append(tabs);
+      const text = ENGINE.composeSMS(name, row, smsAudience,
+        ADVICE.shortAction(county, level, zones));
+      s3.append(el('div', 'sms', text));
+      const segs = Math.ceil(text.length / 160);
+      const meta = el('div', 'sms-meta');
+      meta.append(el('span', null, `${text.length} chars · GSM-7`));
+      meta.append(el('span', segs > 1 ? 'over' : '', `${segs} segment${segs > 1 ? 's' : ''}`));
+      s3.append(meta);
+    }
+    body.append(s3);
+    d.append(body);
   }
 
   // =========================================================================
   //  Boot
   // =========================================================================
+  $('#role-badge').addEventListener('click', () => {
+    $('#login').hidden = false;
+    requestAnimationFrame(() => $('#login').classList.remove('gone'));
+  });
+
   async function boot() {
-    let fews = { phases: {}, months: [] };
+    buildRolePicker();
+    buildLegend();
+
     let lhz = { zones: {} };
     try {
-      [fews, lhz] = await Promise.all([
-        fetch('data/fews-ipc-kenya.json').then(r => r.json()),
+      [TIMELINE, lhz] = await Promise.all([
+        fetch('data/fews-timeline.json').then(r => r.json()),
         fetch('data/kenya-livelihoods.json').then(r => r.json()),
       ]);
     } catch (err) {
-      console.error('FEWS NET data failed to load; official source family will be empty.', err);
+      console.error('FEWS NET data failed to load.', err);
+      $('#login-card').insertAdjacentHTML('beforeend',
+        '<p class="login-note" style="color:#ffd43b">Data failed to load. ' +
+        'Serve over HTTP with <code>python3 serve.py</code>.</p>');
+      return;
     }
-
     ADVICE.init(lhz);
-    MODEL = SIM.build(KENYA_COUNTIES.features, fews);
-    byName = new Map(MODEL.units.map(u => [u.name, u]));
-
-    buildSpark();
-    setTime(0);
-    loadLive();                       // warm it, but never block the UI
 
     const qs = new URLSearchParams(location.search);
-    const qCountry = qs.get('country');
-    if (qCountry && COUNTRIES.some(c => c.name.toLowerCase() === qCountry.toLowerCase())) {
-      const match = COUNTRIES.find(c => c.name.toLowerCase() === qCountry.toLowerCase());
-      selectCountry(match.name);
-      const qt = parseInt(qs.get('t'), 10);
-      if (Number.isFinite(qt)) setTime(qt, { rebuild: true });
-      const qCounty = qs.get('county');
-      if (qCounty && byName.has(qCounty)) {
-        selected = KENYA_COUNTIES.features.find(f => f.properties.name === qCounty);
-        smsAudience = null;
-        paintGlobe();
-        renderDetail();
-      }
-    } else {
-      searchInput.focus();
-    }
+    const qr = qs.get('role');
+    setRole(ROLES.DEFS[qr] ? qr : 'ngo', !!ROLES.DEFS[qr]);
 
-    // ?live=1 opens straight into the FEWS NET current situation.
-    if (qs.get('live') === '1') {
-      await loadLive();
-      $('#live-toggle').click();
+    const c = qs.get('country');
+    if (c && COUNTRIES.some(x => x.name.toLowerCase() === c.toLowerCase())) {
+      $('#login').hidden = true;
+      selectCountry(COUNTRIES.find(x => x.name.toLowerCase() === c.toLowerCase()).name);
+      if (qs.get('res')) applyResolution(qs.get('res'));
+      const t = parseInt(qs.get('t'), 10);
+      setTime(Number.isFinite(t) ? t : 0, { rebuild: true });
+      const unit = qs.get('unit');
+      if (unit) {
+        const f = featuresFor(resolution).find(x => x.properties.name === unit);
+        if (f) { selected = f; paintGlobe(); renderDetail(); }
+      }
+      if (qs.get('live') === '1') { await loadLive(); $('#live-toggle').click(); }
+
+      const tip = qs.get('tip');
+      if (tip) {
+        setTimeout(() => {
+          const pick = tip === '1'
+            ? [...markerEls.values()].sort((a, b) => b.d.level - a.d.level)[0]
+            : markerEls.get(tip);
+          if (pick) showTip(pick.d, pick.el);
+        }, 900);
+      }
     }
+    loadLive();
   }
 
   boot();

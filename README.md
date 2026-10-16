@@ -1,12 +1,13 @@
 # SMS Shortage Early Warning — prototype
 
-A clickable MVP of the dashboard half of the pitch: a globe you search, counties
-that change colour as a drought develops, an alert feed that says who to tell,
-and a timeline you can scrub across six years.
+A clickable MVP: a searchable globe of Kenya at **sub-county resolution**, every
+area coloured by its **real FEWS NET IPC classification**, an alert feed that
+says who to tell and what to do, and a timeline that steps through real FEWS NET
+releases.
 
-The country is **Kenya** (47 counties). The replay is scripted to the real
-**2020–2023 Horn of Africa drought** — five consecutive failed rainy seasons and
-the national drought disaster declaration of 8 September 2021.
+**No data is simulated.** Every phase on screen is a published FEWS NET
+classification from the FEWS NET Data Warehouse. The recommendations and the
+SMS wording are ours; the classifications are not.
 
 ## Run it
 
@@ -14,55 +15,70 @@ the national drought disaster declaration of 8 September 2021.
 python3 serve.py
 ```
 
-Then open <http://localhost:8777>.
+Then open <http://localhost:8777>. Use `serve.py`, not `python3 -m http.server` —
+it also proxies the FEWS NET live feed.
 
-Use `serve.py`, not `python3 -m http.server` — it also proxies the FEWS NET
-live feed (see below). It must be served over HTTP, not opened as a `file://`
-path, or the browser blocks the data loads.
+## What you get
 
-**The replay works with no network.** `globe.gl`, both earth textures and all
-FEWS NET data are vendored or cached locally. Only the Live toggle needs the
-internet, and it degrades to the cached snapshot if offline.
+| | |
+|---|---|
+| **Resolution** | 290 sub-counties (288 with FEWS NET data), or 47 counties |
+| **Timeline** | 18 real FEWS NET releases, Feb 2019 → Oct 2024 |
+| **Observations** | 5,184 published IPC classifications |
+| **Projections** | 19,584 of FEWS NET's own near-term forecasts |
+| **Events** | 500 real reclassifications |
+| **Live mode** | Current FEWS NET situation, re-pullable on demand |
 
-## Two modes
+## Sign in as a role
 
-**Replay** (default) — the six-year scripted drought, driven by the timeline.
+The app opens on a role picker — **Food bank / NGO** or **Government entity**.
+This is not authentication; it decides which decision you are being helped with,
+and the recommendations are genuinely different, not relabelled:
 
-**Live** — press the `Live` button top-left. The globe switches to FEWS NET's
-*current* published IPC classification for all 47 counties, with their own
-near-term projection alongside. The timeline greys out because it no longer
-drives anything.
+| | Food bank / NGO | Government entity |
+|---|---|---|
+| Framing | "Buy and pre-position for Mwingi West this month, before the price peak." | "Mwingi West has crossed the reserve-release threshold." |
+| Levers | procurement timing, branch stock, cash vs food, distribution | NCPB reserve release, duty waivers, declarations, extension deployment |
+| At Emergency | "needs relief distribution now, not procurement" | "a declaration decision is live" |
 
-As of the last pull, 8 counties sit at IPC Phase 3 Crisis: Turkana, Marsabit,
-Mandera, Wajir, Garissa, Isiolo, Samburu and Tana River — which are exactly the
-eight HSNP counties, so every one of them gets a cash-transfer recommendation
-it is actually eligible for.
+Switch role any time from the badge in the feed header.
+
+## The pulsing markers
+
+Areas at IPC Phase 3+ get a pulsing marker — red and blinking at Phase 4+.
+Hover one and a card appears above it with:
+
+- what crops or livestock are at risk, from that area's real FEWS NET
+  livelihood zones
+- the next steps **for your role**
+- which real body can act (NDMA, NCPB, KALRO, HSNP, Kenya Red Cross, WFP)
+- where help does **not** reach — e.g. counties outside the 8 HSNP counties are
+  told so explicitly rather than offered a service they cannot get
+
+Markers cap at 22 so the map stays legible; the overflow count is shown rather
+than silently dropped.
 
 ## Demo script
 
-1. **Open on the spinning globe.** Search box is focused, the country list is
-   already open. Kenya is marked `LIVE`; everything else says `NO COVERAGE`.
-2. **Type Kenya, hit enter.** Camera flies in, 47 counties appear, all green.
-   "Every county is normal. This is October 2019."
-3. **Press play** (or `space`). Watch 2020 stay calm, then the arid north and
-   east turn yellow in early 2021 as the short rains fail.
-4. **Let it run to late 2021.** Counties jump to red. In the feed you can see
-   `FEWS NET: IPC Phase 3 Crisis` appear as a *driver* — the official source
-   confirming what the satellite and price signals already showed months
-   earlier. That gap is the product.
-5. **Pause at the peak (Nov 2022).** 23 Warning + 24 Emergency, 47.8M people.
-6. **Read a notification properly.** Not just the risk level: what crops or
-   livestock are at risk in that specific county, what to do this week, and
-   which real programme pays for it. A pastoral county is told to destock; a
-   highland county is told to hold the surplus. Different advice, same engine.
-7. **Click a red county, then the Farmers tab.** One GSM-7 segment, an action
-   not a probability, matched to that county's livelihood. Turkana gets "Water
-   and feed breeding stock only"; Kitui gets "Plant green gram or cowpea".
-8. **Scrub to 2024.** Everything green again. The system stands down.
+1. **Sign in** as Food bank / NGO.
+2. **Type Kenya, hit enter.** The camera flies in and 290 sub-counties appear,
+   coloured by FEWS NET's February 2019 classification.
+3. **Press play** (or `space`). Each step is a real FEWS NET release. Watch the
+   arid north and east deteriorate through 2021 into 2022.
+4. **Stop at Oct 2022** — the peak. 54 sub-counties at Crisis+, 11 at Emergency.
+   Pulsing markers mark them; the red blinking ones are IPC Phase 4.
+5. **Hover a marker.** A card appears above it: what is at risk there, your next
+   steps, and who can act. Point out the gap line — "no HSNP coverage in this
+   county" — because knowing where help does *not* reach is the useful part.
+6. **Switch role to Government entity** from the badge. Same alert, same data,
+   completely different decision: reserve release and declaration, not
+   procurement.
+7. **Flip to County resolution** and back, to show the 6x jump in granularity.
+8. **Click a sub-county.** FEWS NET's published phase, their own near-term
+   projection, the livelihood zones, and the SMS each audience receives —
+   one GSM-7 segment.
 9. **Press `Live`.** The globe drops the replay and shows FEWS NET's current
-   published classification for all 47 counties, with their own near-term
-   projection. Eight counties are in Crisis today, and all eight are HSNP
-   counties, so each gets a cash transfer it is genuinely eligible for.
+   published classification, with their projection alongside.
 
 ### Controls
 
@@ -106,32 +122,38 @@ If dragging the slider in front of an audience goes wrong, reload straight into
 a moment:
 
 ```
-?country=Kenya&t=26                      # Mar 2021, drought spreading
-?country=Kenya&t=33&county=Marsabit      # Oct 2021, just after the declaration
-?country=Kenya&t=48&county=Turkana       # Jan 2023, peak crisis
+?country=Kenya&role=ngo&t=11&tip=1       # Oct 2022 peak, NGO view, card open
+?country=Kenya&role=gov&t=11&tip=1       # same moment, government view
+?country=Kenya&res=county&t=11           # county resolution instead
 ?country=Kenya&live=1                    # straight into the live FEWS NET feed
 ```
 
-`t` is a month index, 0 = Jan 2019, 71 = Dec 2024.
+`t` is an index into the 18 real FEWS NET releases (0 = Feb 2019, 17 = Oct 2024).
+`tip=1` opens the hover card on the worst-affected area without needing a mouse —
+stage insurance. `tip=<Sub-county>` opens a specific one.
 
 ## What is real and what is not
 
 | Part | Status |
 |---|---|
-| County boundaries | **Real.** geoBoundaries gbOpen KEN ADM1 (RCMRD / Africa GeoPortal), public domain, simplified for the browser |
-| County populations | **Real**, 2019 census, rounded |
-| Aridity / cropland split | **Real-ish.** Follows Kenya's standard ASAL vs high-potential classification |
-| Sequence of failed rainy seasons | **Real.** The 2019–2024 season-by-season record |
-| Sept 2021 disaster declaration | **Real event**, real date |
-| FEWS NET IPC phases (official source family) | **Real.** 846 county-month observations, 2019-2024, from fdw.fews.net |
-| Livelihood zones per county | **Real.** FEWS NET classification, 24 zones across 47 counties |
-| HSNP county eligibility | **Real.** The published 8-county list |
-| Rainfall, NDVI, prices, the risk score | **Simulated.** Generated in `js/sim.js` |
-| Crop lists and action text | **Ours.** Grounded in the real zone, but written by us |
-| SMS text | Generated from the templates in the spec |
+| Every IPC phase on screen | **Real.** FEWS NET Data Warehouse, Current Situation scenario |
+| The projections shown beside them | **Real.** FEWS NET's own ML1 near-term forecast |
+| Sub-county boundaries | **Real.** geoBoundaries gbOpen KEN ADM2 (IEBC / OCHA ROSEA), CC BY 3.0 IGO |
+| County boundaries | **Real.** geoBoundaries gbOpen KEN ADM1, public domain |
+| Livelihood zones | **Real.** FEWS NET classification, 24 zones |
+| HSNP eligibility | **Real.** The published 8-county list |
+| Crop and livestock lists per zone | **Ours.** Mapped from the real zone, written by us |
+| Next steps and role framing | **Ours.** Written by us, grounded in real Kenyan programmes |
+| SMS wording | **Ours.** |
 
-The disclaimer is on screen at all times. Do not let anyone leave the room
-thinking the probabilities are measured.
+Nothing is simulated, smoothed or interpolated. A unit holds its last published
+classification until FEWS NET publishes the next one, and units FEWS NET does
+not cover are drawn grey rather than guessed.
+
+**Two caveats worth stating on stage.** The crop lists and action wording are
+ours, written from general knowledge of Kenyan agriculture — the livelihood zone
+they hang off is real, the specific crop list is our mapping. And 2 of 290
+sub-counties (Kilimani, Nithi) have no FEWS NET match and show as no-data.
 
 ## Layout of the code
 

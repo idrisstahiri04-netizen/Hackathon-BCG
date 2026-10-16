@@ -578,3 +578,218 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* The live bar occupies the strip the detail panel normally starts in. */
 body.live #detail { top: 118px; max-height: calc(100% - 212px); }
 body.live #hud { top: 118px; }
+
+/* ===========================================================================
+   Role login, resolution switch, pulsing markers, hover card
+   =========================================================================== */
+
+#login {
+  position: fixed; inset: 0; z-index: 200;
+  display: grid; place-items: center;
+  background: radial-gradient(900px 600px at 50% 40%, #16233a 0%, #0b0e17 55%, #07070a 100%);
+  transition: opacity .35s ease, visibility .35s;
+}
+#login.gone { opacity: 0; visibility: hidden; }
+
+#login-card {
+  width: min(680px, calc(100vw - 48px));
+  padding: 34px 36px 26px;
+  background: rgba(26,26,25,.92);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 32px 90px rgba(0,0,0,.6);
+}
+#login-brand { display: flex; align-items: center; gap: 13px; margin-bottom: 28px; }
+#login-brand h1 { margin: 0 0 3px; font-size: 20px; font-weight: 650; letter-spacing: -.01em; }
+#login-brand p  { margin: 0; font-size: 12.5px; color: var(--text-muted); }
+#login-brand .pip {
+  width: 11px; height: 11px; border-radius: 50%; flex: none;
+  background: var(--lvl-3); box-shadow: 0 0 0 5px rgba(208,59,59,.18);
+  animation: pulse 1.7s ease-in-out infinite;
+}
+.login-q {
+  margin: 0 0 13px; font-size: 11px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-muted);
+}
+#role-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.role-opt {
+  display: grid; gap: 5px; text-align: left;
+  padding: 18px 18px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 12px;
+  transition: border-color .15s, background .15s, transform .12s;
+}
+.role-opt:hover {
+  border-color: var(--accent); background: var(--surface-3);
+  transform: translateY(-2px);
+}
+.role-opt svg {
+  width: 26px; height: 26px; margin-bottom: 7px;
+  fill: none; stroke: var(--accent); stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.role-opt .ro-l { font-size: 15.5px; font-weight: 620; color: var(--text-primary); }
+.role-opt .ro-b { font-size: 12px; color: var(--text-secondary); }
+.role-opt .ro-q {
+  margin-top: 7px; padding-top: 8px; border-top: 1px solid var(--line);
+  font-size: 11.5px; font-style: italic; color: var(--text-muted);
+}
+.login-note { margin: 20px 0 0; font-size: 11.5px; color: var(--text-muted); }
+.login-note code {
+  font: 11px var(--mono); background: var(--surface-3);
+  padding: 1px 5px; border-radius: 4px;
+}
+
+/* --- Role badge in the feed header --------------------------------------- */
+#role-badge {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 11px; border-radius: 20px;
+  background: var(--surface-3); border: 1px solid var(--line);
+  color: var(--text-secondary); font-size: 11.5px;
+}
+#role-badge:hover { border-color: var(--accent); color: var(--text-primary); }
+#role-badge svg {
+  width: 14px; height: 14px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+#role-badge[data-role="gov"] { color: #c9b6ff; }
+#role-badge[data-role="ngo"] { color: #8fc0ff; }
+
+/* --- Resolution switch ---------------------------------------------------- */
+#res {
+  position: absolute; top: 20px; left: 490px; z-index: 20;
+  display: flex; gap: 3px; padding: 4px;
+  background: rgba(26,26,25,.88); backdrop-filter: blur(14px);
+  border: 1px solid var(--line); border-radius: var(--radius);
+}
+#res button {
+  padding: 7px 12px; border-radius: 7px; border: 0;
+  background: none; color: var(--text-muted); font-size: 12.5px;
+}
+#res button:hover { color: var(--text-primary); }
+#res button.on { background: var(--surface-3); color: var(--text-primary); }
+
+/* --- Pulsing alert markers ------------------------------------------------ */
+.mk {
+  position: relative; width: 0; height: 0;
+  pointer-events: auto; cursor: pointer;
+}
+.mk .mk-dot, .mk .mk-ring {
+  position: absolute; border-radius: 50%;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+}
+.mk .mk-dot {
+  width: 15px; height: 15px;
+  background: #ec833a;
+  border: 2.5px solid rgba(255,255,255,.95);
+  box-shadow: 0 0 16px 4px rgba(236,131,58,.85);
+  transition: transform .12s;
+}
+.mk .mk-ring {
+  width: 15px; height: 15px;
+  border: 2.5px solid #ec833a;
+  animation: mk-pulse 1.9s cubic-bezier(.2,.6,.3,1) infinite;
+}
+.mk.lvl-3 .mk-dot {
+  width: 17px; height: 17px;
+  background: #ff3b3b;
+  box-shadow: 0 0 22px 6px rgba(255,59,59,.95);
+  animation: mk-blink 1s steps(1, end) infinite;
+}
+.mk.lvl-3 .mk-ring {
+  width: 17px; height: 17px;
+  border-color: #ff3b3b; animation-duration: 1.35s;
+}
+.mk:hover .mk-dot { transform: translate(-50%, -50%) scale(1.45); }
+
+@keyframes mk-pulse {
+  0%   { width: 15px; height: 15px; opacity: .95; }
+  100% { width: 64px; height: 64px; opacity: 0; }
+}
+@keyframes mk-blink { 50% { opacity: .35; } }
+
+#marker-overflow {
+  position: absolute; right: 20px; bottom: 42px; z-index: 11;
+  font-size: 11px; color: var(--text-muted);
+  background: rgba(14,14,13,.78); padding: 4px 9px; border-radius: 5px;
+  pointer-events: none;
+}
+
+/* --- Marker hover card ---------------------------------------------------- */
+#marker-tip {
+  position: absolute; z-index: 60; width: 330px;
+  padding: 12px 13px;
+  background: rgba(18,18,17,.97);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--lvl);
+  border-radius: 11px;
+  box-shadow: 0 20px 56px rgba(0,0,0,.72);
+  pointer-events: none;
+  animation: tip-in .14s ease-out;
+}
+@keyframes tip-in { from { opacity: 0; transform: translateY(5px); } }
+#marker-tip::after {
+  content: ""; position: absolute; left: var(--arrow, 50%);
+  margin-left: -7px; border: 7px solid transparent;
+}
+#marker-tip:not(.below)::after { bottom: -14px; border-top-color: rgba(18,18,17,.97); }
+#marker-tip.below::after      { top: -14px;   border-bottom-color: rgba(18,18,17,.97); }
+
+.tip-head { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; flex-wrap: wrap; }
+.tip-name { font-size: 14px; font-weight: 640; }
+.tip-sub  { font-size: 11px; color: var(--text-muted); }
+.tip-lead {
+  font-size: 12.5px; line-height: 1.45; color: var(--text-primary);
+  padding-bottom: 9px; margin-bottom: 9px; border-bottom: 1px solid var(--line);
+}
+.tip-lab {
+  display: block; margin-bottom: 5px;
+  font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.tip-crops { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 9px; }
+.tip-crops .tip-lab { width: 100%; margin-bottom: 3px; }
+.tip-steps { margin-bottom: 9px; }
+.tip-steps ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+.tip-steps li {
+  position: relative; padding-left: 13px;
+  font-size: 11.5px; line-height: 1.45; color: var(--text-secondary);
+}
+.tip-steps li::before {
+  content: "→"; position: absolute; left: 0; top: 0;
+  color: var(--accent); font-size: 10px;
+}
+.tip-res { display: flex; flex-wrap: wrap; gap: 4px; }
+.tip-res .tip-lab { width: 100%; }
+.res-pill {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 3px 8px; border-radius: 20px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  font-size: 10.5px; color: var(--text-secondary);
+}
+.res-pill b { font: 600 9px var(--mono); color: var(--text-muted); letter-spacing: .04em; }
+.tip-gap {
+  margin-top: 8px; padding: 6px 8px; border-radius: 6px;
+  font-size: 10.5px; line-height: 1.4;
+  background: rgba(255,212,59,.09); border: 1px solid rgba(255,212,59,.28);
+  color: #ffe08a;
+}
+
+/* --- Role tint on the recommendation block -------------------------------- */
+.adv-role {
+  margin-left: auto; padding: 2.5px 7px; border-radius: 4px;
+  font-size: 9.5px; letter-spacing: .05em;
+  background: var(--surface-3); color: var(--text-muted);
+}
+.adv-lead {
+  font-size: 12px; line-height: 1.45; color: var(--text-primary);
+  margin-bottom: 9px;
+}
+body[data-role="gov"] .n-advice {
+  background: rgba(144,133,233,.07);
+  border-color: rgba(144,133,233,.26);
+}
+body[data-role="gov"] .adv-kind { color: #c9b6ff; background: rgba(144,133,233,.2); }
+body[data-role="gov"] .adv-actions li::before,
+body[data-role="gov"] .tip-steps li::before { color: #9085e9; }

@@ -4,9 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SMS Shortage Early Warning</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/live.css">
 </head>
-<body class="viz-root">
+<body class="viz-root has-tabs">
+
+<!-- ===== Top tabs (js/live.js). "Map" is the globe; the rest talk to the
+     SMS backend on localhost:8000 and say "backend offline" if it is down. ===== -->
+<nav id="tabs" role="tablist" aria-label="Views">
+  <button role="tab" data-page="map" class="on" aria-selected="true">Map</button>
+  <button role="tab" data-page="alerts" aria-selected="false">Alert feed <span class="tab-badge" id="badge-alerts" hidden>0</span></button>
+  <button role="tab" data-page="users" aria-selected="false">Users joining</button>
+  <button role="tab" data-page="phone" aria-selected="false">Phone</button>
+  <span id="be-status" title="SMS backend status"><i class="dot"></i><span class="be-lab">backend …</span></span>
+</nav>
 
 <main id="stage">
 
@@ -29,8 +41,8 @@
     <!-- Country readout -->
     <header id="hud" hidden>
       <div id="hud-country">
-        <h1 id="hud-name">Kenya</h1>
-        <span id="hud-sub">47 counties · pilot country</span>
+        <h1 id="hud-name"></h1>
+        <span id="hud-sub"></span>
       </div>
       <div id="hud-stats">
         <div class="stat">
@@ -101,6 +113,8 @@
     <span id="clock-sub">month 1 of 72</span>
   </div>
 
+  <button id="run-alerts" type="button" hidden title="Create SMS alert events for this month (POST /alerts/run)">Run alerts for this month</button>
+
   <div id="speeds" role="group" aria-label="Playback speed">
     <button data-speed="1" class="on">1×</button>
     <button data-speed="2">2×</button>
@@ -110,13 +124,75 @@
 
 <div id="disclaimer" hidden></div>
 
+<!-- ===== Live SMS pages (js/live.js) ===== -->
+<section class="live-page" id="page-alerts" role="tabpanel" hidden>
+  <header class="lp-head">
+    <div><h2>Alert feed</h2><span class="lp-sub">Risk events from the model. Warning and above wait for a human to approve before any SMS goes out.</span></div>
+    <span class="lp-count" id="alerts-count">0</span>
+  </header>
+  <div class="lp-offline" hidden>Backend offline. Start it on localhost:8000; the map still works.</div>
+  <div class="lp-empty" id="alerts-empty">No alert events yet. On the Map, open a live country, pick a month and press <b>Run alerts for this month</b>.</div>
+  <ol id="alerts-list" class="lp-list" aria-live="polite"></ol>
+</section>
+
+<section class="live-page" id="page-users" role="tabpanel" hidden>
+  <header class="lp-head">
+    <div><h2>Users joining by SMS</h2><span class="lp-sub">People text the number in their own words. Claude reads it and saves district, role and language.</span></div>
+  </header>
+  <div class="lp-offline" hidden>Backend offline. Start it on localhost:8000; the map still works.</div>
+  <div id="counters">
+    <div class="ctr big"><span class="ctr-val" id="ctr-total">0</span><span class="ctr-lab">subscribers</span></div>
+    <div class="ctr"><span class="ctr-val" id="ctr-today">0</span><span class="ctr-lab">joined today</span></div>
+    <div class="ctr-roles" id="ctr-roles"></div>
+  </div>
+  <div class="tbl-wrap">
+    <table id="join-table">
+      <thead><tr><th>Time</th><th>SMS received</th><th>Claude understood</th><th>Saved as</th></tr></thead>
+      <tbody id="join-body"></tbody>
+    </table>
+    <div class="lp-empty" id="users-empty">Waiting for the first SMS. Text <b>JOIN Mbire farmer</b> to the demo phone, or use the Phone tab.</div>
+  </div>
+</section>
+
+<section class="live-page" id="page-phone" role="tabpanel" hidden>
+  <header class="lp-head">
+    <div><h2>Phone simulator</h2><span class="lp-sub">Backup for the real Android phone. Messages go through the same router (POST /sim/inbound).</span></div>
+  </header>
+  <div class="lp-offline" hidden>Backend offline. Start it on localhost:8000; the map still works.</div>
+  <div id="phone-wrap">
+    <div id="phone">
+      <div class="ph-top">
+        <label for="ph-number">From</label>
+        <input id="ph-number" type="tel" value="+263770000001" autocomplete="off" spellcheck="false">
+        <button id="ph-new" type="button" title="New random number">New</button>
+      </div>
+      <div id="ph-thread" aria-live="polite"><div class="ph-hint">Try: JOIN Mbire farmer · 2 · STOP</div></div>
+      <form id="ph-form">
+        <input id="ph-text" type="text" maxlength="160" autocomplete="off" placeholder="Type an SMS…" aria-label="SMS text">
+        <span id="ph-len">0/160</span>
+        <button id="ph-send" type="submit">Send</button>
+      </form>
+    </div>
+    <div class="ph-quick" id="ph-quick">
+      <span class="d-lab">Quick messages</span>
+      <button type="button">JOIN Mbire farmer</button>
+      <button type="button">Ndiri murimi ku Binga</button>
+      <button type="button">JOIN Gwanda herder</button>
+      <button type="button">2</button>
+      <button type="button">What should I plant?</button>
+      <button type="button">We need food help</button>
+      <button type="button">STOP</button>
+    </div>
+  </div>
+</section>
+
 <script src="vendor/globe.gl.min.js"></script>
-<script src="data/kenya-counties.js"></script>
-<script src="js/sim.js"></script>
 <script src="js/real.js"></script>
+<script src="js/live.js"></script>
 <script>
-  // Load geometry + risk output per country, then start the app. A missing
-  // file just means that country is not live (Kenya then falls back to SIM).
+  // Load geometry + risk output per country, then start the app. A country
+  // is live only with real model output (meta.model_version != "STUB");
+  // otherwise it is listed as "data in progress". No simulated data is used.
   (function () {
     var ISO3 = ['ZWE', 'KEN', 'MWI', 'ZMB'];
     var files = [];

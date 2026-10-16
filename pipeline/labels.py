@@ -44,24 +44,40 @@ def event_outcome(w: pd.DataFrame, event: str, months: list) -> float:
     raise ValueError(event)
 
 
+def _outcome_np(a: dict, e: str, i0: int, n: int) -> float:
+    """Fast path of event_outcome on numpy arrays (same rules)."""
+    if e in ("crop_failure", "no_grass"):
+        v = a["vci_crop" if e == "crop_failure" else "vci_grass"][i0:i0 + n]
+        v = v[~np.isnan(v)]
+        return np.nan if v.size == 0 else float(v.min() < VCI_T)
+    s1, sm = a["spi_1m"][i0:i0 + n], a["sm1_z"][i0:i0 + n]
+    ok = ~np.isnan(s1) & ~np.isnan(sm)
+    return np.nan if not ok.any() else float(((s1[ok] < -1) & (sm[ok] < -1)).any())
+
+
 def build_targets(c: Country, seasons: dict | None = None) -> pd.DataFrame:
     """One row per (unit, season instance, event) with window start W0 and label."""
     seasons = seasons or unit_seasons(c)
     months = c.wide.index.get_level_values("month")
-    y0, y1 = months.min().year, months.max().year
+    m0, m1 = months.min(), months.max()
+    y0, y1 = m0.year, m1.year
+    nm = (m1.year - m0.year) * 12 + m1.month - m0.month + 1
+    full = pd.date_range(m0, m1, freq="MS")
     rows = []
     for u, ss in seasons.items():
         w = c.wide.loc[u]
+        w = w[~w.index.duplicated()].reindex(full)
+        a = {k: w[k].to_numpy(dtype=float) for k in ("vci_crop", "vci_grass", "spi_1m", "sm1_z")}
         inst = season_instances(ss, y0, y1)
-        for _, r in inst.iterrows():
+        for r in inst.itertuples(index=False):
             for e in EVENTS:
-                W0 = r[e]
-                wm = window_months(W0, WINDOW_LEN[e])
-                if wm[-1] > months.max() or wm[0] < months.min():
+                W0 = getattr(r, e)
+                n = WINDOW_LEN[e]
+                i0 = (W0.year - m0.year) * 12 + W0.month - m0.month
+                if i0 < 0 or i0 + n > nm:
                     continue
                 rows.append(dict(unit_id=u, iso3=c.iso3, season=int(r.season), anchor=r.anchor,
-                                 agyear=int(r.agyear), event=e, W0=W0,
-                                 label=event_outcome(w, e, wm)))
+                                 agyear=int(r.agyear), event=e, W0=W0, label=_outcome_np(a, e, i0, n)))
     t = pd.DataFrame(rows)
     # previous instance of the same event in the same unit (for the persistence baseline)
     t = t.sort_values(["unit_id", "event", "W0"])

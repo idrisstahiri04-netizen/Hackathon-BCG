@@ -1,0 +1,155 @@
+{
+ "iso3": "ZWE",
+ "model_version": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB",
+ "generated_at": "2026-10-16T16:28:09+00:00",
+ "n_units": 91,
+ "declaration": "2024-04-03",
+ "crisis_window": [
+  "2023-10-01",
+  "2024-06-01"
+ ],
+ "level_counts_all": {
+  "0": 1144,
+  "1": 4490,
+  "2": 570,
+  "3": 348
+ },
+ "watch_share_before_decl": 1.0,
+ "watch_n_before_decl": 91,
+ "watch_share_ever_in_window": 1.0,
+ "watch_median_lead_wk": 17.7,
+ "watch_lead_wk_iqr": [
+  17.7,
+  22.0
+ ],
+ "watch_first_month_hist": {
+  "2023-10": 45,
+  "2023-11": 32,
+  "2023-12": 14
+ },
+ "warning_share_before_decl": 0.505,
+ "warning_n_before_decl": 46,
+ "warning_share_ever_in_window": 0.879,
+ "warning_median_lead_wk": 0.3,
+ "warning_lead_wk_iqr": [
+  0.3,
+  13.3
+ ],
+ "warning_first_month_hist": {
+  "2023-12": 13,
+  "2024-01": 1,
+  "2024-02": 4,
+  "2024-03": 28,
+  "2024-04": 26,
+  "2024-05": 7,
+  "2024-06": 1
+ },
+ "warning_before_decl_by_issue_convention": {
+  "month_start_optimistic": {
+   "n": 72,
+   "share": 0.791,
+   "median_lead_wk": 4.7,
+   "n_lead_ge_4wk": 46
+  },
+  "next_month_1st": {
+   "n": 46,
+   "share": 0.505,
+   "median_lead_wk": 0.3,
+   "n_lead_ge_4wk": 18
+  },
+  "next_month_1st_plus5wk_latency": {
+   "n": 14,
+   "share": 0.154,
+   "median_lead_wk": 8.3,
+   "n_lead_ge_4wk": 13
+  }
+ },
+ "share_level3_in_window": 0.451,
+ "monthly_share_warning_plus": {
+  "2023-10": 0.0,
+  "2023-11": 0.0,
+  "2023-12": 0.143,
+  "2024-01": 0.154,
+  "2024-02": 0.198,
+  "2024-03": 0.505,
+  "2024-04": 0.791,
+  "2024-05": 0.857,
+  "2024-06": 0.846
+ },
+ "seasons": {
+  "2018/19": {
+   "mean_spi1_NovMar": -0.52,
+   "cls": "dry",
+   "warning_plus_unit_months": 152,
+   "unit_months": 364,
+   "share_units_ever_warning": 0.56,
+   "share_units_ever_watch": 1.0
+  },
+  "2019/20": {
+   "mean_spi1_NovMar": -0.25,
+   "cls": "normal",
+   "warning_plus_unit_months": 28,
+   "unit_months": 546,
+   "share_units_ever_warning": 0.121,
+   "share_units_ever_watch": 1.0
+  },
+  "2020/21": {
+   "mean_spi1_NovMar": 0.38,
+   "cls": "wet",
+   "warning_plus_unit_months": 0,
+   "unit_months": 546,
+   "share_units_ever_warning": 0.0,
+   "share_units_ever_watch": 1.0
+  },
+  "2021/22": {
+   "mean_spi1_NovMar": -0.12,
+   "cls": "normal",
+   "warning_plus_unit_months": 34,
+   "unit_months": 546,
+   "share_units_ever_warning": 0.11,
+   "share_units_ever_watch": 1.0
+  },
+  "2022/23": {
+   "mean_spi1_NovMar": -0.03,
+   "cls": "normal",
+   "warning_plus_unit_months": 4,
+   "unit_months": 546,
+   "share_units_ever_warning": 0.044,
+   "share_units_ever_watch": 1.0
+  },
+  "2023/24": {
+   "mean_spi1_NovMar": -1.2,
+   "cls": "dry",
+   "warning_plus_unit_months": 163,
+   "unit_months": 546,
+   "share_units_ever_warning": 0.791,
+   "share_units_ever_watch": 1.0
+  },
+  "2024/25": {
+   "mean_spi1_NovMar": -0.1,
+   "cls": "normal",
+   "warning_plus_unit_months": 4,
+   "unit_months": 182,
+   "share_units_ever_warning": 0.044,
+   "share_units_ever_watch": 0.835
+  }
+ },
+ "spearman_warning_months_vs": {
+  "spi_3m": -0.63,
+  "ndvi_z_crop": -0.73,
+  "sm1_z": -0.44,
+  "lat": 0.21,
+  "lon": -0.48
+ },
+ "driest10_spi3_units_warning_share": 1.0,
+ "warning_share_by_lat_band": {
+  "middle": 0.97,
+  "north": 0.93,
+  "south": 0.74
+ },
+ "warning_share_by_lon_band": {
+  "west": 0.94,
+  "centre": 0.87,
+  "east": 0.83
+ }
+}

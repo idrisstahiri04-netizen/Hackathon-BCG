@@ -1,0 +1,8 @@
+{
+  "p_warn": 0.25,
+  "p_watch": 0.25,
+  "p_emerg": 0.75,
+  "cv_f1_warn": 0.252,
+  "cv_f1_watch": 0.587,
+  "cv_f1_warn_default": 0.223
+}

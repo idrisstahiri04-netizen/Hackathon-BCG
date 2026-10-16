@@ -5,10 +5,11 @@ that change colour as a drought develops, an alert feed that says who to tell,
 and a timeline you can scrub across six years.
 
 Countries: **Zimbabwe** (91 districts, main replay: 2023–24 El Niño drought,
-disaster declared 3 Apr 2024), **Malawi** (28 districts, 23 Mar 2024) and
-**Zambia** (116 districts, 29 Feb 2024), driven by real pipeline output; plus
-**Kenya** (47 counties), which uses the scripted simulation of the 2020–23 Horn
-of Africa drought until real Kenya output exists.
+disaster declared 3 Apr 2024), **Malawi** (28 districts, 23 Mar 2024),
+**Zambia** (116 districts, 29 Feb 2024) and **Kenya** (47 counties, 8 Sep 2021).
+**Only real data is shown.** There is no simulated fallback: a country is
+`LIVE` only when the risk model has published real output for it; until then
+it is listed as `DATA IN PROGRESS` and nothing is drawn.
 
 ### Data flow
 
@@ -19,10 +20,20 @@ pipeline/make_stub_risk.py        -> data/risk/*.js    placeholder (model_versio
 ```
 
 `index.html` loads `data/geo/<ISO3>.js` and `data/risk/<ISO3>.js` for ZWE, KEN,
-MWI, ZMB (a missing file is fine), then starts `js/app.js`. A country is `LIVE`
-when both files loaded. Real output goes through `js/real.js`; Kenya without
-`data/risk/KEN.js` falls back to `js/sim.js`. The on-screen note says which:
-real model, `STUB` placeholder, or simulated.
+MWI, ZMB, then starts `js/app.js`. A country is `LIVE` when its geometry loaded
+**and** `RISK_DATA[iso3].meta.model_version` is not `STUB`. Stub files
+(`make_stub_risk.py`, for pipeline/dev work only) are never displayed; the
+country shows `DATA IN PROGRESS`. `data/risk/KEN.js` is an empty placeholder
+(avoids a 404) until the model writes real Kenya output. Live countries show
+"Real satellite + weather data (CHIRPS, MODIS, ERA5). Risk levels from our model."
+
+```bash
+python3 pipeline/prep_geo.py --iso3 ZWE KEN MWI ZMB   # geometry
+python3 pipeline/make_stub_risk.py --iso3 ZWE KEN      # dev stubs (never shown)
+```
+
+`make_stub_risk.py` never overwrites a risk file whose `model_version` is not
+`STUB`, so re-running it after the model has written real output is safe.
 
 ## Run it
 
@@ -42,25 +53,19 @@ the demo.
 ## Demo script
 
 1. **Open on the spinning globe.** Search box is focused, the country list is
-   already open. Zimbabwe, Malawi, Zambia and Kenya are `LIVE`; everything
-   else says `NO COVERAGE`. The red dashed line on the timeline is the national
-   disaster declaration — the point to beat.
-2. **Type Zimbabwe, hit enter** (or Kenya for the scripted replay below).
-   Districts appear, all green.
-3. **Press play** (or `space`). Watch 2020 stay calm, then the arid north and
-   east turn yellow in early 2021 as the short rains fail.
-4. **Let it run to Sept 2021.** Counties jump to red — that is the government
-   declaring a national disaster, and you can see it arrive in the feed as a
-   driver. Point out that the satellite and price signals turned *months*
-   earlier. That gap is the product.
-5. **Pause at the peak (Jan 2023).** 24 Warning + 23 Emergency, 47.8M people.
-6. **Click a red county.** Drivers, which of the 5 source families agree, and
-   the SMS each audience would actually receive, with its character count and
-   segment count.
-7. **Click the Farmers tab.** One GSM-7 segment, an action not a probability.
-   That is the whole thesis: it fits on a feature phone and tells one person
-   one thing to do.
-8. **Scrub to 2024.** Everything green again. The system stands down.
+   already open. Countries with real model output are `LIVE`, the others in
+   the pipeline say `DATA IN PROGRESS`, everything else `NO COVERAGE`.
+2. **Type Zimbabwe, hit enter.** Districts appear, all green. The red dashed
+   line on the timeline is the national disaster declaration (3 Apr 2024) —
+   the point to beat.
+3. **Press play** (or `space`) and watch which districts turn yellow, then
+   orange, before the declaration. That lead time is the product.
+4. **Click a red district.** Event type (can't plant / crop failure / no
+   grass), drivers, which of the 3 families (rain, vegetation, soil) agree, and
+   the SMS each audience would receive, with character and segment count.
+5. **Click the Farmers or Herders tab.** One GSM-7 segment, an action not a
+   probability. Herders get the message when the event is "no grass".
+6. **Scrub past the crisis.** Levels stand down slowly (hysteresis: 3 runs).
 
 ### Controls
 
@@ -91,19 +96,14 @@ a moment:
 
 | Part | Status |
 |---|---|
-| County boundaries | **Real.** geoBoundaries gbOpen KEN ADM1 (RCMRD / Africa GeoPortal), public domain, simplified for the browser |
-| County populations | **Real**, 2019 census, rounded |
-| Aridity / cropland split | **Real-ish.** Follows Kenya's standard ASAL vs high-potential classification |
-| Sequence of failed rainy seasons | **Real.** The 2019–2024 season-by-season record |
-| Sept 2021 disaster declaration | **Real event**, real date |
-| ZWE/MWI/ZMB boundaries | **Real.** geoBoundaries gbOpen ADM2 |
-| ZWE/MWI/ZMB/KEN declaration dates | **Real**, see `pipeline/CONTRACT.md` for sources |
-| ZWE/MWI/ZMB risk levels, SPI, NDVI, soil | **Real model output** from `data/risk/*.js` — or placeholders while `meta.model_version` is `STUB` (the screen says so) |
-| Kenya risk number, price, NDVI, SPI | **Simulated.** Generated in `js/sim.js` |
+| Boundaries (ZWE/MWI/ZMB ADM2, KEN ADM1) | **Real.** geoBoundaries gbOpen, simplified for the browser |
+| Kenya county populations / crop share | **Real**, 2019 census (from `prep_data.py`) |
+| Declaration dates | **Real**, sources in `pipeline/CONTRACT.md` |
+| Risk levels, SPI, NDVI, soil | **Real model output** from `data/risk/<ISO3>.js`. A `STUB` file is never displayed |
 | SMS text | Generated from the templates in the spec |
 
-The disclaimer is on screen at all times. Do not let anyone leave the room
-thinking the probabilities are measured.
+The data note is on screen whenever a country is live. Probabilities are
+model estimates, not measurements — say so on stage.
 
 ## Layout of the code
 
@@ -111,11 +111,10 @@ thinking the probabilities are measured.
 index.html              markup for the three regions
 css/app.css             all styling; design tokens at the top
 js/real.js              engine over RISK_DATA (real pipeline output), herder audience, SMS text
-js/sim.js               scripted Kenya engine (fallback only)
 js/app.js               globe, search, timeline, feed, detail panel (multi-country)
 data/geo/<ISO3>.js      generated by pipeline/prep_geo.py; do not hand-edit
 data/risk/<ISO3>.js     written by the risk model (or make_stub_risk.py)
-data/kenya-counties.js  Kenya geometry for the SIM fallback (prep_data.py)
+data/kenya-counties.js  legacy Kenya geometry (no longer loaded)
 vendor/                 globe.gl + earth textures, vendored for offline use
 ```
 
@@ -146,7 +145,7 @@ rather than data:
 
 ```bash
 python3 pipeline/prep_geo.py --iso3 ZWE KEN MWI ZMB   # -> data/geo/<ISO3>.js
-python3 prep_data.py      # ken_raw.geojson -> data/kenya-counties.js (SIM fallback)
+python3 prep_data.py      # legacy: ken_raw.geojson -> data/kenya-counties.js (unused by the app)
 ```
 
 841 KB of raw boundaries down to 46 KB. One non-obvious step: it reverses the

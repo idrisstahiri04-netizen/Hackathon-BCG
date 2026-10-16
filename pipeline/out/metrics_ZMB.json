@@ -1,0 +1,622 @@
+{
+  "iso3": "ZMB",
+  "trained_on": [
+    "ZWE",
+    "KEN",
+    "MWI",
+    "ZMB"
+  ],
+  "generated_at": "2026-10-16T16:25:38+00:00",
+  "winner": "ensemble",
+  "selection": "highest mean CV PR-AUC over events (leads 1-3)",
+  "cv_design": "leave-one-agricultural-year-out 2001-2022, countries pooled",
+  "holdout_design": "agyear>=2023 (2023/24 season) + KEN 2020-2022; final models, evaluated once",
+  "labels": "satellite-only: crop_failure min vci_crop<35 in core+1; no_grass min vci_grass<35 3 months after rains; cant_plant spi_1m<-1 & sm1_z<-1 in first 2 rainy months",
+  "cv_pooled": {
+    "persistence": {
+      "cant_plant": {
+        "n": 20118,
+        "pos_rate": 0.168,
+        "roc_auc": 0.471,
+        "pr_auc": 0.164,
+        "brier": 0.1417
+      },
+      "crop_failure": {
+        "n": 20184,
+        "pos_rate": 0.478,
+        "roc_auc": 0.562,
+        "pr_auc": 0.514,
+        "brier": 0.2488
+      },
+      "no_grass": {
+        "n": 20184,
+        "pos_rate": 0.414,
+        "roc_auc": 0.547,
+        "pr_auc": 0.44,
+        "brier": 0.2458
+      },
+      "mean_pr_auc": 0.373,
+      "mean_roc_auc": 0.527,
+      "mean_brier": 0.2121
+    },
+    "rule": {
+      "cant_plant": {
+        "n": 20118,
+        "pos_rate": 0.168,
+        "roc_auc": 0.518,
+        "pr_auc": 0.173,
+        "brier": 0.1441
+      },
+      "crop_failure": {
+        "n": 20184,
+        "pos_rate": 0.478,
+        "roc_auc": 0.545,
+        "pr_auc": 0.529,
+        "brier": 0.2501
+      },
+      "no_grass": {
+        "n": 20184,
+        "pos_rate": 0.414,
+        "roc_auc": 0.619,
+        "pr_auc": 0.51,
+        "brier": 0.2363
+      },
+      "mean_pr_auc": 0.404,
+      "mean_roc_auc": 0.561,
+      "mean_brier": 0.2102
+    },
+    "logreg": {
+      "cant_plant": {
+        "n": 20118,
+        "pos_rate": 0.168,
+        "roc_auc": 0.493,
+        "pr_auc": 0.168,
+        "brier": 0.1448
+      },
+      "crop_failure": {
+        "n": 20184,
+        "pos_rate": 0.478,
+        "roc_auc": 0.593,
+        "pr_auc": 0.586,
+        "brier": 0.2459
+      },
+      "no_grass": {
+        "n": 20184,
+        "pos_rate": 0.414,
+        "roc_auc": 0.697,
+        "pr_auc": 0.611,
+        "brier": 0.221
+      },
+      "mean_pr_auc": 0.455,
+      "mean_roc_auc": 0.594,
+      "mean_brier": 0.2039
+    },
+    "lgbm": {
+      "cant_plant": {
+        "n": 20118,
+        "pos_rate": 0.168,
+        "roc_auc": 0.455,
+        "pr_auc": 0.162,
+        "brier": 0.146
+      },
+      "crop_failure": {
+        "n": 20184,
+        "pos_rate": 0.478,
+        "roc_auc": 0.609,
+        "pr_auc": 0.581,
+        "brier": 0.2437
+      },
+      "no_grass": {
+        "n": 20184,
+        "pos_rate": 0.414,
+        "roc_auc": 0.708,
+        "pr_auc": 0.64,
+        "brier": 0.2141
+      },
+      "mean_pr_auc": 0.461,
+      "mean_roc_auc": 0.591,
+      "mean_brier": 0.2013
+    },
+    "ensemble": {
+      "cant_plant": {
+        "n": 20118,
+        "pos_rate": 0.168,
+        "roc_auc": 0.485,
+        "pr_auc": 0.168,
+        "brier": 0.1458
+      },
+      "crop_failure": {
+        "n": 20184,
+        "pos_rate": 0.478,
+        "roc_auc": 0.609,
+        "pr_auc": 0.593,
+        "brier": 0.2444
+      },
+      "no_grass": {
+        "n": 20184,
+        "pos_rate": 0.414,
+        "roc_auc": 0.712,
+        "pr_auc": 0.64,
+        "brier": 0.2145
+      },
+      "mean_pr_auc": 0.467,
+      "mean_roc_auc": 0.602,
+      "mean_brier": 0.2016
+    }
+  },
+  "cv_this_country": {
+    "persistence": {
+      "cant_plant": {
+        "n": 7656,
+        "pos_rate": 0.161,
+        "roc_auc": 0.48,
+        "pr_auc": 0.16,
+        "brier": 0.1381
+      },
+      "crop_failure": {
+        "n": 7656,
+        "pos_rate": 0.525,
+        "roc_auc": 0.583,
+        "pr_auc": 0.573,
+        "brier": 0.2481
+      },
+      "no_grass": {
+        "n": 7656,
+        "pos_rate": 0.367,
+        "roc_auc": 0.561,
+        "pr_auc": 0.402,
+        "brier": 0.2372
+      },
+      "mean_pr_auc": 0.378,
+      "mean_roc_auc": 0.541,
+      "mean_brier": 0.2078
+    },
+    "rule": {
+      "cant_plant": {
+        "n": 7656,
+        "pos_rate": 0.161,
+        "roc_auc": 0.505,
+        "pr_auc": 0.161,
+        "brier": 0.1385
+      },
+      "crop_failure": {
+        "n": 7656,
+        "pos_rate": 0.525,
+        "roc_auc": 0.525,
+        "pr_auc": 0.562,
+        "brier": 0.2566
+      },
+      "no_grass": {
+        "n": 7656,
+        "pos_rate": 0.367,
+        "roc_auc": 0.613,
+        "pr_auc": 0.461,
+        "brier": 0.2332
+      },
+      "mean_pr_auc": 0.395,
+      "mean_roc_auc": 0.548,
+      "mean_brier": 0.2094
+    },
+    "logreg": {
+      "cant_plant": {
+        "n": 7656,
+        "pos_rate": 0.161,
+        "roc_auc": 0.431,
+        "pr_auc": 0.143,
+        "brier": 0.1433
+      },
+      "crop_failure": {
+        "n": 7656,
+        "pos_rate": 0.525,
+        "roc_auc": 0.617,
+        "pr_auc": 0.658,
+        "brier": 0.242
+      },
+      "no_grass": {
+        "n": 7656,
+        "pos_rate": 0.367,
+        "roc_auc": 0.653,
+        "pr_auc": 0.5,
+        "brier": 0.2253
+      },
+      "mean_pr_auc": 0.434,
+      "mean_roc_auc": 0.567,
+      "mean_brier": 0.2035
+    },
+    "lgbm": {
+      "cant_plant": {
+        "n": 7656,
+        "pos_rate": 0.161,
+        "roc_auc": 0.378,
+        "pr_auc": 0.128,
+        "brier": 0.1479
+      },
+      "crop_failure": {
+        "n": 7656,
+        "pos_rate": 0.525,
+        "roc_auc": 0.616,
+        "pr_auc": 0.636,
+        "brier": 0.2428
+      },
+      "no_grass": {
+        "n": 7656,
+        "pos_rate": 0.367,
+        "roc_auc": 0.667,
+        "pr_auc": 0.553,
+        "brier": 0.2152
+      },
+      "mean_pr_auc": 0.439,
+      "mean_roc_auc": 0.554,
+      "mean_brier": 0.202
+    },
+    "ensemble": {
+      "cant_plant": {
+        "n": 7656,
+        "pos_rate": 0.161,
+        "roc_auc": 0.413,
+        "pr_auc": 0.136,
+        "brier": 0.147
+      },
+      "crop_failure": {
+        "n": 7656,
+        "pos_rate": 0.525,
+        "roc_auc": 0.624,
+        "pr_auc": 0.657,
+        "brier": 0.2415
+      },
+      "no_grass": {
+        "n": 7656,
+        "pos_rate": 0.367,
+        "roc_auc": 0.67,
+        "pr_auc": 0.547,
+        "brier": 0.2167
+      },
+      "mean_pr_auc": 0.447,
+      "mean_roc_auc": 0.569,
+      "mean_brier": 0.2017
+    }
+  },
+  "cv_by_lead_winner": {
+    "1": {
+      "cant_plant": {
+        "n": 6706,
+        "pos_rate": 0.168,
+        "roc_auc": 0.488,
+        "pr_auc": 0.172,
+        "brier": 0.1434
+      },
+      "crop_failure": {
+        "n": 6728,
+        "pos_rate": 0.478,
+        "roc_auc": 0.647,
+        "pr_auc": 0.644,
+        "brier": 0.2347
+      },
+      "no_grass": {
+        "n": 6728,
+        "pos_rate": 0.414,
+        "roc_auc": 0.818,
+        "pr_auc": 0.76,
+        "brier": 0.1741
+      }
+    },
+    "2": {
+      "cant_plant": {
+        "n": 6706,
+        "pos_rate": 0.168,
+        "roc_auc": 0.479,
+        "pr_auc": 0.162,
+        "brier": 0.1468
+      },
+      "crop_failure": {
+        "n": 6728,
+        "pos_rate": 0.478,
+        "roc_auc": 0.596,
+        "pr_auc": 0.575,
+        "brier": 0.2481
+      },
+      "no_grass": {
+        "n": 6728,
+        "pos_rate": 0.414,
+        "roc_auc": 0.681,
+        "pr_auc": 0.599,
+        "brier": 0.2257
+      }
+    },
+    "3": {
+      "cant_plant": {
+        "n": 6706,
+        "pos_rate": 0.168,
+        "roc_auc": 0.491,
+        "pr_auc": 0.176,
+        "brier": 0.1471
+      },
+      "crop_failure": {
+        "n": 6728,
+        "pos_rate": 0.478,
+        "roc_auc": 0.583,
+        "pr_auc": 0.553,
+        "brier": 0.2505
+      },
+      "no_grass": {
+        "n": 6728,
+        "pos_rate": 0.414,
+        "roc_auc": 0.62,
+        "pr_auc": 0.546,
+        "brier": 0.2436
+      }
+    }
+  },
+  "thresholds": {
+    "p_warn": 0.25,
+    "p_watch": 0.25,
+    "p_emerg": 0.75,
+    "cv_f1_warn": 0.252,
+    "cv_f1_watch": 0.587,
+    "cv_f1_warn_default": 0.223
+  },
+  "holdout": {
+    "persistence": {
+      "cant_plant": {
+        "n": 666,
+        "pos_rate": 0.667,
+        "roc_auc": 0.655,
+        "pr_auc": 0.768,
+        "brier": 0.4708
+      },
+      "crop_failure": {
+        "n": 348,
+        "pos_rate": 0.836,
+        "roc_auc": 0.461,
+        "pr_auc": 0.826,
+        "brier": 0.2496
+      },
+      "no_grass": {
+        "n": 348,
+        "pos_rate": 0.776,
+        "roc_auc": 0.712,
+        "pr_auc": 0.862,
+        "brier": 0.2824
+      },
+      "mean_pr_auc": 0.819,
+      "mean_roc_auc": 0.609,
+      "mean_brier": 0.3343
+    },
+    "rule": {
+      "cant_plant": {
+        "n": 666,
+        "pos_rate": 0.667,
+        "roc_auc": 0.444,
+        "pr_auc": 0.675,
+        "brier": 0.4905
+      },
+      "crop_failure": {
+        "n": 348,
+        "pos_rate": 0.836,
+        "roc_auc": 0.65,
+        "pr_auc": 0.903,
+        "brier": 0.2319
+      },
+      "no_grass": {
+        "n": 348,
+        "pos_rate": 0.776,
+        "roc_auc": 0.798,
+        "pr_auc": 0.923,
+        "brier": 0.1643
+      },
+      "mean_pr_auc": 0.834,
+      "mean_roc_auc": 0.631,
+      "mean_brier": 0.2956
+    },
+    "logreg": {
+      "cant_plant": {
+        "n": 666,
+        "pos_rate": 0.667,
+        "roc_auc": 0.504,
+        "pr_auc": 0.675,
+        "brier": 0.4422
+      },
+      "crop_failure": {
+        "n": 348,
+        "pos_rate": 0.836,
+        "roc_auc": 0.474,
+        "pr_auc": 0.836,
+        "brier": 0.2671
+      },
+      "no_grass": {
+        "n": 348,
+        "pos_rate": 0.776,
+        "roc_auc": 0.615,
+        "pr_auc": 0.863,
+        "brier": 0.3246
+      },
+      "mean_pr_auc": 0.791,
+      "mean_roc_auc": 0.531,
+      "mean_brier": 0.3446
+    },
+    "lgbm": {
+      "cant_plant": {
+        "n": 666,
+        "pos_rate": 0.667,
+        "roc_auc": 0.631,
+        "pr_auc": 0.75,
+        "brier": 0.4824
+      },
+      "crop_failure": {
+        "n": 348,
+        "pos_rate": 0.836,
+        "roc_auc": 0.381,
+        "pr_auc": 0.806,
+        "brier": 0.326
+      },
+      "no_grass": {
+        "n": 348,
+        "pos_rate": 0.776,
+        "roc_auc": 0.742,
+        "pr_auc": 0.915,
+        "brier": 0.1867
+      },
+      "mean_pr_auc": 0.824,
+      "mean_roc_auc": 0.585,
+      "mean_brier": 0.3317
+    },
+    "ensemble": {
+      "cant_plant": {
+        "n": 666,
+        "pos_rate": 0.667,
+        "roc_auc": 0.54,
+        "pr_auc": 0.696,
+        "brier": 0.468
+      },
+      "crop_failure": {
+        "n": 348,
+        "pos_rate": 0.836,
+        "roc_auc": 0.422,
+        "pr_auc": 0.817,
+        "brier": 0.2954
+      },
+      "no_grass": {
+        "n": 348,
+        "pos_rate": 0.776,
+        "roc_auc": 0.716,
+        "pr_auc": 0.895,
+        "brier": 0.2377
+      },
+      "mean_pr_auc": 0.803,
+      "mean_roc_auc": 0.559,
+      "mean_brier": 0.3337
+    }
+  },
+  "holdout_pooled": {
+    "persistence": {
+      "cant_plant": {
+        "n": 2388,
+        "pos_rate": 0.374,
+        "roc_auc": 0.563,
+        "pr_auc": 0.416,
+        "brier": 0.2768
+      },
+      "crop_failure": {
+        "n": 1704,
+        "pos_rate": 0.563,
+        "roc_auc": 0.629,
+        "pr_auc": 0.644,
+        "brier": 0.2428
+      },
+      "no_grass": {
+        "n": 1689,
+        "pos_rate": 0.597,
+        "roc_auc": 0.666,
+        "pr_auc": 0.699,
+        "brier": 0.258
+      },
+      "mean_pr_auc": 0.586,
+      "mean_roc_auc": 0.619,
+      "mean_brier": 0.2592
+    },
+    "rule": {
+      "cant_plant": {
+        "n": 2388,
+        "pos_rate": 0.374,
+        "roc_auc": 0.445,
+        "pr_auc": 0.346,
+        "brier": 0.2888
+      },
+      "crop_failure": {
+        "n": 1704,
+        "pos_rate": 0.563,
+        "roc_auc": 0.638,
+        "pr_auc": 0.693,
+        "brier": 0.2328
+      },
+      "no_grass": {
+        "n": 1689,
+        "pos_rate": 0.597,
+        "roc_auc": 0.752,
+        "pr_auc": 0.799,
+        "brier": 0.2031
+      },
+      "mean_pr_auc": 0.613,
+      "mean_roc_auc": 0.612,
+      "mean_brier": 0.2416
+    },
+    "logreg": {
+      "cant_plant": {
+        "n": 2388,
+        "pos_rate": 0.374,
+        "roc_auc": 0.614,
+        "pr_auc": 0.484,
+        "brier": 0.2639
+      },
+      "crop_failure": {
+        "n": 1704,
+        "pos_rate": 0.563,
+        "roc_auc": 0.602,
+        "pr_auc": 0.659,
+        "brier": 0.2471
+      },
+      "no_grass": {
+        "n": 1689,
+        "pos_rate": 0.597,
+        "roc_auc": 0.744,
+        "pr_auc": 0.814,
+        "brier": 0.228
+      },
+      "mean_pr_auc": 0.652,
+      "mean_roc_auc": 0.653,
+      "mean_brier": 0.2463
+    },
+    "lgbm": {
+      "cant_plant": {
+        "n": 2388,
+        "pos_rate": 0.374,
+        "roc_auc": 0.648,
+        "pr_auc": 0.491,
+        "brier": 0.2799
+      },
+      "crop_failure": {
+        "n": 1704,
+        "pos_rate": 0.563,
+        "roc_auc": 0.575,
+        "pr_auc": 0.653,
+        "brier": 0.2667
+      },
+      "no_grass": {
+        "n": 1689,
+        "pos_rate": 0.597,
+        "roc_auc": 0.789,
+        "pr_auc": 0.841,
+        "brier": 0.1881
+      },
+      "mean_pr_auc": 0.662,
+      "mean_roc_auc": 0.671,
+      "mean_brier": 0.2449
+    },
+    "ensemble": {
+      "cant_plant": {
+        "n": 2388,
+        "pos_rate": 0.374,
+        "roc_auc": 0.63,
+        "pr_auc": 0.493,
+        "brier": 0.2729
+      },
+      "crop_failure": {
+        "n": 1704,
+        "pos_rate": 0.563,
+        "roc_auc": 0.598,
+        "pr_auc": 0.664,
+        "brier": 0.2543
+      },
+      "no_grass": {
+        "n": 1689,
+        "pos_rate": 0.597,
+        "roc_auc": 0.781,
+        "pr_auc": 0.834,
+        "brier": 0.2012
+      },
+      "mean_pr_auc": 0.664,
+      "mean_roc_auc": 0.67,
+      "mean_brier": 0.2428
+    }
+  }
+}

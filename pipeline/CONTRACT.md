@@ -9,7 +9,7 @@ All helpers build to this. Do not change it without telling the orchestrator.
 | KEN | ADM1 (47 counties, matches existing prototype) | 2020-23 Horn of Africa drought | 2021-09-08 |
 | MWI | ADM2 | 2023-24 El Niño drought | 2024-03-23 |
 | ZMB | ADM2 | 2023-24 El Niño drought | 2024-02-29 |
-MWI and ZMB dates verified 2026-10-16: MWI state of disaster declared by President Chakwera on 2024-03-23 (23 of 28 districts; https://www.africanews.com/2024/03/25/malawi-declares-state-of-disaster-over-drought-wrought-by-el-nino/); ZMB national disaster and emergency declared by President Hichilema on 2024-02-29 (https://www.aljazeera.com/news/2024/2/29/zambia-declares-national-disaster-after-drought-devastates-agriculture, https://zambia.un.org/en/node/271472).
+MWI and ZMB dates verified by web search 2026-10-16. MWI: state of disaster in 23 of 28 districts declared by President Chakwera on 2024-03-23 (OCHA/Humanitarian Action https://humanitarianaction.info/article/malawi ; AP https://apnews.com/article/malawi-africa-drought-disaster-el-nino-ccdb755b84133d0e2796da3296410edf). ZMB: drought declared a national disaster and emergency by President Hichilema on Thursday 2024-02-29 (official statement https://www.cabinet.gov.zm/?p=2506 ; DMMU sitrep 1 https://reliefweb.int/report/zambia/republic-zambia-disaster-management-and-mitigation-unit-drought-response-situation-report-no-1-19th-april-2024 ; https://www.aljazeera.com/news/2024/2/29/zambia-declares-national-disaster-after-drought-devastates-agriculture).
 
 Unit id = geoBoundaries `shapeID`. Unit name = `shapeName`.
 

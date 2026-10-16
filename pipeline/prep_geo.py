@@ -113,6 +113,19 @@ def fetch_geoboundaries(iso3, adm):
 
 def load_units(iso3):
     adm = ADM.get(iso3, "ADM2")
+    # An already-downloaded geoBoundaries file (same shapeIDs) wins: the
+    # units_<ISO3>.geojson copies carry a few damaged polygons (e.g. MWI
+    # Mangochi swallowing Lake Malawi), so prefer the untouched raw download.
+    raw_dir = os.path.join(PIPE, "data", "raw", "geoboundaries")
+    if os.path.isdir(raw_dir):
+        for day in sorted(os.listdir(raw_dir), reverse=True):
+            path = os.path.join(raw_dir, day, f"{iso3}_{adm}_simplified.geojson")
+            if os.path.exists(path):
+                meta = {}
+                if os.path.exists(path + "._meta.json"):
+                    meta = json.load(open(path + "._meta.json"))
+                return (json.load(open(path)),
+                        f"geoBoundaries gbOpen {iso3} {adm} ({meta.get('licence')})", adm)
     local = os.path.join(PIPE, "data", f"units_{iso3}.geojson")
     if os.path.exists(local):
         return json.load(open(local)), f"pipeline/data/units_{iso3}.geojson", adm
@@ -139,19 +152,52 @@ def num(v):
         return None
 
 
+def polygon_parts(g):
+    """List of polygons (each a list of rings) from any GeoJSON geometry.
+    units_<ISO3>.geojson sometimes wraps a unit in a GeometryCollection with
+    stray LineStrings; only the polygon parts matter here."""
+    if g["type"] == "Polygon":
+        return [g["coordinates"]]
+    if g["type"] == "MultiPolygon":
+        return g["coordinates"]
+    if g["type"] == "GeometryCollection":
+        return [p for sub in g["geometries"] for p in polygon_parts(sub)]
+    return []
+
+
+def worldpop_extras(iso3):
+    """unit_id -> population (millions) from pipeline/data/pop_<ISO3>.csv
+    (made by pipeline/worldpop_pop.py). Empty dict if the file is absent."""
+    path = os.path.join(PIPE, "data", f"pop_{iso3}.csv")
+    if not os.path.exists(path):
+        return {}, None
+    import csv
+    out, src = {}, None
+    with open(path, newline="") as fh:
+        for row in csv.DictReader(fh):
+            v = num(row.get("pop_millions") or None)
+            if v is not None:
+                out[row["unit_id"]] = v
+                src = src or f"{row.get('source')} {row.get('year')}"
+    return out, src
+
+
 # ---- main -------------------------------------------------------------------
 def build(iso3):
     fc, src, adm = load_units(iso3)
     eps = EPSILON[adm]
     pop_k, prof_k, alias_k = kenya_extras() if iso3 == "KEN" else ({}, {}, {})
+    # Kenya keeps its census numbers; other countries take WorldPop per unit_id.
+    pop_w, pop_src = worldpop_extras(iso3) if iso3 != "KEN" else ({}, None)
+    if pop_src:
+        src += f"; pop: {pop_src}"
     feats = []
     for f in fc["features"]:
         pr = f["properties"]
         uid = pr.get("unit_id") or pr.get("shapeID") or pr.get("id")
         name = (pr.get("unit_name") or pr.get("shapeName") or pr.get("name") or "").strip()
         name = alias_k.get(name, name)
-        g = f["geometry"]
-        polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
+        polys = polygon_parts(f["geometry"])
         out, best, cx, cy = [], 0.0, 0.0, 0.0
         for poly in polys:
             rings = [r for r in (simplify_ring(r, eps) for r in poly) if r]
@@ -173,6 +219,8 @@ def build(iso3):
         pop = num(pr.get("pop"))
         if pop is None and name in pop_k:
             pop = pop_k[name]
+        if pop is None and uid in pop_w:
+            pop = pop_w[uid]
         crop = num(pr.get("crop_frac", pr.get("crop")))
         if crop is None and name in prof_k:
             crop = prof_k[name][1]

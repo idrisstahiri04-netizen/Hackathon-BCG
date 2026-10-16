@@ -33,6 +33,37 @@ TEST_FROM_AGYEAR = 2023                  # agyear 2023 = the 2023/24 season: nev
 DYNAMIC = ["precip_mm", "spi_1m", "spi_3m", "spi_6m", "ndvi_crop", "ndvi_grass",
            "ndvi_z_crop", "ndvi_z_grass", "vci_crop", "vci_grass", "sm1_z", "sm2_z", "t2m_z"]
 STATIC = ["crop_frac", "grass_frac"]
+# Data latency (months). A risk value for month t is issued at the end of month t and may only use
+# signals published by then. Month-m products become available: CHIRPS final ~3 weeks after m
+# (prelim ~2 days, but we use final), MODIS MOD13Q1 16-day composites ~1-2 weeks after the period,
+# ERA5-Land via ERA5T / CDS near-real-time ~5 days after m (the Earth Engine monthly collection
+# lags 2-3 months; we assume the CDS route). So every source is usable with a 1-month lag:
+# issue month t uses signals of month t-1. Change here to stress-test (e.g. era5: 3).
+LATENCY = {"chirps": 1, "modis": 1, "era5": 1}
+SOURCE = {"precip_mm": "chirps", "spi_1m": "chirps", "spi_3m": "chirps", "spi_6m": "chirps",
+          "rain_pct3": "chirps", "ndvi_crop": "modis", "ndvi_grass": "modis", "ndvi_z_crop": "modis",
+          "ndvi_z_grass": "modis", "vci_crop": "modis", "vci_grass": "modis",
+          "sm1_z": "era5", "sm2_z": "era5", "t2m_z": "era5"}
+
+
+def source_of(col: str):
+    for k in sorted(SOURCE, key=len, reverse=True):
+        if col == k or col.startswith(k + "_"):
+            return SOURCE[k]
+    return None
+
+
+def apply_latency(df: pd.DataFrame) -> pd.DataFrame:
+    """df indexed (unit_id, month). Shift every source-derived column by its latency, per unit."""
+    out = df.copy()
+    g = df.groupby(level="unit_id", group_keys=False)
+    for col in df.columns:
+        src = source_of(col)
+        if src and LATENCY[src]:
+            out[col] = g[col].shift(LATENCY[src])
+    return out
+
+
 EVENTS = ["cant_plant", "crop_failure", "no_grass"]
 EVENT_PRIORITY = {"crop_failure": 0, "no_grass": 1, "cant_plant": 2}
 LEADS = [1, 2, 3]

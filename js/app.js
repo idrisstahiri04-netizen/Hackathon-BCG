@@ -18,10 +18,11 @@
   };
 
   // ---- Countries the search knows about ----------------------------------
-  // A country is LIVE when both its geometry (data/geo/<ISO3>.js) and its
-  // risk output (data/risk/<ISO3>.js) loaded. Kenya falls back to the scripted
-  // simulation (js/sim.js) when it has no real risk file. The rest are listed
-  // so the search is honest about where coverage does not exist yet.
+  // A country is LIVE only when its geometry (data/geo/<ISO3>.js) and REAL
+  // model output (data/risk/<ISO3>.js, meta.model_version != "STUB") loaded.
+  // Countries with an iso3 but no real output yet show as DATA IN PROGRESS.
+  // There is no simulated fallback: the screen only ever shows real data.
+  // The rest are listed so the search is honest about missing coverage.
   const COUNTRIES = [
     { name: 'Zimbabwe',     iso3: 'ZWE', lat:-19.02, lng: 29.15, alt: 0.42, unitWord: 'districts' },
     { name: 'Kenya',        iso3: 'KEN', lat:  0.53, lng: 37.86, alt: 0.38, unitWord: 'counties' },
@@ -42,38 +43,29 @@
   const WORLD_VIEW = { lat: 6, lng: 24, altitude: 2.3 };
 
   // ---- Engines --------------------------------------------------------------
-  // Each live country gets an engine with the API app.js needs. Real data
-  // comes from REAL.forCountry; Kenya without real output wraps SIM.
-  const SIM_ENGINE = {
-    isReal: false, isStub: false,
-    START_YEAR: SIM.START_YEAR, N_MONTHS: SIM.N_MONTHS, LEVELS: SIM.LEVELS,
-    AUDIENCES: SIM.AUDIENCES, EVENTS: {}, N_FAMILIES: 5,
-    dateAt: SIM.dateAt, build: SIM.build, composeSMS: SIM.composeSMS,
-    audiencesFor: lvl => SIM.audiencesFor(lvl),
-    FAMILIES: [
-      { key: 'weather',  short: 'Rain',     src: 'CHIRPS',    val: r => r.spi.toFixed(1) },
-      { key: 'eo',       short: 'Crop',     src: 'MODIS',     val: r => r.ndvi.toFixed(1) },
-      { key: 'market',   short: 'Price',    src: 'WFP',       val: r => `${r.price > 0 ? '+' : ''}${Math.round(r.price)}%` },
-      { key: 'official', short: 'Official', src: 'ReliefWeb', val: r => (r.annSev ? `sev ${r.annSev}` : '—') },
-      { key: 'crowd',    short: 'Replies',  src: 'SMS',       val: r => `${Math.round(r.crowd * 100)}%` },
-    ],
-    declaration: { t: 32, date: '2021-09-08', label: 'Drought declared a national disaster' },
-    disclaimer: 'Simulated data · scripted to the 2020–2023 Horn of Africa drought · prototype',
+  // Each live country gets an engine from REAL.forCountry (js/real.js).
+  // TIMELINE is only the idle timeline shown before a country is picked.
+  const TIMELINE = {
+    START_YEAR: 2019, N_MONTHS: 72, LEVELS: REAL.LEVELS,
+    dateAt: t => ({ label: `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][t % 12]} ${2019 + Math.floor(t / 12)}` }),
+    declaration: null,
+  };
+
+  const isRealRisk = iso3 => {
+    const R = (window.RISK_DATA || {})[iso3];
+    return !!(R && R.meta && String(R.meta.model_version).toUpperCase() !== 'STUB');
   };
 
   function engineFor(c) {
     if (!c || !c.iso3) return null;
     const geo = (window.GEO_DATA || {})[c.iso3];
-    if (geo && window.RISK_DATA && RISK_DATA[c.iso3]) {
+    if (geo && isRealRisk(c.iso3)) {
       return { engine: REAL.forCountry(c.iso3), features: geo.features };
-    }
-    if (c.iso3 === 'KEN' && typeof KENYA_COUNTIES !== 'undefined') {
-      return { engine: SIM_ENGINE, features: KENYA_COUNTIES.features };
     }
     return null;
   }
 
-  let ENGINE = SIM_ENGINE;     // timeline defaults before a country is picked
+  let ENGINE = TIMELINE;       // timeline defaults before a country is picked
   let MODEL = { units: [], events: [], national: [] };
   let FEATURES = [];
   let unitOf = new Map();      // feature -> unit
@@ -181,8 +173,8 @@
       li.setAttribute('role', 'option');
       li.dataset.name = c.name;
       li.append(el('span', null, c.name));
-      li.append(el('span', c.live ? 'tag live' : 'tag soon',
-        c.live ? (c.sim ? 'Live · sim' : c.stub ? 'Live · stub' : 'Live') : 'No coverage'));
+      li.append(el('span', c.live ? 'tag live' : c.inProgress ? 'tag wip' : 'tag soon',
+        c.live ? 'Live' : c.inProgress ? 'Data in progress' : 'No coverage'));
       li.addEventListener('mousedown', ev => { ev.preventDefault(); selectCountry(c.name); });
       li.addEventListener('mouseenter', () => { cursor = i; markCursor(); });
       resultsEl.append(li);
@@ -251,23 +243,28 @@
       $('#disclaimer').hidden = false;
       setTime(0, { rebuild: true });
     } else {
-      $('#hud-sub').textContent = 'not yet modelled';
+      $('#hud-sub').textContent = c.inProgress ? 'data in progress' : 'not yet modelled';
       $('#disclaimer').hidden = true;
       buildTicks();
       // Honest empty state rather than a fake map.
       world.polygonsData([]);
       $('#legend').hidden = true;
-      $('#feed-sub').textContent = `${c.name} · no coverage`;
+      $('#feed-sub').textContent = `${c.name} · ${c.inProgress ? 'data in progress' : 'no coverage'}`;
       $('#feed').innerHTML = '';
       $('#feed-count').textContent = '0';
-      $('#spark').style.opacity = '.18';   // the curve is Kenya's, not theirs
+      MODEL = { units: [], events: [], national: [] };
+      buildSpark();                         // no curve: nothing real to show
       $('#feed-empty').hidden = false;
-      $('#feed-empty').innerHTML =
-        `<p>No model for ${c.name} yet.</p>` +
+      $('#feed-empty').innerHTML = c.inProgress
+        ? `<p>Data in progress for ${c.name}.</p>` +
+          `<p class="muted">Boundaries are ready; the risk model has not published ` +
+          `real output for this country yet. Nothing is shown until it does.</p>`
+        : `<p>No model for ${c.name} yet.</p>` +
         `<p class="muted">Adding a country needs its admin boundaries, ` +
         `a crop/grass mask and the satellite + weather signals run through the model.</p>`;
       ['#stat-units', '#stat-people', '#stat-sms'].forEach(s => $(s).textContent = '—');
       pause();
+      announce();
     }
   }
 
@@ -349,6 +346,7 @@
     const d = ENGINE.dateAt(t);
     $('#clock-date').textContent = d.label;
     $('#clock-sub').textContent = `month ${t + 1} of ${ENGINE.N_MONTHS}`;
+    announce();
 
     if (!active || !active.live) return;
 
@@ -357,6 +355,16 @@
     updateLegendCounts();
     renderFeed({ rebuild: rebuild || wentBack });
     if (selected) renderDetail();
+  }
+
+  // Tell js/live.js (the SMS demo pages) which live country and month are on
+  // screen, so "Run alerts for this month" posts the right {iso3, t}.
+  function announce() {
+    const live = !!(active && active.live);
+    window.dispatchEvent(new CustomEvent('app:state', { detail: {
+      iso3: live ? active.iso3 : null, country: active ? active.name : null,
+      live, t: now, label: ENGINE.dateAt(now).label,
+    } }));
   }
 
   // Year ticks under the slider, plus the declaration marker.
@@ -690,16 +698,17 @@
   COUNTRIES.forEach(c => {
     const h = engineFor(c);
     c.live = !!h;
-    c.sim = !!h && !h.engine.isReal;
-    c.stub = !!h && h.engine.isStub;
+    c.inProgress = !h && !!c.iso3;
   });
-  // Live countries first in the default list.
-  COUNTRIES.sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0));
-  const firstLive = COUNTRIES.find(c => c.live && !c.sim) || COUNTRIES.find(c => c.live);
-  if (firstLive) {
-    const hint = $('#empty-hint');
-    hint.querySelector('.muted').innerHTML = 'Live: ' + COUNTRIES.filter(c => c.live)
-      .map(c => `<button class="linkish" data-demo="${c.name}">${c.name}</button>`).join(', ') + '.';
+  // Live first, then in progress, then no coverage.
+  const rank = c => (c.live ? 2 : c.inProgress ? 1 : 0);
+  COUNTRIES.sort((a, b) => rank(b) - rank(a));
+  {
+    const hint = $('#empty-hint').querySelector('.muted');
+    const btns = list => list.map(c => `<button class="linkish" data-demo="${c.name}">${c.name}</button>`).join(', ');
+    const live = COUNTRIES.filter(c => c.live), wip = COUNTRIES.filter(c => c.inProgress);
+    hint.innerHTML = (live.length ? `Live: ${btns(live)}. ` : 'No country has real model output yet. ') +
+      (wip.length ? `Data in progress: ${wip.map(c => c.name).join(', ')}.` : '');
   }
 
   setTime(0);

@@ -125,6 +125,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   padding: 3px 7px; border-radius: 5px; white-space: nowrap;
 }
 #results .tag.live  { background: rgba(12,163,12,.17);  color: #5fd35f; }
+#results .tag.wip   { background: rgba(255,212,59,.15); color: #ffd43b; }
 #results .tag.soon  { background: var(--surface-3);     color: var(--text-muted); }
 
 /* --- Country readout ------------------------------------------------------ */

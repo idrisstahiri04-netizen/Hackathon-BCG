@@ -1,0 +1,178 @@
+{
+  "claude_badkey": {
+    "pass": true,
+    "results": [
+      {
+        "text": "Hello I am a farmer in Mbire and want the drought alerts please",
+        "status": 200,
+        "ms": 12092,
+        "intent": "subscribe",
+        "source": "keywords",
+        "reply": "Welcome to drought alerts. Which district do you live in? Reply with the distric"
+      },
+      {
+        "text": "Ndiri murimi ku Binga",
+        "status": 200,
+        "ms": 377,
+        "intent": "unknown",
+        "source": "keywords",
+        "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP "
+      },
+      {
+        "text": "can you add me, I keep cattle near Gwanda",
+        "status": 200,
+        "ms": 406,
+        "intent": "unknown",
+        "source": "keywords",
+        "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP "
+      },
+      {
+        "text": "what should I plant this season?",
+        "status": 200,
+        "ms": 915,
+        "intent": "ask_advice",
+        "source": "keywords",
+        "reply": "In drought, water sources get dirty. Boil or treat drinking water and keep it co"
+      },
+      {
+        "text": "we have no food in our village, need help",
+        "status": 200,
+        "ms": 634,
+        "intent": "ask_help",
+        "source": "keywords",
+        "reply": "Thank you. An officer will contact you soon. If life is in danger call your loca"
+      },
+      {
+        "text": "my crops are poor this month",
+        "status": 200,
+        "ms": 526,
+        "intent": "unknown",
+        "source": "keywords",
+        "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP "
+      },
+      {
+        "text": "JOIN Mbire farmer",
+        "status": 200,
+        "ms": 491,
+        "intent": "subscribe",
+        "source": "keywords",
+        "reply": "Welcome to drought alerts. Which district do you live in? Reply with the distric"
+      },
+      {
+        "text": "2",
+        "status": 200,
+        "ms": 176,
+        "intent": "report",
+        "source": "keyword",
+        "reply": "Thank you for your report. Reply JOIN to get drought alerts for your district."
+      },
+      {
+        "text": "STOP",
+        "status": 200,
+        "ms": 147,
+        "intent": "stop",
+        "source": "keyword",
+        "reply": "You will get no more alerts. Reply JOIN to come back."
+      }
+    ],
+    "alive": true,
+    "max_ms": 12092,
+    "log": "INFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-sonnet-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6EFbbdrJmXnPGgJhcDu'}\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6EFdzzFpDNQQeUwuYE2'}\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6EFgc1hE7VfK8kUcpgo'}\nINFO:httpx2:HTTP Request: POST https://api.anthropic.com/v1/messages \"HTTP/1.1 401 Unauthorized\"\nWARNING:llm:Claude call failed (claude-haiku-5-5): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cg6EFimF1hodp4Pi8aPwx'}"
+  },
+  "claude_refused": {
+    "pass": true,
+    "results": [
+      {
+        "text": "Hello I am a farmer in Mbire and want the drought alerts please",
+        "status": 200,
+        "ms": 13999,
+        "intent": "subscribe",
+        "reply": "Welcome to drought alerts. Which district do you live in? Reply with the distric"
+      },
+      {
+        "text": "Ndiri murimi ku Binga",
+        "status": 200,
+        "ms": 450,
+        "intent": "unknown",
+        "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP "
+      },
+      {
+        "text": "can you add me, I keep cattle near Gwanda",
+        "status": 200,
+        "ms": 482,
+        "intent": "unknown",
+        "reply": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP "
+      },
+      {
+        "text": "JOIN Gwanda herder",
+        "status": 200,
+        "ms": 486,
+        "intent": "subscribe",
+        "reply": "Welcome to drought alerts. Which district do you live in? Reply with the distric"
+      }
+    ],
+    "max_ms": 13999,
+    "log": "INFO:anthropic._base_client:Retrying request to /v1/messages in 0.385060 seconds\nWARNING:llm:Claude call failed (claude-haiku-5-5): Connection error.\nINFO:anthropic._base_client:Retrying request to /v1/messages in 0.380708 seconds\nWARNING:llm:Claude call failed (claude-haiku-5-5): Connection error.\nINFO:anthropic._base_client:Retrying request to /v1/messages in 0.407826 seconds\nWARNING:llm:Claude call failed (claude-haiku-5-5): Connection error."
+  },
+  "backend_down": {
+    "pass": true,
+    "static": {
+      "/index.html": 200,
+      "/js/app.js": 200,
+      "/js/live.js": 200,
+      "/js/real.js": 200,
+      "/vendor/globe.gl.min.js": 200,
+      "/data/geo/ZWE.js": 200,
+      "/data/risk/ZWE.js": 200,
+      "/css/app.css": 200,
+      "/css/live.css": 200
+    },
+    "external_assets_in_index": [],
+    "note": "live.js: api() catches fetch errors -> 'backend offline', globe untouched (code review)"
+  },
+  "double_approve": {
+    "pass": true,
+    "approve_codes": [
+      200,
+      200,
+      200,
+      200
+    ],
+    "users_subscribed": 5,
+    "recipients": 5,
+    "duplicates": {},
+    "total_out": 5
+  },
+  "gateway_down": {
+    "pass": true,
+    "approve_status": 200,
+    "approve_ms": 691,
+    "out_messages": 3,
+    "statuses": [
+      "failed:ConnectError"
+    ],
+    "event_status_after": "sent",
+    "sim_still_works": true,
+    "approve_body": "{\"ok\":true,\"event\":{\"id\":96,\"created_at\":\"2026-10-16T16:28:25+00:00\",\"iso3\":\"ZWE\",\"unit_id\":\"62879985B20819792882543\",\"unit_name\":\"Uzumba Maramba Pfungwe\",\"t\":59,\"month_label\":\"Dec 2023\",\"level\":2,\"ev",
+    "note": "event is marked 'sent' even when every gateway send failed"
+  },
+  "reload": {
+    "pass": false,
+    "before": [
+      0,
+      2,
+      6
+    ],
+    "fresh_client": [
+      0,
+      2,
+      6
+    ],
+    "after_backend_restart": [
+      0,
+      0,
+      0
+    ],
+    "note": "browser-side: live.js keeps nothing in memory that is not re-fetched; ?page= and ?country&t survive reload"
+  }
+}

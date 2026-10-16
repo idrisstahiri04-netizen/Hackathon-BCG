@@ -1,0 +1,48 @@
+unit_id,unit_name,pop_millions,source,year
+32016919B50719068904883,Baringo,0.80,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B53683499362611,Bomet,1.33,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B68325359473156,Bungoma,1.81,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B17784979587790,Busia,0.96,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B59887050611600,Elgeyo-Marakwet,0.55,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B43560273720920,Embu,0.65,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B57902629823981,Garissa,1.63,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B3301153840115,Homa Bay,1.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B62684442090944,Isiolo,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B31527762068828,Kajiado,0.98,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B72187572718143,Kakamega,2.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B28150779100642,Kericho,0.87,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B11020559484650,Kiambu,1.97,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B27781338411646,Kilifi,1.45,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B58720683486854,Kirinyaga,0.63,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B92888924192138,Kisii,1.45,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B35081513576883,Kisumu,1.23,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B87039477224343,Kitui,1.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B50438423394723,Kwale,0.81,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B40191501607276,Laikipia,0.57,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B38538724963648,Lamu,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B39119671019936,Machakos,1.39,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B42227953152284,Makueni,1.10,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B2031803566233,Mandera,2.68,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B63496705134089,Marsabit,0.36,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B42702125036935,Meru,1.69,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B50702580177250,Migori,1.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B10079274489584,Mombasa,1.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B92229445677015,Murang'a,1.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B57908315498598,Nairobi,4.78,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B58088177642376,Nakuru,2.37,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B10848562282373,Nandi,1.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B83281423333591,Narok,1.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B45734544235065,Nyamira,0.76,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B99956097556155,Nyandarua,0.75,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B26862024603939,Nyeri,0.83,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B77230315601578,Samburu,0.33,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B12007380424127,Siaya,1.07,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B21030921481039,Taita Taveta,0.39,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B56782604912852,Tana River,0.32,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B40030396675644,Tharaka,0.46,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B1149170155930,Trans Nzoia,1.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B72266624462344,Turkana,1.26,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B81086936948851,Uasin Gishu,1.35,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B20488296424250,Vihiga,0.73,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B89873713911655,Wajir,1.74,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+32016919B96045830258165,West Pokot,0.75,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020

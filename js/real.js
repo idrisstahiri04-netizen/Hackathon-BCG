@@ -1,5 +1,5 @@
 /* ============================================================================
-   real.js — the same engine API as js/sim.js, but fed by real pipeline output.
+   real.js — the engine app.js uses, fed only by real pipeline output.
 
    Input: RISK_DATA[iso3] (data/risk/<ISO3>.js, CONTRACT.md section 3) and
           GEO_DATA[iso3]  (data/geo/<ISO3>.js,  CONTRACT.md section 2).
@@ -167,9 +167,8 @@ const REAL = (() => {
       START_YEAR, N_MONTHS, LEVELS, AUDIENCES, EVENTS, FAMILIES, N_FAMILIES,
       dateAt, build, composeSMS, audiencesFor,
       declaration: meta.declaration || null,
-      disclaimer: isStub
-        ? 'PLACEHOLDER risk values (model_version STUB) · real boundaries · not model output'
-        : 'Real satellite + weather data (CHIRPS, MODIS, ERA5). Risk levels from our model.',
+      // app.js never shows a STUB file; isStub is kept for callers that check.
+      disclaimer: 'Real satellite + weather data (CHIRPS, MODIS, ERA5). Risk levels from our model.',
     };
   }
 

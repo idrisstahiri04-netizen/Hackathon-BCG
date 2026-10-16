@@ -7,8 +7,9 @@ PLACEHOLDER risk output, so the frontend can be built before the model exists.
 Writes data/risk/<ISO3>.js in the exact CONTRACT.md section 3 shape with
 meta.model_version = "STUB". Every number is invented (a smooth bump centred a
 few months before the declaration date plus deterministic noise). The real
-model overwrites these files. KEN is not in the default list so the Kenya
-prototype keeps its scripted simulation (js/sim.js) until real output exists.
+model overwrites these files. The frontend NEVER displays a STUB file (the
+country shows "data in progress"); stubs are for pipeline/dev checks only.
+An existing file whose model_version is not STUB is never overwritten.
 
 Needs data/geo/<ISO3>.js (run pipeline/prep_geo.py first).
 """
@@ -39,6 +40,19 @@ def load_geo(iso3):
     txt = open(os.path.join(ROOT, "data", "geo", f"{iso3}.js")).read()
     body = txt.split(f'GEO_DATA["{iso3}"] = ', 1)[1].rstrip().rstrip(";")
     return json.loads(body)["features"]
+
+
+def is_stub(path, iso3):
+    """True when an existing risk file is a stub (or unreadable). A file from
+    the real model (model_version != STUB) is never overwritten."""
+    try:
+        txt = open(path).read()
+        if f'RISK_DATA["{iso3}"]' not in txt:
+            return True    # empty placeholder (e.g. data/risk/KEN.js), safe to replace
+        body = txt.split(f'RISK_DATA["{iso3}"] = ', 1)[1].rstrip().rstrip(";")
+        return str(json.loads(body)["meta"].get("model_version", "")).upper() == "STUB"
+    except Exception:
+        return False   # unknown content: be safe, keep it
 
 
 def series_for(iso3, uid, grass, decl_t):
@@ -110,6 +124,9 @@ def build(iso3):
     }
     os.makedirs(os.path.join(ROOT, "data", "risk"), exist_ok=True)
     path = os.path.join(ROOT, "data", "risk", f"{iso3}.js")
+    if os.path.exists(path) and not is_stub(path, iso3):
+        print(f"[{iso3}] {path} holds real model output - not overwritten")
+        return
     with open(path, "w") as fh:
         fh.write("// STUB risk output - PLACEHOLDER numbers from pipeline/make_stub_risk.py.\n")
         fh.write("// Overwritten by the real model. Shape: pipeline/CONTRACT.md section 3.\n")

@@ -40,8 +40,8 @@ def make_synthetic(path: Path, n_units: int = 10, seed: int = 0) -> None:
             ar = np.zeros(len(months))
             for i in range(1, len(months)):
                 ar[i] = 0.7 * ar[i - 1] + rng.normal(0, 8)
-            seas = 15 * np.sin(2 * np.pi * months.month / 12 + phase)
-            v = np.clip(50 + seas + ar, 0, 100)
+            seas = 15 * np.sin(2 * np.pi * months.month.to_numpy() / 12 + phase)
+            v = np.clip(50 + seas + ar, 0, 100).astype(float)
             v[(months >= "2023-11-01") & (months <= "2024-04-01")] -= 30  # fake drought
             v = np.clip(v, 0, 100)
             v[rng.random(len(v)) < 0.03] = np.nan
@@ -72,15 +72,16 @@ def prep_context(s: np.ndarray, min_len: int = 24) -> np.ndarray | None:
     return s.astype(np.float32)
 
 
-def run_forecasts(wide, origins, max_lead, batch_size=256):
+def run_forecasts(wide, origins, max_lead, batch_size=256, ctx=256, flip=True):
     import timesfm
     import torch
 
-    torch.set_num_threads(max(1, torch.get_num_threads()))
+    import os
+    torch.set_num_threads(int(os.environ.get("TFM_THREADS", os.cpu_count() or 4)))
     model = timesfm.TimesFM_2p5_200M_torch.from_pretrained(CKPT)
     model.compile(timesfm.ForecastConfig(
-        max_context=512, max_horizon=max(16, max_lead), normalize_inputs=True,
-        use_continuous_quantile_head=True, force_flip_invariance=True,
+        max_context=ctx, max_horizon=max(16, max_lead), normalize_inputs=True,
+        use_continuous_quantile_head=True, force_flip_invariance=flip,
         infer_is_positive=True, fix_quantile_crossing=True, per_core_batch_size=batch_size))
 
     jobs, ctxs = [], []
@@ -93,7 +94,7 @@ def run_forecasts(wide, origins, max_lead, batch_size=256):
                 c = prep_context(hist[u].to_numpy())
                 if c is not None:
                     jobs.append((u, o, sig))
-                    ctxs.append(c[-512:])
+                    ctxs.append(c[-ctx:])
     print(f"{len(ctxs)} series to forecast")
     recs = []
     t0 = time.time()
@@ -117,11 +118,11 @@ def add_baselines(fc: pd.DataFrame, wide) -> pd.DataFrame:
     parts = []
     for sig, w in wide.items():
         f = fc[fc.signal == sig].copy()
-        long = w.stack(dropna=True).rename("obs").reset_index()
+        long = w.stack().rename("obs").reset_index()
         long.columns = ["target_month", "unit_id", "obs"]
         f = f.merge(long, on=["target_month", "unit_id"], how="left")
         # persistence: last valid value at or before origin
-        last = w.ffill().stack(dropna=True).rename("persist").reset_index()
+        last = w.ffill().stack().rename("persist").reset_index()
         last.columns = ["origin_month", "unit_id", "persist"]
         f = f.merge(last, on=["origin_month", "unit_id"], how="left")
         # climatology: mean of same calendar month as target, using months <= origin only
@@ -170,6 +171,9 @@ def main():
     ap.add_argument("--end", default="2024-06")
     ap.add_argument("--synthetic", action="store_true")
     ap.add_argument("--batch", type=int, default=256)
+    ap.add_argument("--ctx", type=int, default=256, help="max context months (multiple of 32)")
+    ap.add_argument("--no-flip", action="store_true", help="disable flip invariance (2x faster)")
+    ap.add_argument("--max-units", type=int, default=0, help="dev: limit units")
     a = ap.parse_args()
     leads = sorted(int(x) for x in a.lead.split(","))
     iso = "SYN" if a.synthetic else a.iso3.upper()
@@ -179,7 +183,9 @@ def main():
         make_synthetic(src)
     wide = load_wide(src)
     origins = list(pd.date_range(a.start + "-01", a.end + "-01", freq="MS"))
-    fc, secs = run_forecasts(wide, origins, max(leads), a.batch)
+    if a.max_units:
+        wide = {k: v.iloc[:, :a.max_units] for k, v in wide.items()}
+    fc, secs = run_forecasts(wide, origins, max(leads), a.batch, a.ctx, not a.no_flip)
     fc = fc[fc.lead.isin(leads)]
     out = HERE / "out"
     out.mkdir(exist_ok=True)
@@ -192,7 +198,8 @@ def main():
     n_units = fc.unit_id.nunique()
     rep = [f"# TimesFM zero-shot VCI forecast report ({iso})\n",
            f"Model: `{CKPT}` (zero-shot, CPU). Input: `{src.relative_to(HERE.parent)}`. "
-           f"Units: {n_units}. Origins {a.start}..{a.end}. Leads {leads}. Forecast wall time: {secs:.0f}s.\n",
+           f"Units: {n_units}. Origins {a.start}..{a.end}. Leads {leads}. max_context={a.ctx} months, "
+           f"flip_invariance={not a.no_flip}, batch={a.batch}. Forecast wall time: {secs:.0f}s.\n",
            "Baselines: persistence = last observed value at origin; climatology = mean of same calendar month "
            "using only months <= origin. Event = VCI < 35 (hit rate = hits/events; false-alarm ratio = "
            "false alarms/(hits+false alarms)). Rows with missing obs or baseline are dropped.\n",

@@ -1,0 +1,92 @@
+# Approved advice library for the SMS router (ask_advice intent).
+# DEMO CONTENT, TO BE VALIDATED BY WHH / AGRITEX EXTENSION BEFORE ANY REAL USE.
+# The router may only PICK one entry (Claude Sonnet chooses by id); it never writes new advice.
+# Every `text` must be GSM-7 and <= 160 chars (checked by backend/tests/test_advice.py).
+# event: cant_plant | crop_failure | no_grass | any
+# roles: farmer | herder | ngo | officer | resident
+status: demo_content_to_be_validated_by_WHH_extension
+entries:
+  - id: plant_wait_rains
+    event: cant_plant
+    roles: [farmer]
+    topic: when to plant
+    text: "Wait until the soil is wet to a hand's depth after 2 good rains before planting. Dry planting wastes seed when rains are late."
+    source: "FAO / AGRITEX good practice on planting date (demo, to validate)"
+  - id: plant_short_season_seed
+    event: cant_plant
+    roles: [farmer]
+    topic: which seed
+    text: "Late rains: choose short-season or drought-tolerant maize, or sorghum and millet. Ask your extension officer which seed suits your ward."
+    source: "CIMMYT drought-tolerant maize; FAO small grains guidance (demo, to validate)"
+  - id: plant_basins_mulch
+    event: cant_plant
+    roles: [farmer]
+    topic: save soil water
+    text: "Plant in basins (Pfumvudza) and cover soil with crop residue mulch. This keeps rain water in the soil for longer in dry spells."
+    source: "Zimbabwe Pfumvudza/Intwasa conservation agriculture; FAO CA (demo, to validate)"
+  - id: crop_keep_grain
+    event: crop_failure
+    roles: [farmer]
+    topic: store or sell grain
+    text: "Keep at least 2 months of grain for your family. Do not sell maize below market price; prices usually rise after a poor harvest."
+    source: "FAO anticipatory action guidance (demo, to validate)"
+  - id: crop_store_safely
+    event: crop_failure
+    roles: [farmer]
+    topic: grain storage
+    text: "Dry grain well and store it in sealed (hermetic) bags or a clean granary off the floor to stop weevils and rot."
+    source: "FAO post-harvest loss guidance (demo, to validate)"
+  - id: crop_residue_fodder
+    event: crop_failure
+    roles: [farmer, herder]
+    topic: use failed crop
+    text: "If the crop has failed, cut and store the stalks and leaves as dry fodder for your animals before they rot or burn."
+    source: "FAO / AGRITEX drought fodder practice (demo, to validate)"
+  - id: grass_destock_early
+    event: no_grass
+    roles: [herder, farmer]
+    topic: sell animals
+    text: "Sell old, weak and male animals early while prices are still fair. Keep your best breeding females."
+    source: "LEGS Livestock Emergency Guidelines - destocking (demo, to validate)"
+  - id: grass_water_points
+    event: no_grass
+    roles: [herder]
+    topic: water
+    text: "Plan routes to reliable water now. Water animals at cool times of day and do not overload one borehole."
+    source: "LEGS Livestock Emergency Guidelines - water (demo, to validate)"
+  - id: grass_supplement_feed
+    event: no_grass
+    roles: [herder]
+    topic: feed
+    text: "Give scarce feed and crop residues to breeding and milking animals first. Ask the vet office about lick or supplement support."
+    source: "LEGS Livestock Emergency Guidelines - feed (demo, to validate)"
+  - id: resident_water_safe
+    event: any
+    roles: [resident, farmer, herder]
+    topic: safe water
+    text: "In drought, water sources get dirty. Boil or treat drinking water and keep it covered to avoid cholera and diarrhoea."
+    source: "WHO drinking-water guidance (demo, to validate)"
+  - id: resident_child_nutrition
+    event: any
+    roles: [resident, farmer, herder]
+    topic: children and food
+    text: "If a child looks thin, weak or has swollen feet, go to the clinic now. Free screening is available for children under 5."
+    source: "UNICEF/WHO community nutrition screening (demo, to validate)"
+  - id: resident_food_support
+    event: any
+    roles: [resident, farmer, herder]
+    topic: food aid
+    text: "Register with your ward or village food committee for food or cash support. Reply HELP to talk to an officer."
+    source: "Government/WFP drought response practice (demo, to validate)"
+  - id: officer_prioritise
+    event: any
+    roles: [officer]
+    topic: where to go
+    text: "Prioritise wards with the lowest crop greenness and no water points. Push drought-tolerant seed and check livestock condition."
+    source: "Extension practice (demo, to validate)"
+  - id: ngo_trigger_check
+    event: any
+    roles: [ngo]
+    topic: early action
+    text: "Check your anticipatory action trigger for this district. Pre-position cash or food now; it costs less than late response."
+    source: "FAO/OCHA anticipatory action frameworks (demo, to validate)"

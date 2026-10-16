@@ -77,4 +77,4 @@ def attach(feat: pd.DataFrame, t: pd.DataFrame, plant_start: dict, bimodal: dict
     X["phase"] = ((t["r"].dt.month - ps) % 12).astype(float)
     X["bimodal"] = t["unit_id"].map(bimodal).astype(float)
     X["lead"] = t["lead"].astype(float)
-    return pd.concat([t, X], axis=1)
+    return pd.concat([t.drop(columns=[k for k in X.columns if k in t.columns]), X], axis=1)

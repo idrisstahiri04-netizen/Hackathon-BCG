@@ -208,7 +208,9 @@ def spi_series(acc: pd.DataFrame) -> pd.DataFrame:
             pos_m = ok & (xv > 0)
             zero_m = ok & (xv <= 0)
             H[pos_m] = q + (1 - q) * stats.gamma.cdf(xv[pos_m], a, loc=0, scale=scale)
-            H[zero_m] = q / 2 if q > 0 else np.nan
+            # zero in a calendar month that never had zeros in the baseline:
+            # it is real data (driest on record), not missing -> lowest SPI
+            H[zero_m] = q / 2 if q > 0 else 1e-6
             H = np.clip(H, 1e-6, 1 - 1e-6)
             out.loc[sel, uid] = np.clip(stats.norm.ppf(H), -3, 3)
     return out

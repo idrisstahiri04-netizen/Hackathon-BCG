@@ -109,7 +109,9 @@ const REAL = (() => {
       case 'foodbank':
         return `${L} ${name}: shortage risk ${pc} in ${row.horizon} wks. Raise cereal stock at the nearest branch now, before prices peak. [link]`;
       case 'ngo': {
-        const head = `${L} ${name}: P(shortage,${row.horizon}wk)=${pp}. `;
+        // NGOs see the FEWS NET-informed chance of IPC3+ Crisis (p_crisis), not the vegetation p
+        const pcr = row.p_crisis != null && !Number.isNaN(row.p_crisis) ? `${Math.round(row.p_crisis * 100)}%` : null;
+        const head = pcr ? `${L} ${name}: chance of Crisis within 3 months ${pcr}. ` : `${L} ${name}: `;
         const tail = `${agree}, conf ${row.confidence}. [link]`;
         const drv = fitDriver(row.drivers[0] || 'dry conditions', 160 - septets(head + tail) - 2);
         return head + (drv ? `${drv}. ` : '') + tail;

@@ -30,6 +30,9 @@ from features import attach
 from train import MODEL_EVENTS, SIG_AT_R, add_families, crop_dominant, prepare_country
 
 FAST_ENTRY = False          # spec: no 1-run escalation; set True only after a spec change
+IPC_DIR = Path(__file__).resolve().parent / "ipc_model" / "out"
+IPC_COL = "cal_eo_fews:lgbm"     # recommended in ipc_model/report.md
+CRISIS_WATCH_P = 0.57            # precision-first point from ipc_model/report.md (CV precision 0.60, recall 0.62); 0.31 (max-F1) left Watch on in ~90% of districts in calm 2020/21-2021/22
 WARMUP = 12                 # months of hysteresis warm-up before Jan 2019
 
 
@@ -112,6 +115,7 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
     decl = pd.Timestamp(ddate)
     decl_t = months_between(start, decl)
 
+    pcr = load_p_crisis(iso3)
     disp = P["display"]
     crop_dom = crop_dominant(P["c"])
     decl_m = pd.Timestamp(decl.year, decl.month, 1)
@@ -131,7 +135,24 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
         p = b["p"].values                      # information only (NGO / food-bank text), not used for levels
         dif = np.array([(m >= decl_m) and (agyear(m) == agyear(decl_m)) for m in months])
         raw = ae.raw_levels(fam, dif)
+        # announcement/text family (FEWS NET-informed IPC model): may raise to Watch only, never higher
+        if pcr is not None:
+            pr_ = pcr.reindex(pd.MultiIndex.from_product([[u], months]))
+            pc, known = pr_[IPC_COL].values, pr_["st_phase"].values
+        else:
+            pc = known = np.full(len(months), np.nan)
+        # trigger only where the latest KNOWN (published by the issue month) IPC phase is < 3, as tuned;
+        # unknown phase -> no trigger. p_crisis itself is shown everywhere.
+        crisis = ~np.isnan(pc) & (pc >= CRISIS_WATCH_P) & ~np.isnan(known) & (np.nan_to_num(known, nan=9) < 3)
+        # agricultural decision window only (calendar rule, not tuned on replay outcomes)
+        win = decision_months(iso3, P["ss"][u])
+        crisis &= np.array([m.month in win for m in months])
+        raw = np.where(crisis & (raw < 1), 1, raw)
         lvl, held = ae.hysteresis(raw)         # spec: 2 runs up, 3 runs down, no fast entry
+        # Emergency only while the declaration is in force (cap held Emergency after the window);
+        # held is recomputed so capped rows are held only if the raw level is below Warning
+        lvl = np.where((lvl == 3) & ~dif, 2, lvl)
+        held = raw < lvl
         plant = plant_months(P["ss"][u])
         st = P["c"].static.loc[u]
         default_ev = "no_grass" if (st["grass_frac"] or 0) > (st["crop_frac"] or 0) else "crop_failure"
@@ -152,13 +173,16 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
             d = b["delta"].iloc[k]
             series.append({
                 "t": t, "level": int(lvl[k]), "held": bool(held[k]), "p": None if np.isnan(p[k]) else round(float(p[k]), 3),
+                "p_crisis": None if np.isnan(pc[k]) else round(float(pc[k]), 3),
                 "confidence": conf, "agreeing": int(fam["agreeing"].iloc[k]), "families": f,
                 "event": ("none" if lvl[k] == 0 else
                           "cant_plant" if (bool(fam["strong_weather"].iloc[k]) and
                                            (m - pd.DateOffset(months=lag)).month in plant and lvl[k] == 1)
                           else b["event"].iloc[k] if isinstance(b["event"].iloc[k], str) else default_ev),
                 "horizon": horizon_weeks(d, b["event"].iloc[k]),
-                "drivers": ae.drivers(s, f), "signals": s})
+                "drivers": (ae.drivers(s, f) + ([f"FEWS NET-based outlook: Crisis (IPC3+) likely within 3 months"]
+                                                 if crisis[k] else []))[:3],
+                "signals": s})
         units.append({"id": u, "name": str(P["c"].names[u]), "series": series})
 
     mj = json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
@@ -177,6 +201,16 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
                       "declaration in force (declaration month to end of that agricultural year). "
                       "Hysteresis 2 up / 3 down, no fast entry. p is information only.",
         "spec_rule_cv_stats": mj.get("thresholds"),
+        "p_crisis": {"source": "pipeline/ipc_model (eo_fews:lgbm, FEWS NET outlook/projections + EO + seasonal "
+                               "forecast), calibrated P(district enters IPC3+ within 1-3 months); CV fold predictions "
+                               "for CV seasons, final model for hold-out; null where unavailable",
+                     "available": pcr is not None,
+                     "watch_threshold": CRISIS_WATCH_P,
+                     "watch_only_if_known_phase_below": 3,
+                     "watch_months": "Oct-Apr (ZWE/MWI/ZMB); KEN: own rainy seasons +/- 1 month (agricultural calendar rule)",
+                     "rule": "announcement/text family: p_crisis >= threshold, in districts whose latest published IPC "
+                             "phase is below 3, may raise the level to Watch (1) only (NGO / officer audiences); "
+                             "never Warning; farmers unchanged"},
         "fast_entry": False,
         "data_latency_months": LATENCY,
         "issue_convention": "level/p for month t are issued at the end of month t from data of month t-1 "
@@ -197,6 +231,41 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
                      "metrics": meta_metrics,
                      "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")},
             "units": units}
+
+
+def load_p_crisis(iso3: str):
+    """Out-of-sample p of entering IPC3+ within 1-3 months (ipc_model, eo_fews:lgbm, calibrated):
+    leave-one-season-out CV predictions (oof) for CV seasons, final model for hold-out seasons.
+    Returns Series indexed (unit_id, month) or None if the country has no IPC model output."""
+    parts = []
+    for f in ("oof_h13.parquet", "holdout_h13.parquet"):
+        fp = IPC_DIR / f
+        if fp.exists():
+            d = pd.read_parquet(fp, columns=["iso3", "unit_id", "month", "st_phase", IPC_COL])
+            parts.append(d[d.iso3 == iso3])
+    if not parts:
+        return None
+    d = pd.concat(parts, ignore_index=True)
+    if d.empty:
+        return None
+    d["month"] = pd.to_datetime(d["month"])
+    d = d.drop_duplicates(["unit_id", "month"], keep="last")      # hold-out wins if both
+    return d.set_index(["unit_id", "month"])[[IPC_COL, "st_phase"]].astype(float)
+
+
+SOUTHERN_DECISION = {10, 11, 12, 1, 2, 3, 4}   # Oct-Apr: planting, growing and lean season (unimodal south)
+
+
+def decision_months(iso3: str, ss) -> set:
+    """Months in which the p_crisis Watch trigger may fire. Southern-hemisphere unimodal countries:
+    Oct-Apr. KEN: each of the unit's own rainy seasons (OND / MAM as detected) +/- 1 month."""
+    if iso3 != "KEN":
+        return SOUTHERN_DECISION
+    out = set()
+    for s_ in ss:
+        r = list(s_.rainy)
+        out |= set(r) | {(r[0] - 2) % 12 + 1, r[-1] % 12 + 1}
+    return out
 
 
 def plant_months(ss) -> set:

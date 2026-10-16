@@ -1,6 +1,33 @@
 # Model test report (audit)
 
-## Re-run 2026-10-16 17:27 UTC (after orchestrator decisions + re-export of data/risk/*.js at 17:21)
+## Re-run 2026-10-16 18:01 UTC (alert engine v1.1 "spec mode", data/risk/*.js exported 17:50)
+
+**Result: 93 passed, 1 failed** (`/home/looooo/bcg/.venv/bin/python -m pytest pipeline/tests/audit -q`, ~25 s).
+
+`test_alert_rules.py` is rewritten for the v1.1 API: `families(df, in_season, in_rainy, crop_dom)`,
+`raw_levels(fam, decl_in_force)`, `hysteresis(raw) -> (levels, held)`. It checks all 16 family mixes,
+with and without a declaration in force. Levels must be: Warning = vegetation + (rain or soil),
+Emergency = Warning + declaration, else Watch if any core family is on. Also checked: rain+soil
+(even strong) never goes above Watch; heat alone never raises a level and is not counted in `agreeing`;
+missing signals raise nothing; rain and soil are off outside the rainy season; vegetation needs VCI low in
+2 months in a row; `p` is not an input to the level; hysteresis is exactly 2 up (to the min of the last 2)
+and 3 down (to the max of the last 3); a 1-month spike is ignored; `held` == (raw < shown level);
+no fast entry in export. All 76 pass. Labels (2-of-3 months rule), leakage, CV/hold-out and the
+synthetic export all pass.
+
+### Failure
+**Emergency is shown outside the declaration season.** In real `data/risk/ZWE.js`, 46 units show
+level 3 at t=66 (Jul 2024), and `held=true`. The declaration is in force only for t=63..65 (Apr-Jun 2024,
+the end of agyear 2023/24). Cause: the 3-runs-down hysteresis keeps level 3 after `dif` turns off
+(`pipeline/export_risk.py:132-134`). Test: `pipeline/tests/audit/test_export_contract.py:143`
+(check at line 92). Possible fix: after hysteresis, cap the shown level at 2 where no declaration is in
+force (`lvl = np.where((lvl == 3) & ~dif, 2, lvl)`). Or decide that a held Emergency is allowed for 2 months
+and change the spec.
+
+---
+
+## Earlier run (17:27 UTC, before v1.1)
+
 
 **Result: 109 passed, 0 failed** (`/home/looooo/bcg/.venv/bin/python -m pytest pipeline/tests/audit -q`, ~20 s).
 

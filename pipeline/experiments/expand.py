@@ -40,7 +40,7 @@ def main(iso3s):
         except Exception as e:                # noqa: BLE001
             print(f"  !! {i}: {e}"); continue
         X = make_xy(P["feat"], P["targets"], H.ALL_LEADS, P["plant"], P["bim"])
-        X = T.add_families(X, P["ss"])
+        X = T.add_families(X, P["ss"], T.crop_dominant(P["c"]))   # same families as train.build_rows (v1.1)
         X = X[X.agyear < TEST_FROM_AGYEAR].copy()
         X["test"] = False
         rows.append(X)

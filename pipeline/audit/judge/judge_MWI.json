@@ -1,7 +1,7 @@
 {
  "iso3": "MWI",
  "model_version": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB",
- "generated_at": "2026-10-16T17:50:29+00:00",
+ "generated_at": "2026-10-16T18:40:12+00:00",
  "n_units": 28,
  "declaration": "2024-03-23",
  "crisis_window": [
@@ -9,10 +9,10 @@
   "2024-06-01"
  ],
  "level_counts_all": {
-  "0": 1554,
-  "1": 371,
-  "2": 87,
-  "3": 4
+  "0": 1488,
+  "1": 437,
+  "2": 88,
+  "3": 3
  },
  "watch_share_before_decl": 0.714,
  "watch_n_before_decl": 20,
@@ -80,7 +80,7 @@
    "warning_plus_unit_months": 0,
    "unit_months": 112,
    "share_units_ever_warning": 0.0,
-   "share_units_ever_watch": 0.071
+   "share_units_ever_watch": 0.143
   },
   "2019/20": {
    "mean_spi1_NovMar": -0.03,
@@ -96,7 +96,7 @@
    "warning_plus_unit_months": 0,
    "unit_months": 168,
    "share_units_ever_warning": 0.0,
-   "share_units_ever_watch": 0.071
+   "share_units_ever_watch": 0.214
   },
   "2021/22": {
    "mean_spi1_NovMar": -0.12,
@@ -104,7 +104,7 @@
    "warning_plus_unit_months": 30,
    "unit_months": 168,
    "share_units_ever_warning": 0.357,
-   "share_units_ever_watch": 0.821
+   "share_units_ever_watch": 0.857
   },
   "2022/23": {
    "mean_spi1_NovMar": 0.41,
@@ -112,7 +112,7 @@
    "warning_plus_unit_months": 0,
    "unit_months": 168,
    "share_units_ever_warning": 0.0,
-   "share_units_ever_watch": 0.286
+   "share_units_ever_watch": 0.464
   },
   "2023/24": {
    "mean_spi1_NovMar": -0.56,
@@ -128,7 +128,7 @@
    "warning_plus_unit_months": 0,
    "unit_months": 56,
    "share_units_ever_warning": 0.0,
-   "share_units_ever_watch": 0.0
+   "share_units_ever_watch": 0.107
   }
  },
  "spearman_warning_months_vs": {

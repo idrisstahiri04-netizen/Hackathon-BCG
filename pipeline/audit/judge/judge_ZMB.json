@@ -1,7 +1,7 @@
 {
  "iso3": "ZMB",
  "model_version": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB",
- "generated_at": "2026-10-16T17:50:38+00:00",
+ "generated_at": "2026-10-16T18:33:19+00:00",
  "n_units": 116,
  "declaration": "2024-02-29",
  "crisis_window": [
@@ -11,8 +11,8 @@
  "level_counts_all": {
   "0": 5226,
   "1": 2544,
-  "2": 330,
-  "3": 252
+  "2": 378,
+  "3": 204
  },
  "watch_share_before_decl": 0.448,
  "watch_n_before_decl": 52,

@@ -19,19 +19,20 @@ run() { local g="$1"; shift; want "$g" || return 0; step "exp_$g" $PY "$EXP/run_
 step build     $PY "$EXP/harness.py" build
 step baseline  $PY "$EXP/harness.py" baseline
 step labels    $PY "$EXP/labels_alt.py"
-step expand    $PY "$EXP/expand.py"
-run enso       oni_south_only oni_lr_only oni_both oni_south_lr_only nino34_lr_only oni_dmi_lr_only oni_dmi_both oni_lag0_lr_only nino34_both
-run sfc        sfc_both sfc_lr_only sfc_m13_both combo_oni_sfc combo_oni_sfc_lr
-run pooled     pool_base pool_oni_lr_only pool_oni_sfc
-run labels     lab_mean35 lab_mean35_oni lab_q20 lab_q20_oni lab_mean_q20 lab_mean_q20_oni lab_min20
-run combos     combo_oni_lr_cum combo_oni_sfc_cum combo_oni_dmi_lr_cum combo_oni_lr_cum_mono
-run pooled2    pool_oni_lr_cum pool_lab_mean35_oni
-run longlead   long_base long_oni_lr_only long_oni_both long_oni_sfc
-run season     cum_rain dry_spell cum_dry_gated ndvi_slope phase_x
-run model      mono lr_C1 ens_w_lr70
-step calibration $PY "$EXP/calibration.py" "$EXP_OUT/oof_baseline.parquet" ensemble
-step leadtime_base $PY "$EXP/lead_time.py" "$EXP_OUT/oof_baseline.parquet" cal_ensemble
-[ -f "$EXP_OUT/oof_oni_south_only.parquet" ] && step leadtime_oni $PY "$EXP/lead_time.py" "$EXP_OUT/oof_oni_south_only.parquet" cal_ensemble
+case " $EXP_GROUPS " in *pool*|*v2*) step expand $PY "$EXP/expand.py";; *) log "expand skipped (no pooled group)";; esac
+run enso       oni_south_only oni_lr_only oni_both nino34_lr_only oni_dmi_lr_only
+run sfc        sfc_both combo_oni_sfc combo_oni_sfc_cum combo_oni_lr_cum
+run pooled     pool_base pool_oni_lr_only
+run labels     lab_mean35 lab_mean35_oni lab_q20 lab_q20_oni
+run pooled2    pool_oni_sfc
+run longlead   long_base long_oni_both long_oni_sfc
+run season     cum_rain cum_dry_gated
+run model      mono ens_w_lr70
+run v2         v2_sfc_oni v2_sfc_oni_lr v2_sfc_pool
+want calib && step calibration $PY "$EXP/calibration.py" "$EXP_OUT/oof_baseline.parquet" ensemble
+want calib && step leadtime_base $PY "$EXP/lead_time.py" "$EXP_OUT/oof_baseline.parquet" cal_ensemble
+want calib && step watch_inputs $PY "$EXP/watch_inputs.py"
+want calib && [ -f "$EXP_OUT/oof_oni_south_only.parquet" ] && step leadtime_oni $PY "$EXP/lead_time.py" "$EXP_OUT/oof_oni_south_only.parquet" cal_ensemble
 # once-only hold-out for the CV-chosen configuration among a shortlist declared BEFORE seeing hold-out
 PICK=$($PY - <<'PY'
 import json, os
@@ -40,13 +41,13 @@ best, bp = None, -1
 for l in (Path(os.environ["EXP_OUT"]) / "results.jsonl").read_text().splitlines():
     r = json.loads(l)
     if r["name"] in ("oni_south_only", "oni_lr_only", "oni_both", "combo_oni_lr_cum", "pool_oni_lr_only", "pool_oni_lr_cum",
-                     "sfc_both", "combo_oni_sfc", "combo_oni_sfc_cum", "pool_oni_sfc") \
+                     "sfc_both", "combo_oni_sfc", "combo_oni_sfc_cum", "pool_oni_sfc", "v2_sfc_oni", "v2_sfc_oni_lr", "v2_sfc_pool") \
        and r["label"] == "label" and r["ensemble"]["mean2_pr_auc"] > bp:
         best, bp = r["name"], r["ensemble"]["mean2_pr_auc"]
 print(best or "")
 PY
 )
-[ -n "$PICK" ] && step holdout_once $PY "$EXP/holdout_once.py" "$PICK"
+want holdout && [ -n "$PICK" ] && step holdout_once $PY "$EXP/holdout_once.py" "$PICK"
 # keep the download small
 find "$EXP_OUT" -maxdepth 1 -name 'oof_*.parquet' ! -name 'oof_baseline.parquet' ! -name 'oof_oni_south_only.parquet' \
      ! -name "oof_${PICK:-none}.parquet" -delete 2>/dev/null || true

@@ -83,6 +83,12 @@
 
   const levelColor = n => ENGINE.LEVELS[n].color;
 
+  // Display-level hook for the live crowd signal (js/live.js, window.CROWD):
+  // the model's exported level never changes; CROWD may show it +1 (max
+  // Warning) when crowd reports and a satellite family agree.
+  const dispLevel = (unit, row) =>
+    (window.CROWD && typeof CROWD.displayLevel === 'function') ? CROWD.displayLevel(unit.id, row) : row.level;
+
   // =========================================================================
   //  Globe
   // =========================================================================
@@ -115,22 +121,20 @@
   // changes — that is what makes globe.gl recolour and re-tween the counties.
   function paintGlobe() {
     if (!active || !active.live) return;
+    const lvlOf = d => { const u = unitOf.get(d); return dispLevel(u, u.series[now]); };
     world
       .polygonAltitude(d => {
-        const lvl = unitOf.get(d).series[now].level;
+        const lvl = lvlOf(d);
         const base = 0.008 + lvl * 0.0075;
         return d === selected || d === hovered ? base + 0.014 : base;
       })
       .polygonCapColor(d => {
-        const lvl = unitOf.get(d).series[now].level;
+        const lvl = lvlOf(d);
         const c = levelColor(lvl);
         if (d === selected) return c;
         return c + (lvl === 0 ? 'b0' : 'd8');      // healthy counties sit back a little
       })
-      .polygonSideColor(d => {
-        const lvl = unitOf.get(d).series[now].level;
-        return levelColor(lvl) + '66';
-      })
+      .polygonSideColor(d => levelColor(lvlOf(d)) + '66')
       .polygonStrokeColor(d =>
         d === selected ? '#ffffff' : d === hovered ? '#ffffffaa' : '#00000055');
   }
@@ -628,8 +632,11 @@
       (unit.props.pop != null ? ` · population ${fmtPop(unit.props.pop)}` : ''));
     if (ENGINE.EVENTS[row.event]) sub.append(el('span', 'evt', ENGINE.EVENTS[row.event]));
     ht.append(sub);
-    const chip = el('span', 'chip', `${L.glyph} L${row.level} ${L.label.toUpperCase()}`);
-    chip.style.background = L.color;
+    const dl = dispLevel(unit, row), DL = ENGINE.LEVELS[dl];
+    const chip = el('span', 'chip' + (dl !== row.level ? ' crowd-up' : ''),
+      `${DL.glyph} L${dl} ${DL.label.toUpperCase()}`);
+    chip.style.background = DL.color;
+    if (dl !== row.level) chip.title = `Model level L${row.level} ${L.label}; shown +1 because crowd reports and a satellite family agree`;
     chip.style.alignSelf = 'center';
     chip.style.marginLeft = 'auto';
     const close = el('button', 'd-close', '×');
@@ -674,6 +681,12 @@
     }
     s1.append(fams);
     body.append(s1);
+
+    // --- crowd reports (live, from the SMS backend; js/live.js)
+    if (window.CROWD && typeof CROWD.detailSection === 'function') {
+      const cs = CROWD.detailSection(unit, row);
+      if (cs) body.append(cs);
+    }
 
     // --- drivers
     if (row.drivers.length) {
@@ -722,6 +735,10 @@
   // =========================================================================
   //  Boot
   // =========================================================================
+  // Small surface for js/live.js: the globe (HTML badges) and a repaint after
+  // crowd data changes. Nothing else of the app state is exposed.
+  window.APP = { world, repaint() { paintGlobe(); if (selected) renderDetail(); } };
+
   COUNTRIES.forEach(c => {
     const h = engineFor(c);
     c.live = !!h;

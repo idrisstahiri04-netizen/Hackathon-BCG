@@ -14,7 +14,7 @@ ROOT = PIPE.parent
 META_KEYS = {"iso3", "country", "start_year", "n_months", "declaration", "model_version", "metrics", "generated_at"}
 DECL_KEYS = {"t", "date", "label"}
 UNIT_KEYS = {"id", "name", "series"}
-ROW_KEYS = {"t", "level", "held", "p", "confidence", "agreeing", "families", "event", "horizon", "drivers", "signals"}
+ROW_KEYS = {"t", "level", "held", "p", "p_crisis", "confidence", "agreeing", "families", "event", "horizon", "drivers", "signals"}
 FAM_KEYS = {"rain", "vegetation", "soil", "heat"}
 SIG_KEYS = {"spi_1m", "spi_3m", "ndvi_z_crop", "ndvi_z_grass", "vci_crop", "vci_grass", "sm1_z", "t2m_z"}
 EVENTS = {"none", "cant_plant", "crop_failure", "no_grass"}
@@ -52,6 +52,9 @@ def validate(doc, iso3):
     except Exception:
         E("generated_at not ISO")
     n = m.get("n_months", 72)
+    # declaration in force: declaration month .. end of that agricultural year (June)
+    d_t = (dt.year - 2019) * 12 + dt.month - 1
+    ag_end_t = ((dt.year if dt.month <= 6 else dt.year + 1) - 2019) * 12 + 5
     ids = [u.get("id") for u in doc["units"]]
     if len(ids) != len(set(ids)): E("duplicate unit ids")
     for u in doc["units"]:
@@ -68,7 +71,8 @@ def validate(doc, iso3):
             if not (isint(r["level"]) and 0 <= r["level"] <= 3): E(f"{tag} level {r['level']}")
             if not isinstance(r["held"], bool): E(f"{tag} held {r['held']!r} not bool")
             if r["held"] and r["level"] == 0: E(f"{tag} held at level 0")
-            if not (isnum(r["p"]) and 0 <= r["p"] <= 1): E(f"{tag} p {r['p']}")
+            for pk in ("p", "p_crisis"):      # contract: 0-1 or null (missing is missing)
+                if not (r[pk] is None or (isnum(r[pk]) and 0 <= r[pk] <= 1)): E(f"{tag} {pk} {r[pk]}")
             if r["confidence"] not in ("low", "medium", "high"): E(f"{tag} confidence {r['confidence']}")
             f = r["families"]
             if set(f) != FAM_KEYS or not all(isinstance(v, bool) for v in f.values()):
@@ -85,6 +89,8 @@ def validate(doc, iso3):
             sg = r["signals"]
             if set(sg) != SIG_KEYS: E(f"{tag} signal keys {sorted(sg)}")
             elif not all(v is None or isnum(v) for v in sg.values()): E(f"{tag} signal values {sg}")
+            if r["level"] == 3 and not (d_t <= i <= ag_end_t):
+                E(f"{tag} Emergency outside declaration season (t {d_t}..{ag_end_t}), held={r['held']}")
             # a rise to Warning+ needs this month's raw level >= 2, so the 2-family rule must hold now
             if prev is not None and r["level"] >= 2 and r["level"] > prev["level"]:
                 if not (f["vegetation"] and (f["rain"] or f["soil"])):

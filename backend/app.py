@@ -21,7 +21,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from . import composer, db, gateway, router
+from . import composer, crowd, db, gateway, router
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 log = logging.getLogger("app")
@@ -283,6 +283,26 @@ def feed_messages(since: int = 0, limit: int = 100, phone: str | None = None,
             if isinstance(r["parsed"], dict):
                 r["parsed"].pop("name", None)
     return {"messages": rows, "last_id": max([r["id"] for r in rows], default=since)}
+
+
+@app.get("/feed/crowd")
+def feed_crowd(iso3: str = "ZWE", t: int | None = None, days: int = crowd.WINDOW_DAYS):
+    """Crowd signal (spec crowd_crop_status): per district, inbound 1/2/3 reports of consented users in
+    the last `days` days, one per user per 7 days. Aggregated counts only (no phones, no names), so no
+    auth. With `t`, the display-level rule is evaluated against data/risk/<ISO3>.js for that month:
+    +1 (max Warning) only when share_bad >= 0.6, n_reports >= 3 and a satellite family is in alarm."""
+    if not re.fullmatch(r"[A-Za-z]{3}", iso3 or ""):
+        raise HTTPException(422, "iso3 must be 3 letters")
+    if not 1 <= days <= 365:
+        raise HTTPException(422, "days must be 1..365")
+    units = crowd.aggregate(iso3, days)
+    if t is not None:
+        units = crowd.with_rule(units, iso3, t)
+    return {"iso3": iso3.upper(), "window_days": days, "t": t, "generated_at": db.now_iso(),
+            "rule": {"min_reports": crowd.MIN_REPORTS, "min_share_bad": crowd.MIN_SHARE_BAD,
+                     "dedup_days": crowd.DEDUP_DAYS, "max_display_level": crowd.MAX_DISPLAY_LEVEL,
+                     "needs_satellite_family": list(crowd.SAT_FAMILIES)},
+            "units": units}
 
 
 @app.get("/health")

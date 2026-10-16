@@ -130,3 +130,19 @@ ZWE vs FEWS NET IPC3+ transitions 2023/24: precision 0.778, recall 0.614 (TP 35,
 0.426 / 0.351. All seasons 2019/20-2023/24: 0.709 / 0.277 vs persistence 0.238 / 0.440.
 MWI 2023/24: 0.40 / 0.50 (4 transitions); all seasons 0.07 / 0.08 (no skill, persistence 0.07 / 0.12).
 Kaggle retrain attempt failed (HTTP 409 creating kernel drought-train-v11); this model was trained locally with the same code.
+
+## p_crisis Watch trigger (final, alert logic frozen)
+
+Per-row `p_crisis` = out-of-sample calibrated P(district enters IPC3+ within 1-3 months) from pipeline/ipc_model
+(eo_fews:lgbm; CV fold predictions for CV seasons, final model for hold-out); shown to NGOs everywhere, null where
+unavailable (ZMB). Watch trigger (announcement/text family, Watch only, never Warning, NGO/officer audiences):
+p_crisis >= 0.57 (precision-first CV point of the IPC model; the max-F1 point 0.31 kept Watch on in ~90% of districts
+in calm seasons), only where the latest published IPC phase is < 3 (as the threshold was tuned), and only in the
+agricultural decision window: Oct-Apr for ZWE/MWI/ZMB (planting, growing and lean season), KEN each own rainy
+season +/- 1 month. The window is an a-priori agricultural-calendar rule (when planting, input and pre-positioning
+decisions can still be acted on), not tuned on replay outcomes.
+
+ZWE replay (judge.py, compare_ipc.py): Warning before the declaration 7/91 (median 4.7 wk); Watch before 61/91
+(median 8.9 wk; first Watch Dec-23 13, Jan-24 40). Share of districts ever at Watch (Nov-Apr): 2020/21 18%,
+2021/22 70% (47 of 84 districts entered IPC3+ that season; Watch caught all 47, 13 false), 2022/23 3%.
+Warning+ vs IPC3+ transitions unchanged: 2023/24 P 0.78 / R 0.61 (persistence 0.43 / 0.35); all seasons 0.71 / 0.28.

@@ -81,6 +81,13 @@ EXPERIMENTS = {
     "pool_oni_lr_only": dict(groups=["oni"], lr_extra=ONI_LR, gb_extra=[], extra=True),
     "pool_oni_lr_cum": dict(groups=["oni", "cum_rain"], lr_extra=ONI_LR + ["rain_cum_pct"], gb_extra=["rain_cum_pct"], extra=True),
     "pool_lab_mean35_oni": dict(groups=["oni"], lr_extra=ONI_LR, gb_extra=[], label="label_mean35", events=EV2, extra=True),
+    # ---- final per-event configurations (crop_failure: ONI x south in both members; no_grass: ONI in logreg only)
+    "v2_sfc_oni": dict(per_event={"crop_failure": dict(groups=["oni", "seasonal_fc"], lr_extra=["oni_x_south"] + GROUPS_SFC, gb_extra=["oni_x_south"] + GROUPS_SFC),
+                                  "no_grass": dict(groups=["seasonal_fc"])}),
+    "v2_sfc_pool": dict(per_event={"crop_failure": dict(groups=["oni", "seasonal_fc"], lr_extra=["oni_x_south"] + GROUPS_SFC, gb_extra=["oni_x_south"] + GROUPS_SFC, extra=True),
+                                   "no_grass": dict(groups=["seasonal_fc"], extra=True)}),
+    "v2_sfc_oni_lr": dict(per_event={"crop_failure": dict(groups=["oni", "seasonal_fc"], lr_extra=["oni_x_south"] + GROUPS_SFC, gb_extra=["oni_x_south"] + GROUPS_SFC),
+                                     "no_grass": dict(groups=["oni", "seasonal_fc"], lr_extra=ONI_LR + GROUPS_SFC, gb_extra=GROUPS_SFC)}),
     # ---- alternative labels (rows_alt.parquet), base model and base + ONI(lr)
     "lab_mean35": dict(groups=[], label="label_mean35", events=EV2),
     "lab_min20": dict(groups=[], label="label_min20", events=EV2),
@@ -123,9 +130,38 @@ def load_extra(spec, groups):
     return ex
 
 
+def _cv_for(spec, rows, cols, label, events, train_leads):
+    r, extra = X.with_extra(rows, spec.get("groups", [])) if spec.get("groups") else (rows, [])
+    lr_extra = spec.get("lr_extra"); gb_extra = spec.get("gb_extra")
+    cols_lr = cols + (extra if lr_extra is None else lr_extra)
+    cols_gb = cols + (extra if gb_extra is None else gb_extra)
+    mono = monotone_map(cols_gb) if spec.get("mono") else None
+    extra_rows = load_extra(spec, spec.get("groups", []))
+    if extra_rows is not None:
+        print(f"   + extra training rows: {len(extra_rows)} from {sorted(extra_rows.iso3.unique())}", flush=True)
+    oof = HX.cv2(r, cols_lr, cols_gb, lgb_params=spec.get("lgb"), mono=mono, lr_C=spec.get("lr_C"),
+                 weights=spec.get("weights", (0.5, 0.5)), train_leads=train_leads, label_col=label, events=events,
+                 extra_train=extra_rows)
+    return oof, cols_lr, cols_gb
+
+
 def run(name, spec, rows, cols, base_tab):
+    if "per_event" in spec:                 # event-specific feature sets, e.g. the final v2 configuration
+        label = spec.get("label", "label"); train_leads = spec.get("train_leads", H.TRAIN_LEADS)
+        eval_leads = spec.get("eval_leads", (1, 2, 3)); events = list(spec["per_event"])
+        parts, lr_cols, gb_cols = [], {}, {}
+        for ev, sp in spec["per_event"].items():
+            o, cl, cg = _cv_for(sp, rows, cols, label, [ev], train_leads)
+            parts.append(o); lr_cols[ev] = cl[len(cols):]; gb_cols[ev] = cg[len(cols):]
+        oof = pd.concat(parts, ignore_index=True)
+        oof.to_parquet(OUT / f"oof_{name}.parquet", index=False)
+        tab = H.table(oof, models=MODELS, leads=list(eval_leads))
+        rec = {"name": name, "label": label, "events": events, "train_leads": list(train_leads), "eval_leads": list(eval_leads),
+               "lr_extra": lr_cols, "gb_extra": gb_cols, "per_event": True}
+        _finish(name, rec, tab, oof, events, eval_leads, label, base_tab, spec, rows)
+        return
     label = spec.get("label", "label")
-    events = spec.get("events", T.EVENTS)
+    events = spec.get("events", EV2)          # cant_plant dropped from the main model -> not evaluated
     r, extra = X.with_extra(rows, spec.get("groups", [])) if spec.get("groups") else (rows, [])
     lr_extra = spec.get("lr_extra"); gb_extra = spec.get("gb_extra")
     cols_lr = cols + (extra if lr_extra is None else lr_extra)
@@ -145,6 +181,10 @@ def run(name, spec, rows, cols, base_tab):
     tab = H.table(oof, models=MODELS, leads=list(eval_leads))
     rec = {"name": name, "label": label, "events": list(events), "train_leads": list(train_leads), "eval_leads": list(eval_leads),
            "lr_extra": cols_lr[len(cols):], "gb_extra": cols_gb[len(cols):]}
+    _finish(name, rec, tab, oof, events, eval_leads, label, base_tab, spec, r)
+
+
+def _finish(name, rec, tab, oof, events, eval_leads, label, base_tab, spec, r):
     for m in MODELS:
         rec[m] = {"events": {}}
         for ev in events:

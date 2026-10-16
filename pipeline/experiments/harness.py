@@ -71,7 +71,7 @@ def build(iso3s=ISO3S, data_dir=DATA_DIR):
     preps = {i: T.prepare_country(i, data_dir) for i in iso3s}
     def _rows(P):
         X = make_xy(P["feat"], P["targets"], ALL_LEADS, P["plant"], P["bim"])
-        X = T.add_families(X, P["ss"])
+        X = T.add_families(X, P["ss"], T.crop_dominant(P["c"]))   # same families as train.build_rows (v1.1)
         X["test"] = [T.is_test(P["iso3"], a) for a in X["agyear"]]
         return X
     rows = pd.concat([_rows(P) for P in preps.values()], ignore_index=True)

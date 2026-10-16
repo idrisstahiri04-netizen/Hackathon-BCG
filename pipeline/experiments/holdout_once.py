@@ -31,8 +31,15 @@ MODELS = ("logreg", "lgbm", "ensemble")
 
 
 def fit_score(rows, spec, cols, name):
+    if "per_event" in spec:
+        parts = []
+        for ev, sp in spec["per_event"].items():
+            sp = dict(sp); sp["events"] = [ev]; sp.setdefault("label", spec.get("label", "label"))
+            ho, _ = fit_score(rows, sp, cols, name)
+            parts.append(ho)
+        return pd.concat(parts, ignore_index=True), list(spec["per_event"])
     label = spec.get("label", "label")
-    events = spec.get("events", T.EVENTS)
+    events = spec.get("events", ["crop_failure", "no_grass"])
     r, extra = X.with_extra(rows, spec.get("groups", [])) if spec.get("groups") else (rows, [])
     cols_lr = cols + (extra if spec.get("lr_extra") is None else spec["lr_extra"])
     cols_gb = cols + (extra if spec.get("gb_extra") is None else spec["gb_extra"])
@@ -42,6 +49,7 @@ def fit_score(rows, spec, cols, name):
     if label != "label":
         r["label"] = r[label]
     oof = pd.read_parquet(OUT / f"oof_{name}.parquet")
+    oof = oof[oof.event.isin(events)]
     cv = r[~r.test & r.agyear.between(2001, 2022) & r.lead.isin(train_leads)].dropna(subset=["label"])
     te = r[r.test & r.lead.isin([1, 2, 3])].dropna(subset=["label"]).copy()
     parts = []

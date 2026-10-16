@@ -195,8 +195,11 @@ const ADVICE = (() => {
   }
 
   // ---- Build the recommendation for one alert ------------------------------
-  function build(countyName, level) {
-    const zoneNames = LHZ[countyName] || [];
+  // zoneOverride lets a sub-county pass its own FEWS NET livelihood zones
+  // instead of inheriting the county's — that is the point of the finer
+  // resolution, so we must not throw it away here.
+  function build(countyName, level, zoneOverride) {
+    const zoneNames = (zoneOverride && zoneOverride.length) ? zoneOverride : (LHZ[countyName] || []);
     const profiles = zoneNames.map(z => ZONES[z] || DEFAULT_ZONE);
     if (!profiles.length) profiles.push(DEFAULT_ZONE);
 
@@ -254,8 +257,8 @@ const ADVICE = (() => {
   }
 
   // A one-line version for the SMS, where there are ~40 spare characters.
-  function shortAction(countyName, level) {
-    const rec = build(countyName, level);
+  function shortAction(countyName, level, zoneOverride) {
+    const rec = build(countyName, level, zoneOverride);
     const k = rec.primary;
     if (level >= 3) {
       return k === 'pastoral' ? 'Water and feed breeding stock only'

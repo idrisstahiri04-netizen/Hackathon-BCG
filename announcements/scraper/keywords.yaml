@@ -1,0 +1,133 @@
+# search_terms: queried on the WordPress sites (KNA, Kilimo, Presidency) to find candidates.
+#   Keep them BROAD: WordPress search matches every word as a substring of title/content,
+#   so "crop" also finds "crops", "fertili" finds fertiliser AND fertilizer, and
+#   "food security" finds "food insecurity". Fewer terms = fewer requests.
+# tags: the full list. Every kept announcement lists the tags (and groups) found in its text.
+#   Matching is case-insensitive on whole words ("El Niño" = "El Nino").
+
+search_terms:
+  - drought
+  - famine
+  - hunger
+  - starvation
+  - malnutrition
+  - food security
+  - food shortage
+  - food prices
+  - relief food
+  - maize
+  - wheat
+  - beans
+  - sorghum
+  - millet
+  - cassava
+  - potatoes
+  - green grams
+  - unga
+  - crop
+  - harvest
+  - livestock
+  - pasture
+  - fertili
+  - locust
+  - armyworm
+  - El Nino
+  - La Nina
+  - floods
+  - rainfall
+  - NDMA
+  - NCPB
+  - HSNP
+  - ukame
+  - njaa
+
+tags:
+  drought_weather:
+    - drought
+    - dry spell
+    - failed rains
+    - poor rains
+    - below normal rainfall
+    - El Nino
+    - La Nina
+    - water shortage
+    - boreholes dried
+    - pasture
+    - browse
+
+  food_shortage:
+    - food shortage
+    - food insecurity
+    - hunger
+    - famine
+    - starvation
+    - relief food
+    - food aid
+    - food crisis
+    - malnutrition
+
+  crops:
+    - crop failure
+    - poor harvest
+    - low yields
+    - maize
+    - wheat
+    - beans
+    - sorghum
+    - millet
+    - green grams
+    - cassava
+    - potatoes
+
+  livestock:
+    - livestock deaths
+    - livestock offtake
+    - cattle dying
+    - emaciated
+    - pasture scarcity
+    - livestock prices
+
+  prices_market:
+    - food prices
+    - unga prices
+    - maize flour
+    - price of maize
+    - cost of living
+    - NCPB
+    - strategic food reserve
+    - food imports
+    - duty-free maize
+
+  pests_disease:
+    - locusts
+    - fall armyworm
+    - quelea
+    - maize lethal necrosis
+    - foot and mouth
+    - Rift Valley fever
+
+  floods:
+    - floods destroyed crops
+    - submerged farms
+    - flash floods
+
+  government_action:
+    - drought declaration
+    - national disaster
+    - NDMA
+    - HSNP
+    - cash transfer
+    - relief distribution
+    - fertiliser subsidy
+    - fertilizer subsidy
+    - e-voucher
+    - drought-tolerant seeds
+
+  swahili:
+    - ukame
+    - njaa
+    - chakula cha msaada
+    - mvua
+    - mavuno
+    - bei ya unga
+    - mifugo

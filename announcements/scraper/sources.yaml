@@ -1,0 +1,85 @@
+# Government announcement sources (family: official_text in the spec's `source` table).
+#
+# reliability_weight values are PROVISIONAL placeholders, not calibrated: re-estimate
+# them from the back-test before using them in the fusion model.
+# licence: what the site footer shows (checked 2026-10-16). None publishes an open
+# licence, so store excerpts + links, do not republish full texts.
+#
+# NDMA county drought bulletins were evaluated and skipped: older months are only
+# reachable through ASP.NET/DevExpress postbacks (no per-page URL).
+
+defaults:
+  user_agent: "SMS-Shortage-EWS-hackathon-bot/0.1 (research; non-commercial)"
+  min_delay_seconds: 2.0       # per host, between requests
+  connect_timeout: 15
+  read_timeout: 90             # kenyanews.go.ke often takes 10-30 s
+  max_retries: 2
+  date_from: "2021-10-16"      # last 5 years
+  date_to: null                # null = today
+
+sources:
+  - source_id: ken_kna
+    name: Kenya News Agency
+    url: https://www.kenyanews.go.ke/
+    family: official_text
+    priority: 1
+    reliability_weight: 0.6
+    reliability_weight_status: provisional
+    licence: "Copyright Kenya News Agency (footer notice); no open licence found"
+    adapter: wordpress
+    discovery:
+      wp_api: https://www.kenyanews.go.ke/wp-json/wp/v2/posts
+    # KNA is large and slow: only core shortage terms (counts 2021-10-16..2026-10-16 in
+    # brackets, ~6,400 hits). "food insecurity" replaces "food security" (3,383 hits, WordPress
+    # matches "food" and "security" separately, so it also returns police/security stories).
+    search_terms: [drought, famine, hunger, food insecurity, food shortage, relief food, crop failure, food prices]
+    # read title + summary from the search results; download full text only if they hold a keyword
+    prefilter_excerpt: true
+
+  - source_id: ken_moald
+    name: Kenya Ministry of Agriculture and Livestock Development (Kilimo)
+    url: https://kilimo.go.ke/
+    family: official_text
+    priority: 1
+    reliability_weight: 0.8
+    reliability_weight_status: provisional
+    licence: "Copyright Ministry of Agriculture and Livestock Development (footer notice); no open licence found"
+    adapter: kilimo
+    discovery:
+      wp_api: https://kilimo.go.ke/wp-json/wp/v2/posts
+      press_release_page: https://kilimo.go.ke/press-release/
+
+  - source_id: ken_presidency
+    name: Kenya Presidency
+    url: https://www.president.go.ke/
+    family: official_text
+    priority: 2
+    reliability_weight: 0.9
+    reliability_weight_status: provisional
+    licence: "Copyright Office of the President of the Republic of Kenya (footer notice); no open licence found"
+    adapter: wordpress
+    discovery:
+      wp_api: https://www.president.go.ke/wp-json/wp/v2/posts
+
+  - source_id: ken_gaa
+    name: Government Advertising Agency (MyGov)
+    url: https://gaa.go.ke/
+    family: official_text
+    priority: 3
+    reliability_weight: 0.5
+    reliability_weight_status: provisional
+    licence: "Copyright Government Advertising Agency, All Rights Reserved (footer notice)"
+    adapter: gaa
+    # GAA news is mostly rewritten KNA stories and has no search (page-by-page walk back to
+    # 2021 takes ~1 h), so it is skipped; MyGov issues and public notices are kept.
+    skip_news: true
+    discovery:
+      news_list: https://gaa.go.ke/allnews
+      mygov_issue_pages:          # one page per year, each lists the weekly MyGov PDF issues
+        - https://gaa.go.ke/mygove-issue-2026
+        - https://gaa.go.ke/mygov-newspaper-2025
+        - https://gaa.go.ke/mygov-2024-issues
+        - https://gaa.go.ke/mygov-2023-issues
+        - https://gaa.go.ke/2022-issues
+      public_notices: https://gaa.go.ke/public-notices
+    notes: "News items are often KNA stories rewritten; removed by cross-source dedup."

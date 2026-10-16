@@ -1,0 +1,7 @@
+requests>=2.32
+truststore>=0.10
+beautifulsoup4>=4.12
+lxml>=5.0
+trafilatura>=2.0
+pymupdf>=1.24
+pyyaml>=6.0

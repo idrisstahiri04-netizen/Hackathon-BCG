@@ -1,0 +1,8 @@
+{
+ "url": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/ZMB/ADM2/geoBoundaries-ZMB-ADM2_simplified.geojson",
+ "api": "https://www.geoboundaries.org/api/current/gbOpen/ZMB/ADM2/",
+ "fetched_at": "2026-10-16T15:49:10.260986+00:00",
+ "sha256": "58e9df3f95bb4c7539e5fb48839b246b2bfb12694cf5db3ed595240156016c60",
+ "licence": "Creative Commons Attribution 4.0 (CC BY 4.0)",
+ "source": "GRID3, Office of the Surveyor General"
+}

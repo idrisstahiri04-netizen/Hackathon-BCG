@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMS Shortage Early Warning — Kenya pilot</title>
+<title>SMS Shortage Early Warning</title>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body class="viz-root">
@@ -60,7 +60,7 @@
 
     <div id="empty-hint">
       <p>Search for a country to begin.</p>
-      <p class="muted">Kenya is the pilot. Try <button class="linkish" data-demo="Kenya">Kenya</button>.</p>
+      <p class="muted">Try <button class="linkish" data-demo="Zimbabwe">Zimbabwe</button>.</p>
     </div>
   </section>
 
@@ -108,11 +108,35 @@
   </div>
 </footer>
 
-<div id="disclaimer">Simulated data · scripted to the 2020–2023 Horn of Africa drought · prototype</div>
+<div id="disclaimer" hidden></div>
 
 <script src="vendor/globe.gl.min.js"></script>
 <script src="data/kenya-counties.js"></script>
 <script src="js/sim.js"></script>
-<script src="js/app.js"></script>
+<script src="js/real.js"></script>
+<script>
+  // Load geometry + risk output per country, then start the app. A missing
+  // file just means that country is not live (Kenya then falls back to SIM).
+  (function () {
+    var ISO3 = ['ZWE', 'KEN', 'MWI', 'ZMB'];
+    var files = [];
+    ISO3.forEach(function (c) { files.push('data/geo/' + c + '.js', 'data/risk/' + c + '.js'); });
+    var left = files.length;
+    function done() {
+      if (--left) return;
+      var s = document.createElement('script');
+      s.src = 'js/app.js';
+      document.body.appendChild(s);
+    }
+    files.forEach(function (src) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      s.onload = done;
+      s.onerror = done;
+      document.body.appendChild(s);
+    });
+  })();
+</script>
 </body>
 </html>

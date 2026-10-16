@@ -222,7 +222,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .d-pm .unit { font-size: 11.5px; color: var(--text-muted); }
 
 /* source agreement grid */
-.fams { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.fams { display: grid; grid-template-columns: repeat(var(--fam-n, 5), 1fr); gap: 5px; }
 .fam {
   padding: 7px 4px; border-radius: 6px; text-align: center;
   background: var(--surface-2); border: 1px solid var(--line);
@@ -448,3 +448,21 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .note.is-new, #detail { animation: none; }
 }
+
+/* ---- Multi-country additions ------------------------------------------- */
+/* Declaration marker on the timeline: a thin red tick through the spark. */
+#decl-mark {
+  position: absolute; top: -2px; height: 34px; width: 0;
+  border-left: 1.5px dashed var(--lvl-3); pointer-events: none;
+}
+#decl-mark span {
+  position: absolute; left: 4px; top: -13px; white-space: nowrap;
+  font: 9.5px var(--mono); color: var(--lvl-3);
+}
+.evt {
+  display: inline-block; font: 600 10px var(--mono); letter-spacing: .02em;
+  padding: 1px 6px; border-radius: 4px; margin-left: 6px;
+  background: var(--surface-3); color: var(--text-secondary);
+}
+.note.decl { border-left-color: var(--lvl-3); }
+.note.decl .n-line { color: var(--text-primary); }

@@ -1,0 +1,8 @@
+{
+ "url": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/ZWE/ADM2/geoBoundaries-ZWE-ADM2_simplified.geojson",
+ "api": "https://www.geoboundaries.org/api/current/gbOpen/ZWE/ADM2/",
+ "fetched_at": "2026-10-16T15:49:04.897947+00:00",
+ "sha256": "3486ef2803574e63db97e2a35b6688bb327cb8d6ff5e439691c1cc3068ddb424",
+ "licence": "Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO)",
+ "source": "Zimbabwe National Statistics Agency (ZIMSTAT www.zimstat.co.zw) Central Statistics Office, OCHA ROSEA"
+}

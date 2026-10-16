@@ -1,0 +1,8 @@
+{
+ "url": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/MWI/ADM2/geoBoundaries-MWI-ADM2_simplified.geojson",
+ "api": "https://www.geoboundaries.org/api/current/gbOpen/MWI/ADM2/",
+ "fetched_at": "2026-10-16T15:49:08.214318+00:00",
+ "sha256": "5d1840b4c11dc39947210356279366dce59c1670a1630d4b157f6763902fdd57",
+ "licence": "Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO)",
+ "source": "National Statistics Office of Malawi, OCHA ROSEA"
+}

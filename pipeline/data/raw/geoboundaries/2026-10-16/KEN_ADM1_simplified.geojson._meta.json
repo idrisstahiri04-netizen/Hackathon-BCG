@@ -1,0 +1,8 @@
+{
+ "url": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/KEN/ADM1/geoBoundaries-KEN-ADM1_simplified.geojson",
+ "api": "https://www.geoboundaries.org/api/current/gbOpen/KEN/ADM1/",
+ "fetched_at": "2026-10-16T15:49:06.510672+00:00",
+ "sha256": "4d9e1b8a6d305ee2b2bbeeeb4dd6ec3cc52e44884f0f6065d14d255810f9eae4",
+ "licence": "Public Domain",
+ "source": "RCMRD GeoPortal, Africa GeoPortal"
+}

@@ -18,17 +18,19 @@
   };
 
   // ---- Countries the search knows about ----------------------------------
-  // Only Kenya has a model behind it. The rest are listed so the search is
-  // honest about where coverage does and does not exist yet.
+  // A country is LIVE when both its geometry (data/geo/<ISO3>.js) and its
+  // risk output (data/risk/<ISO3>.js) loaded. Kenya falls back to the scripted
+  // simulation (js/sim.js) when it has no real risk file. The rest are listed
+  // so the search is honest about where coverage does not exist yet.
   const COUNTRIES = [
-    { name: 'Kenya',        lat:  0.53, lng: 37.86, alt: 0.38, live: true },
+    { name: 'Zimbabwe',     iso3: 'ZWE', lat:-19.02, lng: 29.15, alt: 0.42, unitWord: 'districts' },
+    { name: 'Kenya',        iso3: 'KEN', lat:  0.53, lng: 37.86, alt: 0.38, unitWord: 'counties' },
+    { name: 'Malawi',       iso3: 'MWI', lat:-13.25, lng: 34.30, alt: 0.42, unitWord: 'districts' },
+    { name: 'Zambia',       iso3: 'ZMB', lat:-13.13, lng: 27.85, alt: 0.50, unitWord: 'districts' },
     { name: 'Ethiopia',     lat:  9.10, lng: 40.50, alt: 0.65 },
     { name: 'Somalia',      lat:  5.15, lng: 46.20, alt: 0.65 },
     { name: 'Uganda',       lat:  1.37, lng: 32.29, alt: 0.65 },
     { name: 'Tanzania',     lat: -6.37, lng: 34.89, alt: 0.65 },
-    { name: 'Zimbabwe',     lat:-19.02, lng: 29.15, alt: 0.65 },
-    { name: 'Zambia',       lat:-13.13, lng: 27.85, alt: 0.65 },
-    { name: 'Malawi',       lat:-13.25, lng: 34.30, alt: 0.65 },
     { name: 'Niger',        lat: 17.61, lng:  8.08, alt: 0.65 },
     { name: 'Sudan',        lat: 15.60, lng: 30.22, alt: 0.65 },
     { name: 'South Sudan',  lat:  7.86, lng: 29.69, alt: 0.65 },
@@ -39,9 +41,43 @@
 
   const WORLD_VIEW = { lat: 6, lng: 24, altitude: 2.3 };
 
-  // ---- Model --------------------------------------------------------------
-  const MODEL = SIM.build(KENYA_COUNTIES.features);
-  const byName = new Map(MODEL.units.map(u => [u.name, u]));
+  // ---- Engines --------------------------------------------------------------
+  // Each live country gets an engine with the API app.js needs. Real data
+  // comes from REAL.forCountry; Kenya without real output wraps SIM.
+  const SIM_ENGINE = {
+    isReal: false, isStub: false,
+    START_YEAR: SIM.START_YEAR, N_MONTHS: SIM.N_MONTHS, LEVELS: SIM.LEVELS,
+    AUDIENCES: SIM.AUDIENCES, EVENTS: {}, N_FAMILIES: 5,
+    dateAt: SIM.dateAt, build: SIM.build, composeSMS: SIM.composeSMS,
+    audiencesFor: lvl => SIM.audiencesFor(lvl),
+    FAMILIES: [
+      { key: 'weather',  short: 'Rain',     src: 'CHIRPS',    val: r => r.spi.toFixed(1) },
+      { key: 'eo',       short: 'Crop',     src: 'MODIS',     val: r => r.ndvi.toFixed(1) },
+      { key: 'market',   short: 'Price',    src: 'WFP',       val: r => `${r.price > 0 ? '+' : ''}${Math.round(r.price)}%` },
+      { key: 'official', short: 'Official', src: 'ReliefWeb', val: r => (r.annSev ? `sev ${r.annSev}` : '—') },
+      { key: 'crowd',    short: 'Replies',  src: 'SMS',       val: r => `${Math.round(r.crowd * 100)}%` },
+    ],
+    declaration: { t: 32, date: '2021-09-08', label: 'Drought declared a national disaster' },
+    disclaimer: 'Simulated data · scripted to the 2020–2023 Horn of Africa drought · prototype',
+  };
+
+  function engineFor(c) {
+    if (!c || !c.iso3) return null;
+    const geo = (window.GEO_DATA || {})[c.iso3];
+    if (geo && window.RISK_DATA && RISK_DATA[c.iso3]) {
+      return { engine: REAL.forCountry(c.iso3), features: geo.features };
+    }
+    if (c.iso3 === 'KEN' && typeof KENYA_COUNTIES !== 'undefined') {
+      return { engine: SIM_ENGINE, features: KENYA_COUNTIES.features };
+    }
+    return null;
+  }
+
+  let ENGINE = SIM_ENGINE;     // timeline defaults before a country is picked
+  let MODEL = { units: [], events: [], national: [] };
+  let FEATURES = [];
+  let unitOf = new Map();      // feature -> unit
+  let byName = new Map();      // lower-case name -> unit
 
   let now = 0;            // month index
   let rendered = -1;      // how far the feed has been filled, for incremental appends
@@ -53,7 +89,7 @@
   let hovered = null;
   let smsAudience = 'farmer';
 
-  const levelColor = n => SIM.LEVELS[n].color;
+  const levelColor = n => ENGINE.LEVELS[n].color;
 
   // =========================================================================
   //  Globe
@@ -89,18 +125,18 @@
     if (!active || !active.live) return;
     world
       .polygonAltitude(d => {
-        const lvl = byName.get(d.properties.name).series[now].level;
+        const lvl = unitOf.get(d).series[now].level;
         const base = 0.008 + lvl * 0.0075;
         return d === selected || d === hovered ? base + 0.014 : base;
       })
       .polygonCapColor(d => {
-        const lvl = byName.get(d.properties.name).series[now].level;
+        const lvl = unitOf.get(d).series[now].level;
         const c = levelColor(lvl);
         if (d === selected) return c;
         return c + (lvl === 0 ? 'b0' : 'd8');      // healthy counties sit back a little
       })
       .polygonSideColor(d => {
-        const lvl = byName.get(d.properties.name).series[now].level;
+        const lvl = unitOf.get(d).series[now].level;
         return levelColor(lvl) + '66';
       })
       .polygonStrokeColor(d =>
@@ -145,7 +181,8 @@
       li.setAttribute('role', 'option');
       li.dataset.name = c.name;
       li.append(el('span', null, c.name));
-      li.append(el('span', c.live ? 'tag live' : 'tag soon', c.live ? 'Live' : 'No coverage'));
+      li.append(el('span', c.live ? 'tag live' : 'tag soon',
+        c.live ? (c.sim ? 'Live · sim' : c.stub ? 'Live · stub' : 'Live') : 'No coverage'));
       li.addEventListener('mousedown', ev => { ev.preventDefault(); selectCountry(c.name); });
       li.addEventListener('mouseenter', () => { cursor = i; markCursor(); });
       resultsEl.append(li);
@@ -198,17 +235,25 @@
 
     $('#hud').hidden = false;
     $('#hud-name').textContent = c.name;
-    $('#hud-sub').textContent = c.live
-      ? '47 counties · pilot country'
-      : 'not yet modelled';
 
     if (c.live) {
-      world.polygonsData(KENYA_COUNTIES.features);
+      loadCountry(c);
+      const n = FEATURES.length;
+      const decl = ENGINE.declaration;
+      $('#hud-sub').textContent = `${n} ${c.unitWord}` +
+        (decl ? ` · disaster declared ${fmtDate(decl.date)}` : '');
+      $('#stat-units').parentNode.querySelector('.stat-lab').textContent = `${c.unitWord} at Warning+`;
+      world.polygonsData(FEATURES);
       $('#spark').style.opacity = '1';
       $('#legend').hidden = false;
-      $('#feed-sub').textContent = 'Kenya · 47 counties';
+      $('#feed-sub').textContent = `${c.name} · ${n} ${c.unitWord}`;
+      $('#disclaimer').textContent = ENGINE.disclaimer;
+      $('#disclaimer').hidden = false;
       setTime(0, { rebuild: true });
     } else {
+      $('#hud-sub').textContent = 'not yet modelled';
+      $('#disclaimer').hidden = true;
+      buildTicks();
       // Honest empty state rather than a fake map.
       world.polygonsData([]);
       $('#legend').hidden = true;
@@ -219,18 +264,42 @@
       $('#feed-empty').hidden = false;
       $('#feed-empty').innerHTML =
         `<p>No model for ${c.name} yet.</p>` +
-        `<p class="muted">Kenya is the pilot. Adding a country needs its admin boundaries, ` +
-        `a crop mask and one season of price data.</p>`;
+        `<p class="muted">Adding a country needs its admin boundaries, ` +
+        `a crop/grass mask and the satellite + weather signals run through the model.</p>`;
       ['#stat-units', '#stat-people', '#stat-sms'].forEach(s => $(s).textContent = '—');
       pause();
     }
+  }
+
+  function fmtDate(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
+  }
+
+  // Swap the engine, model and polygons for a live country.
+  function loadCountry(c) {
+    const { engine, features } = engineFor(c);
+    ENGINE = engine;
+    FEATURES = features;
+    MODEL = ENGINE.build(features);
+    unitOf = new Map(MODEL.units.map((u, i) => [features[i], u]));
+    byName = new Map(MODEL.units.map(u => [u.name.toLowerCase(), u]));
+    const decl = ENGINE.declaration;
+    if (decl && decl.t >= 0 && decl.t < ENGINE.N_MONTHS) {
+      MODEL.events.push({ kind: 'declaration', t: decl.t, label: decl.label, date: decl.date });
+      MODEL.events.sort((a, b) => a.t - b.t);
+    }
+    now = 0;
+    scrub.max = String(ENGINE.N_MONTHS - 1);
+    buildTicks();
+    buildSpark();
   }
 
   // =========================================================================
   //  Timeline
   // =========================================================================
   const scrub = $('#scrub');
-  scrub.max = String(SIM.N_MONTHS - 1);
+  scrub.max = String(ENGINE.N_MONTHS - 1);
 
   scrub.addEventListener('input', () => setTime(+scrub.value));
 
@@ -254,12 +323,12 @@
 
   function play() {
     if (!active || !active.live) return;
-    if (now >= SIM.N_MONTHS - 1) setTime(0, { rebuild: true });
+    if (now >= ENGINE.N_MONTHS - 1) setTime(0, { rebuild: true });
     playing = true;
     $('.ic-play').hidden = true;
     $('.ic-pause').hidden = false;
     timer = setInterval(() => {
-      if (now >= SIM.N_MONTHS - 1) { pause(); return; }
+      if (now >= ENGINE.N_MONTHS - 1) { pause(); return; }
       setTime(now + 1);
     }, 950 / speed);
   }
@@ -272,14 +341,14 @@
   }
 
   function setTime(t, { rebuild = false } = {}) {
-    t = Math.max(0, Math.min(SIM.N_MONTHS - 1, t));
+    t = Math.max(0, Math.min(ENGINE.N_MONTHS - 1, t));
     const wentBack = t < now;
     now = t;
     scrub.value = String(t);
 
-    const d = SIM.dateAt(t);
+    const d = ENGINE.dateAt(t);
     $('#clock-date').textContent = d.label;
-    $('#clock-sub').textContent = `month ${t + 1} of ${SIM.N_MONTHS}`;
+    $('#clock-sub').textContent = `month ${t + 1} of ${ENGINE.N_MONTHS}`;
 
     if (!active || !active.live) return;
 
@@ -290,26 +359,40 @@
     if (selected) renderDetail();
   }
 
-  // Year ticks under the slider.
-  (function buildTicks() {
+  // Year ticks under the slider, plus the declaration marker.
+  function buildTicks() {
     const wrap = $('#track-marks');
-    for (let y = SIM.START_YEAR; y < SIM.START_YEAR + SIM.N_MONTHS / 12; y++) {
-      const t = (y - SIM.START_YEAR) * 12;
+    wrap.innerHTML = '';
+    const decl = active && active.live ? ENGINE.declaration : null;
+    const old = $('#decl-mark');
+    if (old) old.remove();
+    if (decl && decl.t >= 0 && decl.t < ENGINE.N_MONTHS) {
+      const mk = el('div');
+      mk.id = 'decl-mark';
+      mk.style.left = `${(decl.t / (ENGINE.N_MONTHS - 1)) * 100}%`;
+      mk.title = `${decl.label} — ${fmtDate(decl.date)}`;
+      mk.append(el('span', null, `declared ${fmtDate(decl.date)}`));
+      $('#track-wrap').append(mk);
+    }
+    for (let y = ENGINE.START_YEAR; y < ENGINE.START_YEAR + ENGINE.N_MONTHS / 12; y++) {
+      const t = (y - ENGINE.START_YEAR) * 12;
       const m = el('span', 'yr', String(y));
-      m.style.left = `${(t / (SIM.N_MONTHS - 1)) * 100}%`;
+      m.style.left = `${(t / (ENGINE.N_MONTHS - 1)) * 100}%`;
       wrap.append(m);
     }
-  })();
+  }
+  buildTicks();
 
   // The strip behind the slider: share of counties at Warning or above over
   // the whole window. One measure, one hue, no axis furniture — it exists to
   // show you where the crisis is, not to be read off precisely.
-  (function buildSpark() {
+  function buildSpark() {
     const svg = $('#spark');
+    if (!MODEL.national.length) { svg.innerHTML = ''; return; }
     const W = 1000, H = 30;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     const pts = MODEL.national.map((v, i) => [
-      (i / (SIM.N_MONTHS - 1)) * W,
+      (i / (ENGINE.N_MONTHS - 1)) * W,
       H - v * (H - 2) - 1,
     ]);
     const line = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L');
@@ -331,7 +414,7 @@
          <stop offset="100%" stop-color="#ec833a" stop-opacity=".03"/>
        </linearGradient></defs>`;
     svg.append(area, stroke);
-  })();
+  }
 
   // =========================================================================
   //  Readout + legend
@@ -339,13 +422,14 @@
   function updateStats() {
     const rows = MODEL.units.map(u => u.series[now]);
     const warnPlus = MODEL.units.filter((u, i) => rows[i].level >= 2);
-    const people = warnPlus.reduce((s, u) => s + u.props.pop, 0);
+    const people = warnPlus.reduce((s, u) => s + (u.props.pop || 0), 0);
+    const popKnown = MODEL.units.some(u => u.props.pop != null);
 
     // Cumulative messages: one per subscriber reached, each time a county
     // escalates. Rough, but it is the number that drives the cost model.
     let sms = 0;
     for (const e of MODEL.events) {
-      if (e.t > now || !e.escalation) continue;
+      if (e.t > now || !e.escalation || e.people == null) continue;
       sms += Math.round(e.people * 1000 * 0.11) * e.audiences.length / 3;
     }
 
@@ -354,8 +438,8 @@
     u.style.color = warnPlus.length === 0 ? 'var(--lvl-0)'
                   : warnPlus.length > 20 ? 'var(--lvl-3)' : 'var(--lvl-2)';
 
-    $('#stat-people').textContent = people >= 1 ? `${people.toFixed(1)}M` : `${Math.round(people * 1000)}k`;
-    $('#stat-sms').textContent = fmtCompact(Math.round(sms));
+    $('#stat-people').textContent = !popKnown ? '—' : people >= 1 ? `${people.toFixed(1)}M` : `${Math.round(people * 1000)}k`;
+    $('#stat-sms').textContent = popKnown ? fmtCompact(Math.round(sms)) : '—';
   }
 
   function fmtCompact(n) {
@@ -366,7 +450,7 @@
 
   (function buildLegend() {
     const ul = $('#legend-items');
-    SIM.LEVELS.forEach(L => {
+    ENGINE.LEVELS.forEach(L => {
       const li = el('li');
       li.dataset.level = L.n;
       const sw = el('span', 'sw', L.glyph);
@@ -411,7 +495,19 @@
   }
 
   function buildNote(e, animate) {
-    const L = SIM.LEVELS[e.to];
+    if (e.kind === 'declaration') {
+      const li = el('li', 'note decl' + (animate ? ' is-new' : ''));
+      li.style.setProperty('--lvl', ENGINE.LEVELS[3].color);
+      const top = el('div', 'n-top');
+      top.append(el('span', 'chip', 'OFFICIAL'), el('span', 'n-county', active.name));
+      top.append(el('span', 'n-date', fmtDate(e.date)));
+      li.append(top);
+      li.append(el('div', 'n-line', e.label + '. Compare with when the model first warned.'));
+      li.querySelector('.chip').style.background = ENGINE.LEVELS[3].color;
+      li.addEventListener('click', () => setTime(e.t));
+      return li;
+    }
+    const L = ENGINE.LEVELS[e.to];
     const li = el('li', 'note' + (animate ? ' is-new' : '') + (e.escalation ? '' : ' deesc'));
     li.style.setProperty('--lvl', L.color);
     li.dataset.county = e.county;
@@ -420,20 +516,21 @@
     const top = el('div', 'n-top');
     const chip = el('span', 'chip', `${L.glyph} L${e.to} ${L.label.toUpperCase()}`);
     top.append(chip, el('span', 'n-county', e.county));
-    top.append(el('span', 'n-date', SIM.dateAt(e.t).label));
+    if (e.escalation && ENGINE.EVENTS[e.event]) top.append(el('span', 'evt', ENGINE.EVENTS[e.event]));
+    top.append(el('span', 'n-date', ENGINE.dateAt(e.t).label));
     li.append(top);
 
     li.append(el('div', 'n-move',
       e.escalation
-        ? `escalated from L${e.from} ${SIM.LEVELS[e.from].label}`
-        : `stood down from L${e.from} ${SIM.LEVELS[e.from].label}`));
+        ? `escalated from L${e.from} ${ENGINE.LEVELS[e.from].label}`
+        : `stood down from L${e.from} ${ENGINE.LEVELS[e.from].label}`));
 
     if (e.escalation) {
       const line = el('div', 'n-line');
       line.innerHTML =
         `Shortage risk <b>${Math.round(e.p * 100)}%</b> at <b>${e.horizon} weeks</b> · ` +
-        `<b>${e.agreeing}/5</b> source families agree · confidence ${e.confidence} · ` +
-        `<b>${e.people.toFixed(2)}M</b> people`;
+        `<b>${e.agreeing}/${ENGINE.N_FAMILIES}</b> source families agree · confidence ${e.confidence}` +
+        (e.people != null ? ` · <b>${e.people.toFixed(2)}M</b> people` : '');
       li.append(line);
 
       const ul = el('ul', 'n-drivers');
@@ -442,7 +539,7 @@
 
       const nf = el('div', 'n-notify');
       nf.append(el('span', 'lab', 'Notify'));
-      e.audiences.forEach(a => nf.append(el('span', 'aud', SIM.AUDIENCES[a].label)));
+      e.audiences.forEach(a => nf.append(el('span', 'aud', ENGINE.AUDIENCES[a].label)));
       li.append(nf);
     } else {
       li.append(el('div', 'n-line', 'Conditions improved. No new alerts sent.'));
@@ -450,7 +547,7 @@
 
     li.addEventListener('click', () => {
       setTime(e.t);
-      const poly = KENYA_COUNTIES.features.find(f => f.properties.name === e.county);
+      const poly = FEATURES.find(f => (e.id != null ? f.properties.id === e.id : f.properties.name === e.county));
       if (poly) {
         selected = poly;
         smsAudience = null;
@@ -467,13 +564,10 @@
   // =========================================================================
   //  County detail
   // =========================================================================
-  const FAMILY_LABELS = {
-    weather: ['Rain', 'CHIRPS'],
-    eo: ['Crop', 'MODIS'],
-    market: ['Price', 'WFP'],
-    official: ['Official', 'ReliefWeb'],
-    crowd: ['Replies', 'SMS'],
-  };
+  // GSM 03.38 basic set + extension table (extension chars cost 2, ignored here).
+  const GSM7 = new Set(('@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?' +
+    '¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà^{}\\[~]|€').split(''));
+  const isGsm7 = t => [...t].every(ch => GSM7.has(ch));
 
   function closeDetail() {
     selected = null;
@@ -483,14 +577,15 @@
 
   function renderDetail() {
     if (!selected) { $('#detail').hidden = true; return; }
-    const unit = byName.get(selected.properties.name);
+    const unit = unitOf.get(selected);
     const row = unit.series[now];
-    const L = SIM.LEVELS[row.level];
-    const auds = SIM.audiencesFor(row.level);
+    const L = ENGINE.LEVELS[row.level];
+    const auds = ENGINE.audiencesFor(row.level, row);
     // Default to the farmer message. It is the one that shows the product is
     // about a person with a feature phone, not a dashboard.
     if (!smsAudience || !auds.includes(smsAudience)) {
-      smsAudience = auds.includes('farmer') ? 'farmer' : (auds[0] || null);
+      smsAudience = auds.includes('farmer') ? 'farmer'
+                  : auds.includes('herder') ? 'herder' : (auds[0] || null);
     }
 
     const d = $('#detail');
@@ -501,7 +596,10 @@
     const head = el('div', 'd-head');
     const ht = el('div');
     ht.append(el('h3', null, unit.name));
-    ht.append(el('div', 'sub', `${SIM.dateAt(now).label} · ${(unit.props.pop).toFixed(2)}M people`));
+    const sub = el('div', 'sub', ENGINE.dateAt(now).label +
+      (unit.props.pop != null ? ` · ${unit.props.pop.toFixed(2)}M people` : ''));
+    if (ENGINE.EVENTS[row.event]) sub.append(el('span', 'evt', ENGINE.EVENTS[row.event]));
+    ht.append(sub);
     const chip = el('span', 'chip', `${L.glyph} L${row.level} ${L.label.toUpperCase()}`);
     chip.style.background = L.color;
     chip.style.alignSelf = 'center';
@@ -522,7 +620,7 @@
     pwrap.append(big);
     pwrap.append(el('div', 'unit', `probability of shortage at ${row.horizon} weeks`));
     const cwrap = el('div');
-    cwrap.append(el('span', 'big', `${row.agreeing}/5`));
+    cwrap.append(el('span', 'big', `${row.agreeing}/${ENGINE.N_FAMILIES}`));
     cwrap.append(el('div', 'unit', `sources agree · ${row.confidence} confidence`));
     pm.append(pwrap, cwrap);
     body.append(pm);
@@ -531,17 +629,11 @@
     const s1 = el('div', 'd-sect');
     s1.append(el('span', 'd-lab', 'Source families'));
     const fams = el('div', 'fams');
-    const vals = {
-      weather: `${row.spi.toFixed(1)}`,
-      eo: `${row.ndvi.toFixed(1)}`,
-      market: `${row.price > 0 ? '+' : ''}${Math.round(row.price)}%`,
-      official: row.annSev ? `sev ${row.annSev}` : '—',
-      crowd: `${Math.round(row.crowd * 100)}%`,
-    };
-    for (const [k, [short]] of Object.entries(FAMILY_LABELS)) {
-      const f = el('div', 'fam' + (row.families[k] ? ' hit' : ''));
-      f.append(el('span', 'fn', short), el('span', 'fv', vals[k]));
-      f.title = `${FAMILY_LABELS[k][1]} — ${row.families[k] ? 'anomalous' : 'within normal range'}`;
+    fams.style.setProperty('--fam-n', ENGINE.FAMILIES.length);
+    for (const F of ENGINE.FAMILIES) {
+      const f = el('div', 'fam' + (row.families[F.key] ? ' hit' : ''));
+      f.append(el('span', 'fn', F.short), el('span', 'fv', F.val(row)));
+      f.title = `${F.src} — ${row.families[F.key] ? 'anomalous' : 'within normal range'}`;
       fams.append(f);
     }
     s1.append(fams);
@@ -571,18 +663,19 @@
     } else {
       const tabs = el('div', 'aud-tabs');
       auds.forEach(a => {
-        const b = el('button', a === smsAudience ? 'on' : '', SIM.AUDIENCES[a].label);
+        const b = el('button', a === smsAudience ? 'on' : '', ENGINE.AUDIENCES[a].label);
         b.addEventListener('click', () => { smsAudience = a; renderDetail(); });
         tabs.append(b);
       });
       s3.append(tabs);
 
-      const text = SIM.composeSMS(unit.name, row, smsAudience);
+      const text = ENGINE.composeSMS(unit.name, row, smsAudience);
       s3.append(el('div', 'sms', text));
 
-      const segs = Math.ceil(text.length / 160);
+      const gsm = isGsm7(text);
+      const segs = Math.ceil(text.length / (gsm ? 160 : 70));
       const meta = el('div', 'sms-meta');
-      meta.append(el('span', null, `${text.length} chars · GSM-7`));
+      meta.append(el('span', null, `${text.length} chars · ${gsm ? 'GSM-7' : 'UCS-2'}`));
       meta.append(el('span', segs > 1 ? 'over' : '', `${segs} segment${segs > 1 ? 's' : ''}`));
       s3.append(meta);
     }
@@ -594,9 +687,24 @@
   // =========================================================================
   //  Boot
   // =========================================================================
+  COUNTRIES.forEach(c => {
+    const h = engineFor(c);
+    c.live = !!h;
+    c.sim = !!h && !h.engine.isReal;
+    c.stub = !!h && h.engine.isStub;
+  });
+  // Live countries first in the default list.
+  COUNTRIES.sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0));
+  const firstLive = COUNTRIES.find(c => c.live && !c.sim) || COUNTRIES.find(c => c.live);
+  if (firstLive) {
+    const hint = $('#empty-hint');
+    hint.querySelector('.muted').innerHTML = 'Live: ' + COUNTRIES.filter(c => c.live)
+      .map(c => `<button class="linkish" data-demo="${c.name}">${c.name}</button>`).join(', ') + '.';
+  }
+
   setTime(0);
 
-  // Deep link: ?country=Kenya&t=48&county=Turkana jumps straight to a moment.
+  // Deep link: ?country=Zimbabwe&t=63&county=Mbire jumps straight to a moment.
   // Insurance for the pitch — if live scrubbing goes wrong, reload into the
   // peak of the crisis instead of dragging the slider in front of an audience.
   const qs = new URLSearchParams(location.search);
@@ -607,9 +715,9 @@
     const qt = parseInt(qs.get('t'), 10);
     if (Number.isFinite(qt)) setTime(qt, { rebuild: true });
     const qCounty = qs.get('county');
-    if (qCounty && byName.has(qCounty)) {
-      const poly = KENYA_COUNTIES.features.find(f => f.properties.name === qCounty);
-      selected = poly;
+    if (qCounty && byName.has(qCounty.toLowerCase())) {
+      const unit = byName.get(qCounty.toLowerCase());
+      selected = unit.feature;
       smsAudience = null;
       paintGlobe();
       renderDetail();

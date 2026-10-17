@@ -2,7 +2,7 @@
 
 Usage: python -I pipeline/audit/fetch_ipc.py [ISO3 ...]   (default: ZWE)
 Raw bulk CSV -> pipeline/cache/ipc_raw/<ISO3>/ipcphase.csv (+ _meta.json: url, fetched_at, sha256). Untouched.
-Output -> pipeline/data/ipc_<ISO3>.parquet: scenarios CS, ML1, ML2; projection_start 2016..2024.
+Output -> pipeline/data/ipc_<ISO3>.parquet: scenarios CS, ML1, ML2; projection_start 2016..2026.
 The API ignores date/scenario filters, so we download the whole country CSV and filter client-side.
 Idempotent: cached CSV is reused.
 """
@@ -58,7 +58,7 @@ def fetch(iso3: str) -> pd.DataFrame:
     df["projection_start"] = pd.to_datetime(df["projection_start"])
     df["projection_end"] = pd.to_datetime(df["projection_end"])
     df = df[df["scenario"].isin(["CS", "ML1", "ML2"])]
-    df = df[df["projection_start"].dt.year.between(2016, 2024)]
+    df = df[df["projection_start"].dt.year.between(2016, 2026)]
     df["iso3"] = iso3
     df = df.drop_duplicates("id")
     return df.reset_index(drop=True)

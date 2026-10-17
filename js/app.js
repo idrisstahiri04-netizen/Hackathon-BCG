@@ -94,9 +94,9 @@
   let view = 'now';
   let lastLead = 3;             // what F toggles back to
   let layer = 'model';
-  const MAX_LEAD = 8;
+  const MAX_LEAD = 6;            // chart line goes to +6 (last tested model lead)
   const leadOf = () => (view === 'now' ? 0 : +view.slice(1));
-  const VIEWS = ['now', ...Array.from({ length: MAX_LEAD }, (_, i) => `f${i + 1}`)];
+  const VIEWS = ['now', 'f1', 'f3', 'f6'];   // now / next month / quarter / season
   const LAYERS = ['model', 'fews', 'both'];
   const fewsOn = () => leadOf() > 0 && layer !== 'model';
   const modelOn = () => leadOf() > 0 && layer !== 'fews';
@@ -452,7 +452,7 @@
     else if (ev.key === 'ArrowLeft') setTime(now - 1);
     else if (ev.key === 'Escape') closeDetail();
     else if (ev.key === 'f' || ev.key === 'F') { ev.preventDefault(); toggleView(); }
-    else if (/^[0-8]$/.test(ev.key) && !ev.ctrlKey && !ev.metaKey && !ev.altKey) setView(ev.key === '0' ? 'now' : `f${ev.key}`);
+    else if (/^[0136]$/.test(ev.key) && !ev.ctrlKey && !ev.metaKey && !ev.altKey) setView(ev.key === '0' ? 'now' : `f${ev.key}`);
     else if (ev.key === 'l' || ev.key === 'L') setLayer(LAYERS[(LAYERS.indexOf(layer) + 1) % LAYERS.length]);
   });
 

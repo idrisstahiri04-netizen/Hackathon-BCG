@@ -101,7 +101,6 @@
       ? `backend online${info && info.mock ? ' (mock)' : ''}${API_KEY ? '' : ' · no admin key'}` : 'backend offline';
     s.title = ok && !API_KEY ? KEY_MSG : `SMS backend ${API} — ${ok ? 'online' : 'not reachable'}`;
     $$('.lp-offline').forEach(n => { n.hidden = ok; });
-    updateRunButton();
   }
   async function checkHealth() {
     try { const h = await api('/health'); setOnline(true, h); }

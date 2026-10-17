@@ -77,6 +77,7 @@ class SimIn(BaseModel):
 class RunIn(BaseModel):
     iso3: str
     t: int
+    lead: int | None = None
 
 
 class ApproveIn(BaseModel):
@@ -202,6 +203,86 @@ def run_alerts(iso3: str, t: int, dispatch: bool = True) -> dict:
             "pending_approval": len([1 for eid in created if db.q1("SELECT 1 FROM events WHERE id=? AND status='pending_approval'", (eid,))])}
 
 
+# Pastoral counties (ASAL): forecast alerts there are routed to herders (event no_grass), others to farmers.
+PASTORAL_COUNTIES = {"turkana", "wajir", "mandera", "marsabit", "garissa", "isiolo", "samburu", "west-pokot",
+                     "baringo", "tana-river", "kajiado", "laikipia"}
+
+
+def auto_send() -> bool:
+    """AUTO_SEND (default on): forecast alerts are dispatched to the gateway as soon as they are stored."""
+    return os.environ.get("AUTO_SEND", "1").lower() not in ("0", "false", "no", "off")
+
+
+def forecast_class(f: dict | None, edge_lo: float) -> tuple[int, str, int | None] | None:
+    """Same colouring as the +L view in js/app.js. Returns (level, basis, fews_phase) for orange/red, else None.
+    Model layer: chance = p_crisis ?? p; orange from the country's Watch threshold (edges 0.3 / clamp(thr,.31,.79) / 0.8),
+    red from 0.8. FEWS NET layer: IPC phase 3 = orange, 4-5 = red. A unit counts if either layer paints it orange/red."""
+    if not f:
+        return None
+    chance = f.get("p_crisis") if f.get("p_crisis") is not None else f.get("p")
+    m = 0 if chance is None else (3 if chance >= 0.8 else 2 if chance >= edge_lo else 0)
+    ph = f.get("fews_phase")
+    ph = None if ph is None else max(1, min(5, round(ph)))
+    fl = 0 if ph is None else (3 if ph >= 4 else 2 if ph == 3 else 0)
+    lvl = max(m, fl)
+    if lvl < 2:
+        return None
+    basis = (f"FEWS NET phase {ph}" if fl >= m else "our model")
+    return lvl, basis, ph
+
+
+def run_forecast_alerts(iso3: str, t: int, lead: int = 3) -> dict:
+    """Store FORECAST alerts issued in month t for month t+lead: every unit that is orange/red in the +lead view.
+    Status pending_approval; nothing is sent here. Idempotent on (iso3, unit, target t, level)."""
+    iso3 = iso3.upper()
+    lead = int(lead)
+    if not 1 <= lead <= 8:
+        raise ValueError("lead must be 1..8")
+    risk = db.load_risk(iso3)
+    meta = risk.get("meta", {})
+    n = int(meta.get("n_months") or 0)
+    if not 0 <= t < max(n, 1):
+        raise ValueError(f"t must be 0..{n - 1}")
+    start = int(meta.get("start_year") or 2019)
+    thr = (((meta.get("metrics") or {}).get("p_crisis") or {}).get("watch_threshold"))
+    edge_lo = min(0.79, max(0.31, float(thr if thr is not None else 0.57)))
+    tt, tlabel = t + lead, db.month_label(t + lead, start)
+    created = []
+    for u in risk.get("units", []):
+        cur = {r["t"]: r for r in u.get("series", [])}.get(t)
+        if not cur or cur.get("level") is None:
+            continue  # missing is missing
+        hit = forecast_class((cur.get("forecast") or {}).get(str(lead)), edge_lo)
+        if not hit:
+            continue
+        lvl, basis, _ph = hit
+        if db.q1("SELECT 1 FROM events WHERE iso3=? AND unit_id=? AND t=? AND level=?", (iso3, u["id"], tt, lvl)):
+            continue
+        parts = u["id"].split(".")
+        county = parts[1] if len(parts) > 2 else ""
+        event = "no_grass" if county in PASTORAL_COUNTIES else "none"
+        recs = recommend.recommend({"iso3": iso3, "county": u.get("name"), "level": lvl, "event": event,
+                                    "drivers": [], "p_crisis": None, "livelihood": None})
+        created.append(db.ex(
+            "INSERT INTO events (created_at, iso3, unit_id, unit_name, t, month_label, level, event, p, "
+            "drivers_json, status, approved_by, horizon, confidence, agreeing, model_version, recommendations_json, "
+            "lead, issue_t, target_label, basis) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (db.now_iso(), iso3, u["id"], u.get("name"), tt, tlabel, lvl, event, None, "[]",
+             "pending_approval", None, lead * 4, None, None, meta.get("model_version"), json.dumps(recs),
+             lead, t, tlabel, basis)))
+    sent = 0
+    if created and auto_send():  # forecast alerts go straight to the gateway layer (GATEWAY=sim now)
+        for eid in created:
+            db.ex("UPDATE events SET status='approved', approved_by='auto' WHERE id=?", (eid,))
+            try:
+                sent += composer.send_event(eid, "auto")["sent"]
+            except Exception as e:  # stays 'approved'; re-running retries
+                log.warning("auto-send event %s failed: %s", eid, e)
+    return {"created": len(created), "event_ids": created, "iso3": iso3, "t": t, "lead": lead,
+            "issue_month": db.month_label(t, start), "target_month": tlabel, "auto_send": auto_send(),
+            "sms_sent": sent, "pending_approval": 0 if auto_send() else len(created)}
+
+
 def process_live_months() -> list[dict]:
     """For every country with a risk file: store alerts for the latest issued month (meta.live_t) once.
     Stores only; sending stays behind the approval."""
@@ -213,7 +294,15 @@ def process_live_months() -> list[dict]:
         except Exception as e:
             log.info("scheduler skips %s: %s", iso3, e)
             continue
-        if t is None or db.q1("SELECT 1 FROM processed_runs WHERE iso3=? AND t=?", (iso3, int(t))):
+        if t is None:
+            continue
+        try:  # forecast alerts (+3) for the live month; idempotent, stored only
+            fr = run_forecast_alerts(iso3, int(t), 3)
+            if fr["created"]:
+                log.info("scheduler %s t=%s: %s forecast alerts (+3) stored", iso3, t, fr["created"])
+        except Exception as e:
+            log.warning("scheduler %s forecast t=%s failed: %s", iso3, t, e)
+        if db.q1("SELECT 1 FROM processed_runs WHERE iso3=? AND t=?", (iso3, int(t))):
             continue
         try:
             r = run_alerts(iso3, int(t), dispatch=False)
@@ -242,6 +331,8 @@ def _scheduler_loop():
 @app.post("/alerts/run", dependencies=[Depends(require_admin)])
 def alerts_run(body: RunIn):
     try:
+        if body.lead:
+            return run_forecast_alerts(body.iso3, body.t, body.lead)
         return run_alerts(body.iso3, body.t)
     except db.RiskFileError as e:
         raise HTTPException(409, str(e))

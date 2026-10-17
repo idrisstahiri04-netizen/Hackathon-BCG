@@ -578,9 +578,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .vs-row button small { font: 9.5px var(--mono); color: var(--text-muted); margin-top: 1px; white-space: nowrap; }
 .vs-row button[data-view="now"] { min-width: 58px; }
-.vs-layers button { flex-direction: row; min-width: 0; padding: 5px 10px; font-weight: 550; }
-.vs-layers button.on { background: var(--surface-3); border-color: var(--line); color: var(--text-primary); }
-.vs-layers button[data-layer="fews"].on, .vs-layers button[data-layer="both"].on { background: #e67800; border-color: #e67800; color: #0e0e0d; }
 .vs-row button .vs-conf { font: 9px/1.2 var(--mono); font-style: normal; color: var(--text-muted); margin-top: 1px; }
 .vs-row button[data-view^="f"].on .vs-conf { color: rgba(255,255,255,.8); }
 .vs-row button:hover { background: var(--surface-3); color: var(--text-primary); }
@@ -716,7 +713,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .vs-short { display: inline; }
   .vs-row button { min-width: 32px; padding: 5px 5px; font-size: 11px; }
   .vs-row button[data-view="now"] { min-width: 40px; }
-  .vs-layers button { padding: 5px 7px; }
   #view-cap { display: none; }
   #legend { max-width: 172px; padding: 6px 7px; }
   #legend.fc .legend-title { display: block; font-size: 9.5px; }

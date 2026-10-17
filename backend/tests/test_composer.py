@@ -140,3 +140,50 @@ def test_unique_index_blocks_double_send():
     db.log_message("out", "+f", "x", user_id=uid, event_id=e, status="sending")
     with pytest.raises(sqlite3.IntegrityError):
         db.log_message("out", "+f", "x", user_id=uid, event_id=e, status="sending")
+
+
+# ---- forecast alerts
+def test_forecast_sms_one_segment_all_roles():
+    ev = {"unit_name": "Turkana Central", "level": 2, "event": "no_grass", "lead": 3,
+          "target_label": "Dec 2026", "basis": "FEWS NET phase 3", "p": 0.5, "unit_id": "x"}
+    for lvl in (2, 3):
+        for name in ("Turkana Central", "Mandera South", "A very long sub-county name that goes on and on"):
+            for role in ("herder", "farmer", "officer", "ngo", "resident"):
+                t = composer.compose(role, {**ev, "level": lvl, "unit_name": name})
+                assert composer.is_gsm7(t) and composer.gsm_len(t) <= 160, (role, t)
+                assert "Dec 2026" in t and "%" not in t and "0.5" not in t
+    assert composer.compose("herder", ev).startswith("ALERT Turkana Central: food crisis likely by Dec 2026. Sell weak")
+
+
+def test_forecast_events_stored_idempotent_and_not_sent(tmp_path, monkeypatch):
+    monkeypatch.setenv("AUTO_SEND", "0")
+    from backend import app as appmod
+    from backend.tests.conftest import make_risk, write_risk
+    risk = make_risk({"Binga": {}, "Hwange": {}, "Kariba": {}})
+    for u, f in zip(risk["units"], ({"p_crisis": 0.7, "fews_phase": 1}, {"p": 0.1, "fews_phase": 3},
+                                    {"p": 0.2, "fews_phase": 2})):
+        u["series"][60]["forecast"] = {"3": f}
+    monkeypatch.setenv("RISK_DIR", str(tmp_path))
+    write_risk(tmp_path, risk)
+    r1 = appmod.run_forecast_alerts("ZWE", 60, 3)
+    assert r1["created"] == 2 and r1["target_month"] == db.month_label(63, 2019)  # model 0.7>=0.57; FEWS phase 3
+    assert appmod.run_forecast_alerts("ZWE", 60, 3)["created"] == 0
+    rows = db.q("SELECT * FROM events ORDER BY id")
+    assert {r["basis"] for r in rows} == {"our model", "FEWS NET phase 3"}
+    assert all(r["status"] == "pending_approval" and r["lead"] == 3 and r["issue_t"] == 60 and r["t"] == 63 for r in rows)
+    assert not db.q("SELECT 1 FROM messages WHERE direction='out'")
+
+
+def test_forecast_auto_send_sim(tmp_path, monkeypatch):
+    from backend import app as appmod
+    from backend.tests.conftest import make_risk, write_risk
+    risk = make_risk({"Binga": {}})
+    risk["units"][0]["series"][60]["forecast"] = {"3": {"p": 0.1, "fews_phase": 3}}
+    monkeypatch.setenv("RISK_DIR", str(tmp_path))
+    monkeypatch.setenv("GATEWAY", "sim")
+    write_risk(tmp_path, risk)
+    _user("+n9", "ngo", "Binga")
+    r = appmod.run_forecast_alerts("ZWE", 60, 3)
+    assert r["sms_sent"] == 1
+    assert db.q1("SELECT status, approved_by FROM events") == {"status": "sent", "approved_by": "auto"}
+    assert "by " in db.q1("SELECT text FROM messages WHERE direction='out'")["text"]

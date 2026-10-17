@@ -93,11 +93,10 @@
   // Everything that paints reads `leadOf()`; 0 means the Now view.
   let view = 'now';
   let lastLead = 3;             // what F toggles back to
-  let layer = 'model';
+  const layer = 'fews';          // forecast views always colour by FEWS NET phase
   const MAX_LEAD = 6;            // chart line goes to +6 (last tested model lead)
   const leadOf = () => (view === 'now' ? 0 : +view.slice(1));
   const VIEWS = ['now', 'f1', 'f3', 'f6'];   // now / next month / quarter / season
-  const LAYERS = ['model', 'fews', 'both'];
   const fewsOn = () => leadOf() > 0 && layer !== 'model';
   const modelOn = () => leadOf() > 0 && layer !== 'fews';
 
@@ -242,9 +241,9 @@
       // Forecast: our chance choropleth, the FEWS NET projected phase, or
       // both (chance fill, FEWS phase on the outline and sides).
       const fOf = d => fcAt(unitOf.get(d), now, lead);
-      const fill = f => (layer === 'fews' ? ipcColor(f.fews_phase) : fcColor(f.chance));
-      const rank = f => (layer === 'fews' ? (f.fews_phase == null ? 0 : f.fews_phase - 1) : Math.max(0, binOf(f.chance)));
-      const low = f => (layer === 'fews' ? f.fews_phase == null : binOf(f.chance) <= 0);
+      const fill = f => ipcColor(f.fews_phase);
+      const rank = f => (f.fews_phase == null ? 0 : f.fews_phase - 1);
+      const low = f => f.fews_phase == null;
       world
         .polygonAltitude(d => {
           const base = 0.008 + rank(fOf(d)) * 0.005;
@@ -255,11 +254,10 @@
           if (d === selected) return c;
           return c + (low(f) ? 'a0' : 'c8')   // forecasts sit lighter than issued alerts;
         })
-        .polygonSideColor(d => { const f = fOf(d); return (layer === 'both' ? ipcColor(f.fews_phase) : fill(f)) + '88'; })
+        .polygonSideColor(d => { const f = fOf(d); return fill(f) + '88'; })
         .polygonStrokeColor(d => {
           if (d === selected) return '#ffffff';
           if (d === hovered) return '#ffffffaa';
-          if (layer === 'both') { const ph = fOf(d).fews_phase; return ph == null ? '#00000055' : ipcColor(ph); }
           return '#ffffff40';      // light outline = forecast, not an issued alert
         });
       return;
@@ -468,7 +466,6 @@
     else if (ev.key === 'Escape') closeDetail();
     else if (ev.key === 'f' || ev.key === 'F') { ev.preventDefault(); toggleView(); }
     else if (/^[0136]$/.test(ev.key) && !ev.ctrlKey && !ev.metaKey && !ev.altKey) setView(ev.key === '0' ? 'now' : `f${ev.key}`);
-    else if (ev.key === 'l' || ev.key === 'L') setLayer(LAYERS[(LAYERS.indexOf(layer) + 1) % LAYERS.length]);
   });
 
   // ---- Horizon switch: Now | +1 … +8, and the layer switch ------------------
@@ -499,7 +496,6 @@
       b.setAttribute('aria-pressed', String(on));
     });
     document.body.classList.toggle('fc-view', v !== 'now');
-    $('#layer-switch').hidden = v === 'now';
     if (history.replaceState) {
       const q = new URLSearchParams(location.search);
       if (v === 'now') q.delete('view'); else q.set('view', v);
@@ -508,25 +504,9 @@
     }
     refreshForecastUI();
   }
-  function setLayer(l) {
-    if (!LAYERS.includes(l)) return;
-    layer = l;
-    [...$('#layer-switch').querySelectorAll('button')].forEach(b => {
-      const on = b.dataset.layer === l;
-      b.classList.toggle('on', on);
-      b.setAttribute('aria-pressed', String(on));
-    });
-    document.body.classList.toggle('fews-layer', l !== 'model');
-    if (history.replaceState) {
-      const q = new URLSearchParams(location.search);
-      if (l === 'model') q.delete('layer'); else q.set('layer', l);
-      const qs = q.toString();
-      history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : ''));
-    }
-    refreshForecastUI();
-  }
   function refreshForecastUI() {
     renderLegend();
+    try { logSig = ''; if (active && active.live) renderFeed(); } catch (e) { console.warn("feed", e); }
     if (!active || !active.live) return;
     paintGlobe();
     updateStats();
@@ -535,15 +515,11 @@
     if (selected) renderDetail();
     announce();
   }
-  // F: Now <-> the last forecast lead (default +3). L: cycle the layer.
+  // F: Now <-> the last forecast lead (default +3).
   const toggleView = () => setView(view === 'now' ? `f${lastLead}` : 'now');
   $('#horizon').addEventListener('click', ev => {
     const b = ev.target.closest('button[data-view]');
     if (b) setView(b.dataset.view);
-  });
-  $('#layer-switch').addEventListener('click', ev => {
-    const b = ev.target.closest('button[data-layer]');
-    if (b) setLayer(b.dataset.layer);
   });
 
   // Target month under each lead button and the caption under the switch.
@@ -567,9 +543,7 @@
     if (lead && live) {
       const cf = fcConf(lead);
       const tgt = ENGINE.dateAt(now + lead).label, iss = ENGINE.dateAt(now).label;
-      const what = layer === 'fews' ? 'FEWS NET projected IPC phase' : layer === 'both'
-        ? 'Our chance of Crisis (IPC 3+) as fill, FEWS NET projected phase on the outline' : 'Predicted chance of Crisis (IPC 3+)';
-      cap.append(el('div', null, `${what} for ${tgt} · issued end of ${iss}` + (layer === 'fews' ? '' : ' · same colours as the Now view')));
+      cap.append(el('div', null, `FEWS NET projected IPC phase for ${tgt} · issued end of ${iss}`));
       if (liveGaps(now) || fewsGapNote()) cap.append(el('div', 'vc-note', liveNote()));
       const pend = pendingText(lead);
       if (pend) cap.append(el('div', 'vc-pending', pend));
@@ -933,10 +907,14 @@
     const td = el('span', 'a-st', '—');
     const r = logStored.get(`${e.id}|${e.t}|${e.to}`);
     if (!r) { if (e.to === 1) td.textContent = 'not sent'; return td; }
+    return fillStatus(td, r);
+  }
+  function fillStatus(td, r) {
     if (r.level < 2) { td.textContent = 'not sent'; return td; }
     if (r.send_status === 'pending') {
       td.textContent = '';
-      if (r.level >= 1) {
+      if (r.lead) td.textContent = 'queued';   // forecast alerts are sent automatically
+      else if (r.level >= 1) {
         const b = el('button', 'approve', 'Approve & send');
         b.type = 'button';
         b.addEventListener('click', async ev => {
@@ -953,7 +931,56 @@
     return td;
   }
 
+  // +1/+3/+6 views: the stored FORECAST alerts issued this month for that lead (orange/red units), each with
+  // automatic send (AUTO_SEND), status sent N.
+  function renderForecastFeed() {
+    const list = $('#alog-list'), lead = leadOf();
+    const rows = [...logStored.values()].filter(r => r.lead === lead && r.issue_t === now)
+      .sort((a, b) => b.level - a.level || String(a.unit_name).localeCompare(b.unit_name));
+    $('#feed-count').textContent = String(rows.length);
+    const sig = ['fc', window.ROLE && ROLE.get(), now, lead, active && active.iso3, rows.map(r => r.id + r.send_status + r.sent_count).join()].join('|');
+    if (sig === logSig) return;
+    logSig = sig;
+    list.innerHTML = '';
+    const tgt = ENGINE.dateAt(now + lead).label;
+    const em = $('#alog-empty');
+    em.hidden = rows.length > 0;
+    em.textContent = `No forecast alerts stored for +${lead} (${tgt}).`;
+    const frag = document.createDocumentFragment();
+    for (const r of rows) {
+      const li = el('li', 'alog-row');
+      li.tabIndex = 0;
+      li.append(el('span', 'a-date', `${r.target_label || tgt} forecast`));
+      li.append(el('span', 'a-dist', r.unit_name));
+      const c = el('span', 'a-chg'), t = ENGINE.LEVELS[r.level];
+      const chip = el('span', 'chip', `${t.glyph} L${r.level} ${t.label}`);
+      chip.style.background = t.color;
+      c.append(el('span', 'chip', `+${lead}`), '→', chip);
+      c.firstChild.style.background = '#6b6a64';
+      li.append(c);
+      li.append(el('span', 'a-why', `crisis likely by ${r.target_label || tgt} · ${r.basis || 'forecast'}`));
+      li.append(fillStatus(el('span', 'a-st', '—'), r));
+      const tr = topRec(r.recommendations || [], r.event);
+      if (tr) { const line = el('span', 'a-rec'); line.append(el('b', null, 'Do: '), tr.action); li.append(line); }
+      const go = () => {
+        const poly = FEATURES.find(f => f.properties.id === r.unit_id);
+        if (poly) {
+          selected = poly; smsAudience = null;
+          world.pointOfView({ lat: poly.properties.lat, lng: poly.properties.lng, altitude: 0.55 }, 900);
+          paintGlobe(); renderDetail();
+        }
+      };
+      li.addEventListener('click', go);
+      li.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
+      frag.append(li);
+    }
+    list.append(frag);
+    fetchStored();
+  }
+
   function renderFeed() {
+    if (leadOf() > 0) return renderForecastFeed();
+    $('#alog-empty').textContent = 'No alerts yet.';
     const list = $('#alog-list');
     let evs = MODEL.events.filter(e => e.t <= now);
     if (logFilter === 'warn') evs = evs.filter(e => e.kind === 'declaration' || e.to >= 2);
@@ -1389,16 +1416,15 @@
 
   setTime(0);
 
-  // Deep link: ?country=Zimbabwe&t=63&county=Mbire&view=f3&layer=both jumps
-  // straight to a moment (view = now | f1..f8, layer = model | fews | both). Insurance for the pitch — if live
+  // Deep link: ?country=Zimbabwe&t=63&county=Mbire&view=f3jumps
+  // straight to a moment (view = now | f1..f8). Insurance for the pitch — if live
   // scrubbing goes wrong, reload into the peak of the crisis instead of
   // dragging the slider in front of an audience.
   const qs = new URLSearchParams(location.search);
   const qCountry = qs.get('country');
   const qView = (qs.get('view') || '').toLowerCase();
   if (VIEWS.includes(qView)) setView(qView);
-  const qLayer = (qs.get('layer') || '').toLowerCase();
-  if (LAYERS.includes(qLayer)) setLayer(qLayer);
+  // an old ?layer= param is ignored
   if (qCountry && COUNTRIES.some(c => c.name.toLowerCase() === qCountry.toLowerCase())) {
     const match = COUNTRIES.find(c => c.name.toLowerCase() === qCountry.toLowerCase());
     selectCountry(match.name);

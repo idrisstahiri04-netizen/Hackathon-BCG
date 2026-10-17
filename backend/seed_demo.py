@@ -34,7 +34,10 @@ SEED_KEN = [
     ("+212600000006", "Demo Resident Kilifi", "Kilifi North", "resident", "sw"),
     ("+212600000007", "Demo Farmer Kilifi", "Kilifi North", "farmer", "sw"),
     ("+212600000008", "Demo Herder Wajir", "Wajir East", "herder", "en"),
+    # forecast demo (Sep 2026 +3 -> Dec 2026): Turkana Central, FEWS NET Phase 3, pastoral
+    ("+212600000010", "Demo Herder Turkana Central", "Turkana Central", "herder", "en"),
 ]
+DEMO_FC_T_KEN, DEMO_FC_LEAD = 92, 3
 DEMO_T_KEN = 56  # Sep 2023, Kacheliba Warning
 SEEDS = {"ZWE": SEED_ZWE, "KEN": SEED_KEN}
 SEED = SEED_ZWE  # default country (kept for tests)
@@ -71,3 +74,6 @@ if __name__ == "__main__":
         from .app import run_alerts
         r = run_alerts("KEN", DEMO_T_KEN, dispatch=False)
         print(f"stored {r['created']} new alerts for KEN {r['month']} ({r['pending_approval']} waiting for approval)")
+        from .app import run_forecast_alerts
+        f = run_forecast_alerts("KEN", DEMO_FC_T_KEN, DEMO_FC_LEAD)
+        print(f"stored {f['created']} forecast alerts for KEN {f['issue_month']} +{f['lead']} -> {f['target_month']}")

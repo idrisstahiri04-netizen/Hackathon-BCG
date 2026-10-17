@@ -72,8 +72,41 @@ def audiences(level: int, event: str | None) -> list[str]:
     return out
 
 
+FC_TAIL = "Reply 1 ok 2 poor 3 bad. STOP to quit"
+
+
+def compose_forecast(role: str, ev: dict) -> str:
+    """Forecast alert (ev has lead + target_label): one segment, no probability, one action, states the future month.
+    English only for now (Swahili/French need native review)."""
+    m = ev.get("target_label") or ev.get("month_label") or "soon"
+    sev = "severe food crisis" if int(ev["level"]) >= 3 else "food crisis"
+
+    def build(name: str) -> str:
+        head = f"ALERT {name}: "
+        if role == "herder":
+            return f"{head}{sev} likely by {m}. Sell weak animals early, plan water and herd moves. {FC_TAIL}"
+        if role == "farmer":
+            return f"{head}{sev} likely by {m}. Keep your grain and seed, do not sell animals cheap. {FC_TAIL}"
+        if role == "resident":
+            return f"{head}food shortage likely by {m}. Store clean water and food, join the local food committee. Reply HELP. STOP to quit"
+        if role == "officer":
+            return f"{head}{sev} likely by {m} ({ev.get('basis') or 'forecast'}). Plan relief targeting and early visits to worst wards."
+        if role == "ngo":
+            return f"{head}{ev.get('basis') or 'forecast'} projects {sev} by {m}. Pre-position food and cash support now."
+        raise ValueError(f"unknown role {role}")
+
+    name = gsm_safe(ev.get("unit_name") or "your area")
+    text = build(name)
+    while gsm_len(text) > MAX_LEN and len(name) > 6:
+        name = name[:-2]
+        text = build(name.rstrip() + ".")
+    return fit(text)
+
+
 def compose(role: str, ev: dict, language: str = "en") -> str:
     """ev: dict with unit_name, level, event, p, drivers (list), horizon, agreeing, confidence."""
+    if ev.get("lead"):
+        return compose_forecast(role, ev)
     level = int(ev["level"])
     fr = (language or "en").startswith("fr") and role in ("farmer", "herder", "resident")
     sw = (language or "en").startswith("sw") and role in ("farmer", "herder", "resident")

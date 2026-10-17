@@ -244,6 +244,9 @@ def connect(path: str | None = None) -> sqlite3.Connection:
             cols = [r[1] for r in c.execute('PRAGMA table_info(events)')]
             if 'recommendations_json' not in cols:  # migrate older DBs
                 c.execute('ALTER TABLE events ADD COLUMN recommendations_json TEXT')
+            for col, typ in (('lead', 'INTEGER'), ('issue_t', 'INTEGER'), ('target_label', 'TEXT'), ('basis', 'TEXT')):
+                if col not in cols:  # forecast alerts: t = target month, issue_t = month issued, lead in months
+                    c.execute(f'ALTER TABLE events ADD COLUMN {col} {typ}')
             _conns[path] = c
         return _conns[path]
 

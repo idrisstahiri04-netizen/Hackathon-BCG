@@ -103,6 +103,32 @@ class RiskFileError(Exception):
     pass
 
 
+def decode_risk(data: dict) -> dict:
+    """Undo pipeline/shrink_risk.py's compact encoding (meta.fcf / dict / rowdict / fam / sigs); same as js/real.js."""
+    meta = data.get("meta", {})
+    if "fcf" not in meta or meta.get("_decoded"):
+        return data
+    meta["_decoded"] = True
+    fcf, dic, rd = meta["fcf"], meta.get("dict", {}), meta.get("rowdict", {})
+    for u in data["units"]:
+        for r in u["series"]:
+            for k, tab in rd.items():
+                if isinstance(r.get(k), int):
+                    r[k] = tab[r[k]]
+            if isinstance(r.get("families"), int):
+                r["families"] = {n: True for i, n in enumerate(meta["fam"]) if r["families"] >> i & 1}
+            if isinstance(r.get("signals"), list):
+                r["signals"] = {n: v for n, v in zip(meta["sigs"], r["signals"]) if v is not None}
+            prev = None
+            for k, f in list((r.get("forecast") or {}).items()):
+                if f == 0:
+                    f = prev
+                elif isinstance(f, list):
+                    f = {n: (dic[n][v] if n in dic else v) for n, v in zip(fcf, f) if v is not None}
+                r["forecast"][k] = prev = f
+    return data
+
+
 def load_risk(iso3: str) -> dict:
     """Parse data/risk/<ISO3>.js. Raises RiskFileError for missing or STUB data."""
     iso3 = iso3.upper()
@@ -117,7 +143,7 @@ def load_risk(iso3: str) -> dict:
         raise RiskFileError(
             f"{f.name} is a STUB (placeholder numbers, model_version=STUB). "
             "Refusing to create alerts from fake data. Run the risk model first.")
-    return data
+    return decode_risk(data)
 
 
 def month_label(t: int, start_year: int = 2019) -> str:

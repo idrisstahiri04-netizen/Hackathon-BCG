@@ -46,7 +46,20 @@ def main():
              for f in json.load(open(D / "units_KENSUB.geojson"))["features"]}
     for n in ["seasonal_fc_KEN", "prices_KEN"]:
         inherit(pd.read_parquet(D / f"{n}.parquet"), sub, names).to_parquet(T / f"{n}.parquet")
-    r = subprocess.run([sys.executable, str(HERE / "export_risk.py"), "--iso3", "KEN", "--data-dir", str(T)], check=True)
+    # out dir with live p_crisis (eo_fews / FEWS-proxy, h13+h46) inherited from the parent county; rest symlinked
+    O = HERE / "cache" / "ken_sub_out"
+    if O.exists():
+        shutil.rmtree(O)
+    O.mkdir(parents=True)
+    for f in (HERE / "out").iterdir():
+        if f.name not in ("ipc_eofews_live.parquet", "ipc_proxy_live.parquet"):
+            (O / f.name).symlink_to(f)
+    for n in ["ipc_eofews_live", "ipc_proxy_live"]:
+        d = pd.read_parquet(HERE / "out" / f"{n}.parquet")
+        k = d[d.iso3 == "KEN"]
+        pd.concat([d[d.iso3 != "KEN"], inherit(k, sub, names)], ignore_index=True).to_parquet(O / f"{n}.parquet")
+    subprocess.run([sys.executable, str(HERE / "export_risk.py"), "--iso3", "KEN", "--data-dir", str(T),
+                    "--out-dir", str(O)], check=True)
 
 
 if __name__ == "__main__":

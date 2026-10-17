@@ -182,6 +182,33 @@ const REAL = (() => {
     const R = (window.RISK_DATA || {})[iso3];
     if (!R) return null;
     const meta = R.meta;
+    // Size optimisation (pipeline/shrink_risk.py): each forecast lead is a fixed-order array (meta.fcf) whose
+    // strings are integer codes into meta.dict[field]; 0 = same as the previous lead. Decode once, in place,
+    // so everything below sees the original {field: value} objects.
+    if (meta.fcf && !meta._decoded) {
+      meta._decoded = true;
+      const FCF = meta.fcf, DICT = meta.dict || {};
+      const RD = meta.rowdict || {};
+      for (const u of R.units) for (const r of (u.series || [])) {
+        if (!r) continue;
+        for (const fld in RD) if (typeof r[fld] === 'number') r[fld] = RD[fld][r[fld]];
+        if (typeof r.families === 'number') { const m = r.families; r.families = {}; meta.fam.forEach((n, i) => { if (m >> i & 1) r.families[n] = true; }); }
+        if (Array.isArray(r.signals)) { const a = r.signals; r.signals = {}; meta.sigs.forEach((n, i) => { if (a[i] != null) r.signals[n] = a[i]; }); }
+        const fc = r.forecast;
+        if (!fc) continue;
+        let prev = null;
+        for (const k in fc) {
+          let f = fc[k];
+          if (f === 0) f = prev;
+          else if (Array.isArray(f)) {
+            const o = {};
+            FCF.forEach((fld, i) => { const v = f[i]; if (v != null) o[fld] = DICT[fld] ? DICT[fld][v] : v; });
+            f = o;
+          }
+          fc[k] = prev = f;
+        }
+      }
+    }
     const START_YEAR = meta.start_year;
     const N_MONTHS = meta.n_months;
     const dateAt = t => ({

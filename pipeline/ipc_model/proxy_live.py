@@ -64,6 +64,9 @@ def main():
     m = Proxy(eo).fit(rows[fit], yp[fit].astype(int))
     out = rows.loc[live, ["iso3", "unit_id", "month"]].copy()
     out["p_proxy"] = m.raw(rows[live])
+    y6 = np.where(rows["fews_h46"].notna(), (rows["fews_h46"] >= 3).astype(float), np.nan)   # lead 4-6 variant
+    fit6 = (rows["month"] <= pd.Timestamp(LAST_FIT)).values & ~np.isnan(y6)
+    out["p_proxy_h46"] = Proxy(eo).fit(rows[fit6], y6[fit6].astype(int)).raw(rows[live])
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     out.to_parquet(a.out, index=False)
     print(out.groupby("iso3").p_proxy.describe().round(3))

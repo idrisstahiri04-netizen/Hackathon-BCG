@@ -35,17 +35,18 @@ def main():
     rows = pd.concat([D.build_country(i)[0] for i in a.iso3], ignore_index=True)
     rows["month"] = pd.to_datetime(rows["month"])
     cols = T.feature_sets(rows)["eo_fews"]
-    y = rows["y_h13"].values
-    fit = (rows.month <= pd.Timestamp(LAST_FIT)).values & ~np.isnan(y)
-    m = T.LGBM(cols).fit(rows[fit], y[fit].astype(int))
-    o = pd.concat([pd.read_parquet(HERE / "out" / f"{n}_h13.parquet") for n in ("oof", "holdout")])
-    o = o.dropna(subset=["raw_eo_fews:lgbm", "y_h13", "st_phase"])
-    iso = T.iso_fit(o["raw_eo_fews:lgbm"].values, o["y_h13"].values)
     live = (rows.month > pd.Timestamp(LAST_FIT)).values & rows.fdw_ml1.notna().values
     out = rows.loc[live, ["iso3", "unit_id", "month", "st_phase"]].copy()
-    out["p_eofews"] = iso.predict(m.raw(rows[live]))
+    for h, col in (("h13", "p_eofews"), ("h46", "p_eofews_h46")):
+        y = rows[f"y_{h}"].values
+        fit = (rows.month <= pd.Timestamp(LAST_FIT)).values & ~np.isnan(y)
+        m = T.LGBM(cols).fit(rows[fit], y[fit].astype(int))
+        o = pd.concat([pd.read_parquet(HERE / "out" / f"{n}_{h}.parquet") for n in ("oof", "holdout")])
+        o = o.dropna(subset=["raw_eo_fews:lgbm", f"y_{h}", "st_phase"])
+        iso = T.iso_fit(o["raw_eo_fews:lgbm"].values, o[f"y_{h}"].values)
+        out[col] = iso.predict(m.raw(rows[live]))
     out.to_parquet(PIPE / "out" / "ipc_eofews_live.parquet", index=False)
-    print(len(out), "live rows"); print(out.groupby("iso3").p_eofews.describe().round(3))
+    print(len(out), "live rows"); print(out.groupby("iso3")[["p_eofews", "p_eofews_h46"]].describe().round(3).T)
     print(out.groupby("iso3").month.agg(["min", "max"]))
 
 

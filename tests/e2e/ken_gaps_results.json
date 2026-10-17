@@ -1,0 +1,595 @@
+{
+ "errs": [],
+ "out": [
+  {
+   "t": 30,
+   "view": "now",
+   "layer": "model",
+   "clock": "Jul 2021",
+   "stat": "5",
+   "statColor": "rgb(236, 131, 58)",
+   "legend": [
+    "●L0Normal25",
+    "▲L1Watch17",
+    "▲L2Warning5",
+    "■L3Emergency0"
+   ],
+   "sum": 47,
+   "note": [],
+   "exp": null
+  },
+  {
+   "t": 30,
+   "view": "f1",
+   "layer": "model",
+   "clock": "Jul 2021",
+   "stat": "12",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%34",
+    "2Moderate · 30% – <57%1",
+    "3High · 57% – <80%7",
+    "4Very high · ≥ 80%5"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 30,
+   "view": "f1",
+   "layer": "fews",
+   "clock": "Jul 2021",
+   "stat": "13",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Phase 1 Minimal24",
+    "2Phase 2 Stressed10",
+    "3Phase 3 Crisis13",
+    "4Phase 4 Emergency0",
+    "5Phase 5 Famine0"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 30,
+   "view": "f3",
+   "layer": "model",
+   "clock": "Jul 2021",
+   "stat": "12",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%34",
+    "2Moderate · 30% – <57%1",
+    "3High · 57% – <80%7",
+    "4Very high · ≥ 80%5"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 30,
+   "view": "f3",
+   "layer": "fews",
+   "clock": "Jul 2021",
+   "stat": "9",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Phase 1 Minimal24",
+    "2Phase 2 Stressed14",
+    "3Phase 3 Crisis9",
+    "4Phase 4 Emergency0",
+    "5Phase 5 Famine0"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 30,
+   "view": "f6",
+   "layer": "model",
+   "clock": "Jul 2021",
+   "stat": "10",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%31",
+    "2Moderate · 30% – <57%6",
+    "3High · 57% – <80%5",
+    "4Very high · ≥ 80%5"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 30,
+   "view": "f6",
+   "layer": "fews",
+   "clock": "Jul 2021",
+   "stat": "9",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Phase 1 Minimal24",
+    "2Phase 2 Stressed14",
+    "3Phase 3 Crisis9",
+    "4Phase 4 Emergency0",
+    "5Phase 5 Famine0"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 32,
+   "view": "now",
+   "layer": "model",
+   "clock": "Sep 2021",
+   "stat": "4",
+   "statColor": "rgb(236, 131, 58)",
+   "legend": [
+    "●L0Normal21",
+    "▲L1Watch22",
+    "▲L2Warning4",
+    "■L3Emergency0"
+   ],
+   "sum": 47,
+   "note": [],
+   "exp": null
+  },
+  {
+   "t": 32,
+   "view": "f1",
+   "layer": "model",
+   "clock": "Sep 2021",
+   "stat": "10",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%36",
+    "2Moderate · 30% – <57%1",
+    "3High · 57% – <80%0",
+    "4Very high · ≥ 80%10"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 32,
+   "view": "f1",
+   "layer": "fews",
+   "clock": "Sep 2021",
+   "stat": "10",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Phase 1 Minimal25",
+    "2Phase 2 Stressed12",
+    "3Phase 3 Crisis10",
+    "4Phase 4 Emergency0",
+    "5Phase 5 Famine0"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 32,
+   "view": "f3",
+   "layer": "model",
+   "clock": "Sep 2021",
+   "stat": "10",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%36",
+    "2Moderate · 30% – <57%1",
+    "3High · 57% – <80%0",
+    "4Very high · ≥ 80%10"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 32,
+   "view": "f3",
+   "layer": "fews",
+   "clock": "Sep 2021",
+   "stat": "10",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Phase 1 Minimal25",
+    "2Phase 2 Stressed12",
+    "3Phase 3 Crisis10",
+    "4Phase 4 Emergency0",
+    "5Phase 5 Famine0"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 32,
+   "view": "f6",
+   "layer": "model",
+   "clock": "Sep 2021",
+   "stat": "14",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%25",
+    "2Moderate · 30% – <57%8",
+    "3High · 57% – <80%7",
+    "4Very high · ≥ 80%7"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 32,
+   "view": "f6",
+   "layer": "fews",
+   "clock": "Sep 2021",
+   "stat": "—",
+   "statColor": "rgb(195, 194, 183)",
+   "legend": [
+    "1Phase 1 Minimal—",
+    "2Phase 2 Stressed—",
+    "3Phase 3 Crisis—",
+    "4Phase 4 Emergency—",
+    "5Phase 5 Famine—",
+    "?no outlook47"
+   ],
+   "sum": null,
+   "note": [
+    "No FEWS NET outlook covers Mar 2022 yet (latest outlook published Sep 2021)",
+    "No FEWS NET outlook covers Mar 2022 yet (latest outlook published Sep 2021)"
+   ],
+   "exp": {
+    "none": 47
+   }
+  },
+  {
+   "t": 88,
+   "view": "now",
+   "layer": "model",
+   "clock": "May 2026",
+   "stat": "0",
+   "statColor": "rgb(12, 163, 12)",
+   "legend": [
+    "●L0Normal33",
+    "▲L1Watch14",
+    "▲L2Warning0",
+    "■L3Emergency0"
+   ],
+   "sum": 47,
+   "note": [],
+   "exp": null
+  },
+  {
+   "t": 88,
+   "view": "f1",
+   "layer": "model",
+   "clock": "May 2026",
+   "stat": "12",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%35",
+    "2Moderate · 30% – <57%0",
+    "3High · 57% – <80%4",
+    "4Very high · ≥ 80%8"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 88,
+   "view": "f1",
+   "layer": "fews",
+   "clock": "May 2026",
+   "stat": "8",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Phase 1 Minimal24",
+    "2Phase 2 Stressed15",
+    "3Phase 3 Crisis8",
+    "4Phase 4 Emergency0",
+    "5Phase 5 Famine0"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 88,
+   "view": "f3",
+   "layer": "model",
+   "clock": "May 2026",
+   "stat": "12",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%35",
+    "2Moderate · 30% – <57%0",
+    "3High · 57% – <80%4",
+    "4Very high · ≥ 80%8"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 88,
+   "view": "f3",
+   "layer": "fews",
+   "clock": "May 2026",
+   "stat": "8",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Phase 1 Minimal24",
+    "2Phase 2 Stressed15",
+    "3Phase 3 Crisis8",
+    "4Phase 4 Emergency0",
+    "5Phase 5 Famine0"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 88,
+   "view": "f6",
+   "layer": "model",
+   "clock": "May 2026",
+   "stat": "8",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%36",
+    "2Moderate · 30% – <57%3",
+    "3High · 57% – <80%0",
+    "4Very high · ≥ 80%8"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 88,
+   "view": "f6",
+   "layer": "fews",
+   "clock": "May 2026",
+   "stat": "—",
+   "statColor": "rgb(195, 194, 183)",
+   "legend": [
+    "1Phase 1 Minimal—",
+    "2Phase 2 Stressed—",
+    "3Phase 3 Crisis—",
+    "4Phase 4 Emergency—",
+    "5Phase 5 Famine—",
+    "?no outlook47"
+   ],
+   "sum": null,
+   "note": [
+    "No FEWS NET outlook covers Nov 2026 yet (latest outlook published May 2026)",
+    "No FEWS NET outlook covers Nov 2026 yet (latest outlook published May 2026)"
+   ],
+   "exp": {
+    "none": 47
+   }
+  },
+  {
+   "t": 92,
+   "view": "now",
+   "layer": "model",
+   "clock": "Sep 2026",
+   "stat": "2",
+   "statColor": "rgb(236, 131, 58)",
+   "legend": [
+    "●L0Normal28",
+    "▲L1Watch17",
+    "▲L2Warning2",
+    "■L3Emergency0"
+   ],
+   "sum": 47,
+   "note": [],
+   "exp": null
+  },
+  {
+   "t": 92,
+   "view": "f1",
+   "layer": "model",
+   "clock": "Sep 2026",
+   "stat": "8",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%38",
+    "2Moderate · 30% – <57%1",
+    "3High · 57% – <80%1",
+    "4Very high · ≥ 80%7"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 92,
+   "view": "f1",
+   "layer": "fews",
+   "clock": "Sep 2026",
+   "stat": "6",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Phase 1 Minimal24",
+    "2Phase 2 Stressed17",
+    "3Phase 3 Crisis6",
+    "4Phase 4 Emergency0",
+    "5Phase 5 Famine0"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 92,
+   "view": "f3",
+   "layer": "model",
+   "clock": "Sep 2026",
+   "stat": "8",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%38",
+    "2Moderate · 30% – <57%1",
+    "3High · 57% – <80%1",
+    "4Very high · ≥ 80%7"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 92,
+   "view": "f3",
+   "layer": "fews",
+   "clock": "Sep 2026",
+   "stat": "6",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Phase 1 Minimal24",
+    "2Phase 2 Stressed17",
+    "3Phase 3 Crisis6",
+    "4Phase 4 Emergency0",
+    "5Phase 5 Famine0"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 92,
+   "view": "f6",
+   "layer": "model",
+   "clock": "Sep 2026",
+   "stat": "9",
+   "statColor": "rgb(255, 255, 255)",
+   "legend": [
+    "1Low · < 30%37",
+    "2Moderate · 30% – <57%1",
+    "3High · 57% – <80%2",
+    "4Very high · ≥ 80%7"
+   ],
+   "sum": 47,
+   "note": [
+    ""
+   ],
+   "exp": {
+    "none": 0
+   }
+  },
+  {
+   "t": 92,
+   "view": "f6",
+   "layer": "fews",
+   "clock": "Sep 2026",
+   "stat": "—",
+   "statColor": "rgb(195, 194, 183)",
+   "legend": [
+    "1Phase 1 Minimal—",
+    "2Phase 2 Stressed—",
+    "3Phase 3 Crisis—",
+    "4Phase 4 Emergency—",
+    "5Phase 5 Famine—",
+    "?no outlook47"
+   ],
+   "sum": null,
+   "note": [
+    "No FEWS NET outlook covers Mar 2027 yet (latest outlook published Sep 2026)",
+    "No FEWS NET outlook covers Mar 2027 yet (latest outlook published Sep 2026)"
+   ],
+   "exp": {
+    "none": 47
+   }
+  }
+ ]
+}

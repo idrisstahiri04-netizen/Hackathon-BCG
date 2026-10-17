@@ -312,7 +312,11 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
         fp = XF.groupby(["unit_id", "r", "L"])["p"].max().to_dict()
         # label: the target month if an event window covers it, else the season window the p refers to
         fl = XF.groupby(["unit_id", "r", "L"]).agg(cover=("cover", "first"), W0=("W0", "min"))
-        flab = {k: (None if v.cover else f"{v.W0:%b %Y} season") for k, v in fl.iterrows()}
+        def _season_name(w0):
+            if iso3 == "KEN":      # Kenya: long rains (MAM) windows start Mar-Jul, short rains (OND) Sep-Jan
+                return f"{'MAM' if 2 <= w0.month <= 7 else 'OND'} {w0.year} season"
+            return f"{w0:%b %Y} season"
+        flab = {k: (None if v.cover else _season_name(v.W0)) for k, v in fl.iterrows()}
     pcr46 = load_p_crisis(iso3, "h46")
     fews = load_fews(iso3, data_dir)
 
@@ -495,11 +499,12 @@ def load_p_crisis(iso3: str, h: str = "h13"):
     d["month"] = pd.to_datetime(d["month"])
     d = d.drop_duplicates(["unit_id", "month"], keep="last")      # hold-out wins if both
     d["proxy"] = 0.0
-    if h == "h13":
+    LIVE_EO, LIVE_PX = ("p_eofews", "p_proxy") if h == "h13" else ("p_eofews_h46", "p_proxy_h46")
+    if True:
         # ML-expert fallback: never serve eo_fews where its FEWS inputs were missing -> FEWS proxy (EO+NMME+ONI,
         # FEWS-projection target; out-of-sample nested CV / hold-out values)
         fb = IPC_DIR / "proxy_fallback_h13.parquet"
-        if fb.exists():
+        if h == "h13" and fb.exists():
             f = pd.read_parquet(fb)
             f = f[(f.iso3 == iso3) & f.fews_missing & f.p_proxy.notna()]
             f["month"] = pd.to_datetime(f["month"])
@@ -518,7 +523,7 @@ def load_p_crisis(iso3: str, h: str = "h13"):
             f["month"] = pd.to_datetime(f["month"])
             f = f[f.month > last]
             if len(f):
-                d = pd.concat([d, pd.DataFrame({"unit_id": f.unit_id, "month": f.month, IPC_COL: f.p_eofews,
+                d = pd.concat([d, pd.DataFrame({"unit_id": f.unit_id, "month": f.month, IPC_COL: f[LIVE_EO],
                                                 "st_phase": f.st_phase, "proxy": 0.0})], ignore_index=True)
         lv = Path(OUT_DIR) / "ipc_proxy_live.parquet"
         if lv.exists():
@@ -528,7 +533,7 @@ def load_p_crisis(iso3: str, h: str = "h13"):
             f = f[f.month > last]
             f = f[~f.set_index(["unit_id", "month"]).index.isin(d.set_index(["unit_id", "month"]).index)]
             if len(f):
-                d = pd.concat([d, pd.DataFrame({"unit_id": f.unit_id, "month": f.month, IPC_COL: f.p_proxy,
+                d = pd.concat([d, pd.DataFrame({"unit_id": f.unit_id, "month": f.month, IPC_COL: f[LIVE_PX],
                                                 "st_phase": np.nan, "proxy": 1.0})], ignore_index=True)
     return d.set_index(["unit_id", "month"])[[IPC_COL, "st_phase", "proxy"]].astype(float)
 

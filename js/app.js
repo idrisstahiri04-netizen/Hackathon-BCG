@@ -168,7 +168,20 @@
     return nul > 0;
   };
   let liveAllNull = false;
-  const liveNote = () => (liveAllNull ? 'No forecast available for this month (inputs missing)' : NOTE_LIVE);
+  // FEWS layer with no outlook for the target month: say exactly why (pause vs beyond the latest outlook).
+  const fewsGapNote = () => {
+    const lead = leadOf();
+    if (!lead || layer === 'model' || !ENGINE.hasFews) return null;
+    if (!MODEL.units.every(u => fcAt(u, now, lead).fews_phase == null)) return null;
+    const tgt = ENGINE.dateAt(now + lead).label, d = new Date('1 ' + tgt);
+    if (!isNaN(d) && d >= new Date(2025, 2, 1) && d <= new Date(2025, 6, 31)) return 'FEWS NET paused (2025) — no outlook';
+    let pub = '';
+    for (let L = 1; L <= 8; L++) for (const u of MODEL.units) { const p = fcAt(u, now, L).fews_published; if (p && p > pub) pub = p; }
+    if (!pub) return `No FEWS NET outlook covers ${tgt} yet`;
+    const [y, m] = pub.split('-');
+    return `No FEWS NET outlook covers ${tgt} yet (latest outlook published ${new Date(+y, +m - 1, 1).toLocaleString('en', { month: 'short', year: 'numeric' })})`;
+  };
+  const liveNote = () => fewsGapNote() || (liveAllNull ? 'No forecast available for this month (inputs missing)' : NOTE_LIVE);
   // Pending text for the current lead/layer, or null when the fields exist.
   const pendingText = lead => {
     const bits = [];
@@ -555,7 +568,7 @@
       const what = layer === 'fews' ? 'FEWS NET projected IPC phase' : layer === 'both'
         ? 'Our chance of Crisis (IPC 3+) as fill, FEWS NET projected phase on the outline' : 'Predicted chance of Crisis (IPC 3+)';
       cap.append(el('div', null, `${what} for ${tgt} · issued end of ${iss}` + (layer === 'fews' ? '' : ' · same colours as the Now view')));
-      if (liveGaps(now)) cap.append(el('div', 'vc-note', liveNote()));
+      if (liveGaps(now) || fewsGapNote()) cap.append(el('div', 'vc-note', liveNote()));
       const pend = pendingText(lead);
       if (pend) cap.append(el('div', 'vc-pending', pend));
     }
@@ -705,7 +718,7 @@
       people = hot.reduce((s, x) => s + (x.props.pop || 0), 0);
       u.textContent = String(hot.length);
       u.style.color = hot.length === 0 ? 'var(--lvl-0)' : 'var(--text-primary)';
-      if (MODEL.units.every(x => fcAt(x, now, lead).fews_phase == null)) u.textContent = '—';
+      if (MODEL.units.every(x => fcAt(x, now, lead).fews_phase == null)) { u.textContent = '—'; u.style.color = 'var(--text-secondary, #888)'; }
       u.parentNode.querySelector('.stat-lab').textContent =
         `${unitWord} projected IPC 3+ by ${ENGINE.dateAt(now + lead).label} (FEWS NET)`;
       $('#stat-people').parentNode.querySelector('.stat-lab').textContent = 'population in them';
@@ -839,7 +852,7 @@
     });
     const cf = fcConf(lead);
     const lines = [];
-    if (liveGaps(now)) lines.push({ c: 'ln-note', s: liveNote() });
+    if (liveGaps(now) || fewsGapNote()) lines.push({ c: 'ln-note', s: liveNote() });
     const pend = pendingText(lead);
     if (pend) lines.push({ c: 'ln-pending', s: pend[0].toUpperCase() + pend.slice(1) + '.' });
     note.hidden = false;
@@ -1163,7 +1176,7 @@
     leg.append(el('span', 'solid', 'past 6 months (issued)'), el('span', 'dotted', `our model +1 to +${MAX_LEAD}`), el('span', 'steps', 'FEWS NET phase (steps)'));
     sect.append(leg);
     const yr0 = yearOf(pts.find(p => p.t >= 0)?.label), yr1 = yearOf(pts[pts.length - 1].label);
-    if (liveGaps(now)) sect.append(el('div', 'fc-note', liveNote()));
+    if (liveGaps(now) || fewsGapNote()) sect.append(el('div', 'fc-note', liveNote()));
     const pend = pendingText(lead);
     if (pend) sect.append(el('div', 'fc-pending', pend[0].toUpperCase() + pend.slice(1) + '.'));
     else if (f.derived && !f.pending) sect.append(el('div', 'fc-pending', "Forecast fields pending: dotted values are the model's p_crisis for the 1–3 month window."));
@@ -1222,33 +1235,8 @@
     const pwrap = el('div');
     pwrap.append(big);
     pwrap.append(el('div', 'unit', `probability of shortage at ${row.horizon} weeks`));
-    const cwrap = el('div');
-    if (row.held) {
-      // Level kept only by hysteresis: the sources no longer need to agree.
-      cwrap.className = 'held';
-      cwrap.append(el('span', 'big', 'held'));
-      cwrap.append(el('div', 'unit',
-        `needs 3 calm months to stand down · ${row.agreeing}/${ENGINE.N_FAMILIES} sources in alarm now`));
-    } else {
-      cwrap.append(el('span', 'big', `${row.agreeing}/${ENGINE.N_FAMILIES}`));
-      cwrap.append(el('div', 'unit', `sources agree · ${row.confidence} confidence`));
-    }
-    pm.append(pwrap, cwrap);
+    pm.append(pwrap);
     body.append(pm);
-
-    // --- source agreement
-    const s1 = el('div', 'd-sect');
-    s1.append(el('span', 'd-lab', 'Source families'));
-    const fams = el('div', 'fams');
-    fams.style.setProperty('--fam-n', ENGINE.FAMILIES.length);
-    for (const F of ENGINE.FAMILIES) {
-      const f = el('div', 'fam' + (row.families[F.key] ? ' hit' : ''));
-      f.append(el('span', 'fn', F.short), el('span', 'fv', F.val(row)));
-      f.title = `${F.src} — ${row.families[F.key] ? 'anomalous' : 'within normal range'}`;
-      fams.append(f);
-    }
-    s1.append(fams);
-    body.append(s1);
 
     // --- crowd reports (live, from the SMS backend; js/live.js)
     if (window.CROWD && typeof CROWD.detailSection === 'function') {

@@ -126,7 +126,7 @@ def evidence(alert: dict) -> str:
     return ". ".join(parts) + "."
 
 
-def role_recommend(alert: dict, role: str, limit: int = 5) -> list[dict]:
+def role_recommend(alert: dict, role: str, limit: int = 4) -> list[dict]:
     """Objective, actionable advice for one role (gov|ngo). [] below Warning."""
     level = int(alert.get("level") or 0)
     if level < 2 or role not in ROLES:

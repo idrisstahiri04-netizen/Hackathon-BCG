@@ -34,3 +34,14 @@ def test_event_decides_livestock_vs_crop():
     assert "Sell" in herder
     farmer = recommend.top_action(recommend.recommend({"level": 2, "event": "cant_plant"}), "farmer")
     assert "rain" in farmer.lower()
+
+
+@pytest.mark.parametrize("role", recommend.ROLES)
+@pytest.mark.parametrize("event", EVENTS)
+@pytest.mark.parametrize("level", [2, 3])
+def test_role_bullets_short(role, event, level):
+    a = {"level": level, "event": event, "county": "Turkana", "pop": 120000, "n_hit": 3, "n_units": 10}
+    recs = recommend.role_recommend(a, role)
+    assert 1 <= len(recs) <= 4
+    for r in recs:
+        assert len(r["action"].split()) <= 14, r["action"]

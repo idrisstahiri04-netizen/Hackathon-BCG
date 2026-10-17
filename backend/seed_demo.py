@@ -35,6 +35,7 @@ SEED_KEN = [
     ("+212600000007", "Demo Farmer Kilifi", "Kilifi North", "farmer", "sw"),
     ("+212600000008", "Demo Herder Wajir", "Wajir East", "herder", "en"),
 ]
+DEMO_T_KEN = 56  # Sep 2023, Kacheliba Warning
 SEEDS = {"ZWE": SEED_ZWE, "KEN": SEED_KEN}
 SEED = SEED_ZWE  # default country (kept for tests)
 
@@ -65,3 +66,8 @@ if __name__ == "__main__":
     ap.add_argument("--iso3", default="ZWE", choices=sorted(SEEDS))
     a = ap.parse_args()
     print(f"seeded {seed(a.iso3)} demo users ({a.iso3}) into {db.db_path()}")
+    if a.iso3 == "KEN":
+        # Demo alert: store the Sep 2023 (t=56) events so Kacheliba waits for "Approve & send". Nothing is sent here.
+        from .app import run_alerts
+        r = run_alerts("KEN", DEMO_T_KEN, dispatch=False)
+        print(f"stored {r['created']} new alerts for KEN {r['month']} ({r['pending_approval']} waiting for approval)")

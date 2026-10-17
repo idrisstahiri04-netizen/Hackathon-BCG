@@ -49,23 +49,15 @@ window.ROLE = (function () {
     }).sort(function (x, y) { return x.priority - y.priority || (x.id < y.id ? -1 : 1); }).map(function (it) {
       return { id: it.id, role: r, verb: it.verb, action: fill(it.action, c), who: it.who, when: it.when,
         quantity: it.quantity ? fill(it.quantity, c) : null, evidence: evid, source: lib.sources[it.source] || it.source, note: lib.role_note };
-    }).filter(function (x) { return x.action; }).slice(0, 5);
+    }).filter(function (x) { return x.action; }).slice(0, 4);
   }
   function block(recs) {
     var box = document.createElement('div'); box.className = 'a-recs role-recs';
-    var ol = document.createElement('ol');
-    recs.forEach(function (x) {
-      var li = document.createElement('li');
-      var b = document.createElement('b'); b.textContent = x.action; li.append(b);
-      [['Who', x.who], ['When', x.when], ['Scale', x.quantity], ['Evidence', x.evidence], ['Source', x.source]].forEach(function (p) {
-        if (!p[1]) return;
-        var s = document.createElement('small'); s.className = 'rr-' + p[0].toLowerCase();
-        s.textContent = p[0] + ': ' + p[1]; li.append(s);
-      });
-      ol.append(li);
-    });
-    box.append(ol);
-    if (recs[0]) { var n = document.createElement('small'); n.className = 'a-demo'; n.textContent = recs[0].note; box.append(n); }
+    var ul = document.createElement('ul');
+    recs.forEach(function (x) { var li = document.createElement('li'); li.textContent = x.action; ul.append(li); });
+    box.append(ul);
+    var src = recs.map(function (x) { return x.source; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; }).join('\n');
+    if (src) { var n = document.createElement('small'); n.className = 'a-demo'; n.textContent = 'sources'; n.title = src; box.append(n); }
     return box;
   }
   function forEvent(e, unit, ctxFn) {

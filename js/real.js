@@ -93,7 +93,11 @@ const REAL = (() => {
     heat: ['hot', 'temperature', 'heat'], soil: ['soil', 'moisture'], fews: ['fews', 'ipc', 'crisis'], price: ['price', 'market'] };
   function recommend(row, livelihood) {
     const lib = window.RECS;
-    const level = +(row && row.level) || 0;
+    // Recommendations follow the FEWS NET result: worst IPC phase in the latest outlook (leads 1-3).
+    // Phase 3 -> prepare, Phase 4-5 -> respond. Only if FEWS has no outlook do we fall back to our alert level.
+    let fp = null;
+    for (const L of [1, 2, 3]) { const f = row && row.forecast && row.forecast[L]; const v = f && f.fews_phase; if (v != null && (fp == null || v > fp)) fp = +v; }
+    const level = fp != null ? (fp >= 4 ? 3 : fp === 3 ? 2 : 0) : (+(row && row.level) || 0);
     if (!lib || level < 2) return [];
     const phase = level >= 3 ? 'respond' : 'prepare';
     const evKey = !row.event || row.event === 'none' ? 'any' : row.event;

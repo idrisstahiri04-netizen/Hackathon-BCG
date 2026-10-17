@@ -1363,7 +1363,7 @@
     const recs = !roleOn && ENGINE.recommend ? ENGINE.recommend(row) : [];
     if (recs.length) {
       const s4 = el('div', 'd-sect');
-      s4.append(el('span', 'd-lab', row.level >= 3 ? 'Recommended actions: respond' : 'Recommended actions: prepare'));
+      s4.append(el('span', 'd-lab', recs[0].phase === 'respond' ? 'Recommended actions: respond (FEWS NET)' : 'Recommended actions: prepare (FEWS NET)'));
       s4.append(recsBlock(recs));
       body.append(s4);
     }

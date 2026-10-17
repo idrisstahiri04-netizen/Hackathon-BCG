@@ -220,7 +220,7 @@ const REAL = (() => {
       const target_label = dateAt(row.t + lead).label;
       const f = row.forecast && row.forecast[String(lead)];
       let p = null, p_crisis = null, derived = true, pending = false;
-      let fews_phase = null, fews_scenario = null, fews_published = null, source = null;
+      let fews_phase = null, fews_scenario = null, fews_published = null, source = null, primary = null;
       if (f) {
         p = num(f.p); p_crisis = num(f.p_crisis); derived = false;
         fews_phase = num(f.fews_phase);
@@ -228,6 +228,7 @@ const REAL = (() => {
         fews_scenario = f.fews_scenario || null;
         fews_published = f.fews_published || null;
         source = f.source || null;
+        primary = f.primary || null;
       } else if (!row.missing && lead <= 3) {
         p_crisis = num(row.p_crisis);
         p = lead === 1 ? num(row.p) : null;
@@ -237,7 +238,7 @@ const REAL = (() => {
       const chance = p_crisis != null ? p_crisis : p;
       const kind = p_crisis != null ? 'crisis' : p != null ? 'event' : null;
       return { lead, p, p_crisis, chance, kind, derived, pending,
-               fews_phase, fews_scenario, fews_published, source,
+               fews_phase, fews_scenario, fews_published, source, primary,
                target_label: (f && f.target_label) || target_label };
     }
 

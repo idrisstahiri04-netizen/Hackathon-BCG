@@ -962,6 +962,7 @@
   // Plain words for why a unit is at Watch (export field watch_reason).
   const WATCH_WORDS = {
     climate_readiness: 'Ready: climate readiness (El Niño + dry forecast, country-wide)',
+    fews_outlook: 'Ready: FEWS NET crisis outlook',
     ipc_outlook: 'Ready: crisis outlook',
     district_evidence: 'Watch: district evidence',
   };
@@ -1102,6 +1103,13 @@
         (f.kind === 'crisis' ? ` · IPC 3+ · Watch threshold ${pct(thr)}` : ' · satellite event model') +
         (f.chance >= thr && f.kind === 'crisis' ? ' · above threshold' : '') +
         (f.source ? ` · ${f.source}` : '')));
+    }
+    // Primary forecast source (FEWS-first): FEWS outlook when one covers the target month, else our model
+    if (f.primary) {
+      const mon = s => { const [y, m] = String(s).split('-'); return new Date(+y, +m - 1, 1).toLocaleString('en', { month: 'short', year: 'numeric' }); };
+      sect.append(el('div', 'fc-sub', f.primary === 'fews'
+        ? `Primary: FEWS NET outlook${f.fews_published ? ` (published ${mon(f.fews_published)})` : ''}`
+        : 'Primary: our model'));
     }
     // FEWS NET projected phase line (headline in the FEWS layer)
     {

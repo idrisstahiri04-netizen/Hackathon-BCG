@@ -35,15 +35,16 @@ File `../.env` (repo parent, gitignored):
 | Docs | `docs/models_explained.md`, `docs/metrics_report.md`, `docs/experts/*.md`, `pipeline/audit/*.md` |
 
 ## 4. Alert logic (frozen, spec "Ready / Set / Go")
-- Watch (Ready): any one family (rain, vegetation, soil) **or** climate readiness (ONI≥1 or ONI≥0.5 & NMME dry, NGO only) **or** p_crisis≥0.57 where known IPC<3, Oct–Apr only. `watch_reason` says which.
-- Warning (Set/Go): vegetation + (rain or soil). Hysteresis 2 up / 3 down (`held`), no fast entry.
+- FEWS first: forecast per lead has `primary` ("fews" when an outlook published ≤ issue month covers the month, else "model"/"proxy"); UI shows "Primary: ...".
+- Watch (Ready): any one family (rain, vegetation, soil) **or** FEWS NET outlook ≥ Phase 3 within 3 months for a unit known <3 (`fews_outlook`) **or** climate readiness (ONI≥1 or ONI≥0.5 & NMME dry, NGO only) **or** p_crisis≥0.57 where known IPC<3, Oct–Apr only. `watch_reason` says which.
+- Warning (Set/Go): vegetation + (rain or soil), and — when a FEWS outlook exists — FEWS agrees (outlook ≥3 or current ≥3), else Watch. Hysteresis 2 up / 3 down (`held`), no fast entry. Details: CONTRACT 4c.
 - Emergency: Warning + official declaration in force (capped to that season).
 - Urban units: visible but no farmer/herder SMS. Data latency: month t uses t−1 data.
 
 ## 5. Honest results (cite only these)
 - Model A v2: CV mean PR-AUC 0.39 (persistence 0.27); hold-out ROC ≈ 0.76.
 - Model B (with FEWS NET): hold-out 2023/24 transition ROC/PR 0.94/0.92; without FEWS → proxy ≈ 0.89.
-- ZWE vs FEWS NET IPC3+ 2023/24: Warning precision 0.78 / recall 0.61 (persistence 0.43/0.35); 0 Warnings in wet 2020/21.
+- ZWE Warning vs FEWS NET IPC3+ (before FEWS gate): 2023/24 P 0.78 / R 0.61 (persistence 0.43/0.35); 0 Warnings in wet 2020/21; 2025/26 0 of 45 caught. After FEWS-first gate: 2023/24 P 0.55 / R 0.21 (gate cuts satellite Warnings where FEWS said <3); 2025/26 still 0/45 Warnings, but FEWS is the primary forecast and Watch share is 0.44. FEWS projections alone: precision 0.98 / recall 1.0 in 2025/26.
 - Oct 2023 forecast: FEWS Phase 3 for Feb–May 2024; 40 districts ≥57%. Feb 2024 +2: 33 districts. Declaration 2024-04-03.
 - Limits: Malawi = monitoring only (price-led crisis); Zambia no p_crisis (no IPC after 2017); +7/+8 = FEWS only; live 2026 forecast uses the FEWS-proxy (no FEWS outlook in 2026).
 
@@ -62,3 +63,9 @@ File `../.env` (repo parent, gitignored):
 - Model per task: haiku (mechanical), sonnet (research/routine code/tests), opus (model design/pitch).
 - Real data only on screen — never simulated numbers. Keep the forecast visible (user's top priority).
 - Don't change frozen alert rules without the user's OK; never tune on the 2023/24 hold-out.
+
+## Changes (UI v3)
+- Phone tab removed. Real SMS will run on a separate SMS server later; the backend still accepts `/sim/inbound` and `/sms/inbound`.
+- No SMS self-signup: JOIN/subscribe from an unknown number gets "To register, please contact your local officer." Users are added on the **Users** page (or `POST /users`, `PATCH /users/{id}`, `DELETE /users/{id}`, header `X-API-Key`).
+- Alerts are generated and stored automatically for each new live month (`meta.live_t`) by a scheduler in `backend/app.py` (hourly + on start, `processed_runs` table, `SCHEDULER=off` disables it). It only stores; sending still needs "Approve & send" in the Map alert log. Auto-send is pending the user's decision.
+- `GET /alerts/log?iso3=&since=` returns stored alerts with send status. Map right panel = Alert log (replay months show risk-file level changes with status "-").

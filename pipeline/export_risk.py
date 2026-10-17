@@ -101,8 +101,8 @@ def load_fews(iso3: str, data_dir):
     if not f.exists():
         return None
     d = pd.read_parquet(f, columns=["unit_id", "scenario", "projection_start", "projection_end",
-                                    "reporting_date", "phase_w20"])
-    d = d[d.scenario.isin(["ML1", "ML2"])].dropna(subset=["phase_w20"]).copy()
+                                    "reporting_date", "phase_w20", "phase_max"])
+    d = d[d.scenario.isin(["ML1", "ML2"])].dropna(subset=["phase_w20"]).copy()      # phase_max: any part of the unit
     for c in ("projection_start", "projection_end", "reporting_date"):
         d[c] = pd.to_datetime(d[c])
     d["pub"] = d.reporting_date.dt.to_period("M").dt.to_timestamp()
@@ -122,6 +122,18 @@ def fews_lookup(g, r, T):
         return None
     x = h.sort_values("scenario").iloc[0]
     return int(round(x.phase_w20)), x.scenario, x.pub.strftime("%Y-%m")
+
+
+def fews_window(g, m, a=1, b=3, col="phase_w20"):
+    """(exists, max phase) of the latest outlook published on/before issue month m over target months m+a..m+b."""
+    if g is None:
+        return False, None
+    h = g[g.pub <= m]
+    if h.empty:
+        return False, None
+    h = h[h.pub == h.pub.max()]
+    h = h[(h.projection_start <= m + pd.DateOffset(months=b)) & (h.projection_end >= m + pd.DateOffset(months=a))]
+    return (False, None) if h.empty else (True, int(round(h[col].max())))
 
 
 def score(bundle: dict, X: pd.DataFrame, iso3: str) -> np.ndarray:
@@ -146,16 +158,18 @@ def _r(v):
 
 FEWS_NA = "FEWS NET outlook not available"
 WATCH_REASONS = {"district_evidence": "district evidence (satellite / weather families)",
+                 "fews_outlook": "FEWS NET crisis outlook (projection >= IPC3 within 3 months)",
                  "ipc_outlook": "FEWS NET-informed Crisis outlook (p_crisis)",
                  "climate_readiness": "climate readiness (country-wide: El Niño + dry seasonal forecast)"}
 
 
-def watch_reasons(lvl, fam_raw, crisis, climate) -> list:
+def watch_reasons(lvl, fam_raw, crisis, climate, fews_ol) -> list:
     """Why a unit is at its level: district evidence (family rule) beats the IPC-outlook trigger, which beats
     country-wide climate readiness. Rows held by hysteresis keep the reason that raised them."""
     out, last = [], None
     for k in range(len(lvl)):
-        now = ("district_evidence" if fam_raw[k] >= 1 else "ipc_outlook" if crisis[k]
+        now = ("district_evidence" if fam_raw[k] >= 1 else "fews_outlook" if fews_ol[k]
+               else "ipc_outlook" if crisis[k]
                else "climate_readiness" if climate[k] else None)
         if lvl[k] == 0:
             last = None
@@ -191,7 +205,9 @@ def forecast_row(u, m, k, fp, flab, pc, pc46, fews, proxy=False) -> dict:
         source = "+".join(src) if src else "none"
         if fw is None:                    # say why the FEWS layer is empty instead of a silent null
             source = (f"{source}; " if src else "") + FEWS_NA
-        out[str(L)] = {"p": p, "p_crisis": pcr,
+        primary = ("fews" if fw else ("proxy" if (proxy and L <= 3 and pcr is not None) else "model")
+                   if (p is not None or pcr is not None) else None)
+        out[str(L)] = {"primary": primary, "p": p, "p_crisis": pcr,
                        "fews_phase": fw[0] if fw else None, "fews_scenario": fw[1] if fw else None,
                        "fews_published": fw[2] if fw else None,
                        "target_label": flab.get((u, m, L)) or T.strftime("%b %Y"),
@@ -343,13 +359,25 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
         # climate readiness (ONI / NMME, public in the issue month): Watch only, decision months only
         fu = P["feat"].loc[u].reindex(months)
         climate = ae.climate_readiness(fu["oni_x_south"].values, fu["sfc_pbn_m13"].values) & in_win
-        raw = np.where((crisis | climate) & (raw < 1), 1, raw)
+        # FEWS-first: outlook (published <= issue month) >= Phase 3 within 3 months for a unit known < 3 -> Watch
+        fw3 = [fews_window(fews.get(u) if fews else None, m) for m in months]
+        fex = np.array([x[0] for x in fw3])
+        fmax = np.array([x[1] if x[1] is not None else np.nan for x in fw3])
+        fw8 = [fews_window(fews.get(u) if fews else None, m, 0, 8, "phase_max") for m in months]      # whole latest outlook (to +8)
+        fex8 = np.array([x[0] for x in fw8])
+        fmax8 = np.array([x[1] if x[1] is not None else np.nan for x in fw8])
+        fews_ol = in_win & fex & (np.nan_to_num(fmax, nan=0) >= 3) & ~np.isnan(known) & (np.nan_to_num(known, nan=9) < 3)
+        # Warning/Emergency need FEWS agreement (latest outlook, any part of the unit, any month to +8, >= 3, or current phase >= 3) whenever an outlook exists;
+        # otherwise the satellite two-family rule stands alone. Disagreement -> Watch.
+        agree = (np.nan_to_num(fmax8, nan=0) >= 3) | (np.nan_to_num(known, nan=0) >= 3)
+        raw = np.where((raw >= 2) & fex8 & ~agree, 1, raw)
+        raw = np.where((crisis | climate | fews_ol) & (raw < 1), 1, raw)
         lvl, held = ae.hysteresis(raw)         # spec: 2 runs up, 3 runs down, no fast entry
         # Emergency only while the declaration is in force (cap held Emergency after the window);
         # held is recomputed so capped rows are held only if the raw level is below Warning
         lvl = np.where((lvl == 3) & ~dif, 2, lvl)
         held = raw < lvl
-        why = watch_reasons(lvl, fam_raw, crisis, climate)
+        why = watch_reasons(lvl, fam_raw, crisis, climate, fews_ol)
         plant = plant_months(P["ss"][u])
         st = P["c"].static.loc[u]
         default_ev = "no_grass" if (st["grass_frac"] or 0) > (st["crop_frac"] or 0) else "crop_failure"
@@ -378,7 +406,8 @@ def build(iso3: str, bundle: dict, data_dir, metrics_path: Path) -> dict:
                           else b["event"].iloc[k] if isinstance(b["event"].iloc[k], str) else default_ev),
                 "horizon": horizon_weeks(d, b["event"].iloc[k]),
                 "drivers": (ae.drivers(s, f)
-                            + (["FEWS NET-based outlook: Crisis (IPC3+) likely within 3 months"] if crisis[k] else [])
+                            + (["FEWS NET outlook: Crisis (IPC3+) projected within 3 months"] if fews_ol[k] else [])
+                            + (["FEWS NET-based outlook: Crisis (IPC3+) likely within 3 months"] if crisis[k] and not fews_ol[k] else [])
                             + ([ae.CLIMATE_REASON] if climate[k] else []))[:3],
                 "signals": s,
                 "forecast": forecast_row(u, m, k, fp, flab, pc, pc46, fews, bool(pxy[k]))})
@@ -479,13 +508,25 @@ def load_p_crisis(iso3: str, h: str = "h13"):
             d.loc[m, IPC_COL] = d.loc[m, "p_proxy"]
             d.loc[m, "proxy"] = 1.0
             d = d.drop(columns="p_proxy")
-        # live months (after the IPC model's last issue month): proxy fitted on all past months
+        # live months (after the IPC model's last issue month): eo_fews with the real FEWS inputs
+        # (ipc_model/rescore_live.py), proxy fitted on all past months only where those are missing
+        last = d.month.max()
+        le = Path(OUT_DIR) / "ipc_eofews_live.parquet"
+        if le.exists():
+            f = pd.read_parquet(le)
+            f = f[f.iso3 == iso3].copy()
+            f["month"] = pd.to_datetime(f["month"])
+            f = f[f.month > last]
+            if len(f):
+                d = pd.concat([d, pd.DataFrame({"unit_id": f.unit_id, "month": f.month, IPC_COL: f.p_eofews,
+                                                "st_phase": f.st_phase, "proxy": 0.0})], ignore_index=True)
         lv = Path(OUT_DIR) / "ipc_proxy_live.parquet"
         if lv.exists():
             f = pd.read_parquet(lv)
             f = f[f.iso3 == iso3].copy()
             f["month"] = pd.to_datetime(f["month"])
-            f = f[f.month > d.month.max()]
+            f = f[f.month > last]
+            f = f[~f.set_index(["unit_id", "month"]).index.isin(d.set_index(["unit_id", "month"]).index)]
             if len(f):
                 d = pd.concat([d, pd.DataFrame({"unit_id": f.unit_id, "month": f.month, IPC_COL: f.p_proxy,
                                                 "st_phase": np.nan, "proxy": 1.0})], ignore_index=True)

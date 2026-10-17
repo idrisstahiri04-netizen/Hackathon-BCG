@@ -110,3 +110,7 @@ cant_plant: model dropped (no CV skill: pre-latency ROC 0.485, PR-AUC 0.168 = ba
 | ensemble | 0.599 / 0.705 / 0.2862 (base 0.638) | 0.754 / 0.837 / 0.2995 (base 0.655) | 0.771 |
 
 Caveat: the ZWE/MWI/ZMB hold-out is a single season in which most units were in drought; AUC there only measures which units the model ranks worst, not whether it sees the year coming.
+
+## FEWS-first alert logic (Oct 2026)
+Primary forecast per lead = FEWS NET ML1/ML2 projection published on/before the issue month (else our model / proxy); Watch gets reason `fews_outlook`; Warning needs FEWS agreement when an outlook exists (CONTRACT 4c). Live-month p_crisis re-scored with real FEWS inputs (eo_fews, fitted on <= 2024-12).
+ZWE Warning vs FEWS CS transitions (compare_ipc.py), before -> after: 2023/24 P 0.78 / R 0.61 -> 0.55 / 0.21; 2024/25 no transitions (2 FP -> 2 FP); 2025/26 0 of 45 -> 0 of 45 (no satellite Warning fires; FEWS projections caught them only via Watch/primary forecast). The FEWS gate removes satellite Warnings in units FEWS projected below Phase 3 at issue time, so it lowers recall and did not remove any false positive. Watch share (Oct-Jun, non-urban): 2020/21 0.14->0.15, 2022/23 0.11->0.11, 2024/25 0.31->0.31, 2025/26 0.01->0.44.

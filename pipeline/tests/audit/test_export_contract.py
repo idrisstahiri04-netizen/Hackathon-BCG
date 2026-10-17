@@ -98,8 +98,10 @@ def validate(doc, iso3):
             else:
                 for L, v in fc.items():
                     if not ({"p", "p_crisis", "target_label"} <= set(v) <= {"p", "p_crisis", "target_label", "fews_phase",
-                            "fews_scenario", "fews_published", "source"}) or not isinstance(v["target_label"], str):
+                            "fews_scenario", "fews_published", "source", "primary"}) or not isinstance(v["target_label"], str):
                         E(f"{tag} forecast[{L}] {v}"); break
+                    if v.get("primary") not in (None, "fews", "model", "proxy"): E(f"{tag} forecast[{L}].primary {v.get('primary')!r}")
+                    if r["watch_reason"] not in (None, "district_evidence", "fews_outlook", "ipc_outlook", "climate_readiness"): E(f"{tag} watch_reason {r['watch_reason']!r}")
                     for pk in ("p", "p_crisis"):
                         if not (v[pk] is None or (isnum(v[pk]) and 0 <= v[pk] <= 1)): E(f"{tag} forecast[{L}].{pk} {v[pk]}")
             if r["level"] == 3 and not (d_t <= i <= ag_end_t):

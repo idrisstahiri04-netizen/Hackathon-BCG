@@ -1,7 +1,7 @@
 {
  "iso3": "KEN",
  "model_version": "sat-v1-ensemble-ZWE_KEN_MWI_ZMB",
- "generated_at": "2026-10-16T21:24:38+00:00",
+ "generated_at": "2026-10-17T01:30:10+00:00",
  "unit_match": {
   "our_units": 47,
   "our_units_matched": 44,
@@ -526,7 +526,7 @@
    "warning_vs_fews_wk": null,
    "fews_proj_lead_wk": null,
    "n_transitions": 0,
-   "n_units_with_warning": 14
+   "n_units_with_warning": 11
   },
   "2022/23": {
    "transition_warning": {
@@ -594,7 +594,7 @@
    "warning_vs_fews_wk": null,
    "fews_proj_lead_wk": null,
    "n_transitions": 0,
-   "n_units_with_warning": 15
+   "n_units_with_warning": 12
   },
   "2023/24": {
    "transition_warning": {
@@ -730,7 +730,7 @@
    "warning_vs_fews_wk": null,
    "fews_proj_lead_wk": null,
    "n_transitions": 0,
-   "n_units_with_warning": 1
+   "n_units_with_warning": 0
   },
   "2025/26": {
    "transition_warning": {
@@ -798,7 +798,7 @@
    "warning_vs_fews_wk": null,
    "fews_proj_lead_wk": null,
    "n_transitions": 0,
-   "n_units_with_warning": 12
+   "n_units_with_warning": 11
   }
  },
  "all_seasons": {
@@ -867,6 +867,6 @@
   "warning_vs_fews_wk": null,
   "fews_proj_lead_wk": null,
   "n_transitions": 0,
-  "n_units_with_warning": 47
+  "n_units_with_warning": 39
  }
 }

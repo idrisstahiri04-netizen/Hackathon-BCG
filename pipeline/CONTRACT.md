@@ -58,7 +58,7 @@ Rings clockwise (see prep_data.py note), simplified, 3 dp.
           declaration: { t, date, label }, model_version, metrics: {...}, generated_at },
   units: [ { id, name, urban (bool: town/city unit, pipeline/urban_units.py; level shown, no farmer/herder SMS, not in farm Warning counts), series: [   // length n_months, t = 0 is Jan 2019
      { t, level (0-3, after hysteresis), held (bool: level kept only by hysteresis, raw level lower),
-       watch_reason (null at level 0, else "district_evidence" | "ipc_outlook" | "climate_readiness"; climate readiness is country-wide by design (ENSO/NMME); Warning+ is always district_evidence; held rows keep the reason that raised them), p (0-1 or null; satellite-event probability, information only), p_crisis (0-1 or null; FEWS NET-informed P(enter IPC3+ within 1-3 months), shown to NGOs as "chance of Crisis within 3 months"), confidence ("low"|"medium"|"high"),
+       watch_reason (null at level 0, else "district_evidence" | "fews_outlook" | "ipc_outlook" | "climate_readiness"; climate readiness is country-wide by design (ENSO/NMME); Warning+ is always district_evidence; held rows keep the reason that raised them), p (0-1 or null; satellite-event probability, information only), p_crisis (0-1 or null; FEWS NET-informed P(enter IPC3+ within 1-3 months), shown to NGOs as "chance of Crisis within 3 months"), confidence ("low"|"medium"|"high"),
        agreeing (int, number of families in alarm), families: { rain: bool, vegetation: bool, soil: bool, heat: bool },
        event ("none"|"cant_plant"|"crop_failure"|"no_grass"), horizon (weeks),
        drivers: [string, ...max 3], signals: { spi_1m, spi_3m, ndvi_z_crop, ndvi_z_grass, vci_crop, vci_grass, sm1_z, t2m_z } }
@@ -82,10 +82,16 @@ meta.n_months may exceed 72 when live months are added (t=0 is still Jan 2019); 
 ### 4b. Extended horizon to +8 months (user request: follow the FEWS NET outlook cycle)
 `forecast` keys may go "1".."8". Per lead:
 ```
-{ p, p_crisis, fews_phase, fews_scenario, fews_published, target_label, source }
+{ primary, p, p_crisis, fews_phase, fews_scenario, fews_published, target_label, source }
 ```
+- primary: FEWS-first. "fews" when a FEWS ML1/ML2 projection published on/before the issue month covers the target month (fews_phase is then the headline forecast; our p_crisis stays secondary info); else "model", or "proxy" when the FEWS inputs were missing (p_crisis from the satellite-only proxy); null if nothing is available.
 - p: Model A chance (bad season) — available as far as the model has skill-tested leads (≥ 1..6 with NMME m1-3/m4-6 + ONI); null beyond.
 - p_crisis: Model B (IPC) — h13 for leads 1–3, h46 for 4–6 if trained; null beyond.
 - fews_phase: FEWS NET projected IPC phase (1–5) for the target month from the LATEST outlook published on or before the issue month (ML1 = near term ≈ first 4 months, ML2 = medium term ≈ months 5–8); fews_scenario "ML1"/"ML2"; fews_published = publication month. Null if no outlook covers that month (e.g. FEWS NET pause 2025). Unit value = area-weighted worst phase covering ≥20% (same mapping as ipc_units).
 - source: short text, e.g. "model+FEWS ML1".
 Expected visual effect: the FEWS NET layer changes in steps when a new outlook is published (~every 4 months); our model updates monthly.
+
+### 4c. FEWS-first alert logic (Oct 2026)
+- Watch "fews_outlook": latest FEWS projection published <= issue month puts the unit at phase_w20 >= 3 for any of months +1..+3, while the latest known CS phase is < 3; Oct-Apr decision window only. Precedence: district_evidence > fews_outlook > ipc_outlook > climate_readiness.
+- Warning/Emergency keep the satellite two-family rule, but when a FEWS outlook (published <= issue month) exists they also need agreement: latest outlook phase_max >= 3 in any covered month to +8, or current known CS >= 3. Disagreement caps the raw level at Watch. No outlook -> satellite rule alone. Hysteresis and Emergency rules unchanged.
+- Live months (after 2024-12): p_crisis = eo_fews LightGBM fitted once on issue months <= 2024-12 (no retraining of the published model) with the real FEWS inputs (pipeline/ipc_model/rescore_live.py -> out/ipc_eofews_live.parquet); proxy only where FEWS inputs are missing.

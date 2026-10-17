@@ -20,14 +20,6 @@
   const API_KEY = window.SMS_API_KEY || null;
   const KEY_MSG = 'Admin key missing — run python backend/make_ui_config.py';
   const POLL_MS = 2000;
-  const LEVELS = (typeof REAL !== 'undefined' && REAL.LEVELS) || [
-    { n: 0, label: 'Normal', color: '#0ca30c', glyph: '●' },
-    { n: 1, label: 'Watch', color: '#ffd43b', glyph: '▲' },
-    { n: 2, label: 'Warning', color: '#ec833a', glyph: '▲' },
-    { n: 3, label: 'Emergency', color: '#d03b3b', glyph: '■' },
-  ];
-  const EVENTS = (typeof REAL !== 'undefined' && REAL.EVENTS) || {};
-
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
   const el = (tag, cls, txt) => {
@@ -84,14 +76,6 @@
     return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
   const maskPhone = p => (p && /\*/.test(p) ? String(p) : p ? String(p).replace(/^(\+?\d{3,5})\d*(\d{3})$/, '$1 ••• $2') : '');
-  function driversOf(e) {
-    if (Array.isArray(e.drivers)) return e.drivers;
-    if (e.drivers_json) {
-      try { const v = typeof e.drivers_json === 'string' ? JSON.parse(e.drivers_json) : e.drivers_json; return Array.isArray(v) ? v : []; }
-      catch (_) { return []; }
-    }
-    return [];
-  }
   // Outgoing SMS status from the gateway: sim / logged / queued / sent /
   // delivered / failed[:reason] / cancelled.
   const isFailed = st => /^(failed|error|cancel)/i.test(String(st || ''));
@@ -105,24 +89,6 @@
     if (s === 'queued' || s === 'pending' || s === 'processed') return { cls: 'wait', txt: 'sending…' };
     return { cls: '', txt: s };
   }
-  // Failed SMS per event, counted from /feed/messages (backend may also send
-  // failed_count / sent_ok on the event itself; those win).
-  const failedByEvent = new Map();
-  const sentOf = e => e.sent_count ?? e.sent_to ?? e.n_sent ?? e.recipients ?? e.sent ?? 0;
-  const STATUS = {
-    pending_approval: 'Waiting for approval',
-    approved: 'Approved',
-    sent: 'Sent',
-    cancelled: 'Cancelled',
-  };
-
-  function levelChip(n) {
-    const L = LEVELS[Math.max(0, Math.min(3, +n || 0))];
-    const c = el('span', 'chip', `${L.glyph} L${L.n} ${L.label.toUpperCase()}`);
-    c.style.background = L.color;
-    return c;
-  }
-
   // ---- Backend status -------------------------------------------------------
   let online = null;   // null = unknown yet
   function setOnline(ok, info) {
@@ -154,7 +120,6 @@
     $$('.live-page').forEach(s => { s.hidden = s.id !== `page-${p}`; });
     document.body.classList.toggle('on-live', p !== 'map');
     if (p === 'users') initUserForm();
-    if (p === 'alerts') { seenAlerts = maxAlertId; updateBadge(); }
     if (history.replaceState) {
       const q = new URLSearchParams(location.search);
       if (p === 'map') q.delete('page'); else q.set('page', p);
@@ -181,112 +146,6 @@
     t.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { t.hidden = true; }, 5000);
-  }
-
-  // ---- Alert feed -----------------------------------------------------------
-  const alertRows = new Map();   // id -> {li, sig}
-  let maxAlertId = 0, seenAlerts = 0, alertsLoaded = false;
-
-  function updateBadge() {
-    const n = [...alertRows.values()].filter(r => r.status === 'pending_approval').length;
-    const b = $('#badge-alerts');
-    b.textContent = String(n);
-    b.hidden = n === 0;
-  }
-
-  function buildAlert(e) {
-    const lvl = +e.level || 0;
-    const li = el('li', 'al-row');
-    li.style.setProperty('--lvl', LEVELS[Math.max(0, Math.min(3, lvl))].color);
-    li.dataset.id = e.id;
-
-    const top = el('div', 'al-top');
-    top.append(el('span', 'al-time', fmtTime(e.created_at)), levelChip(lvl),
-      el('span', 'al-unit', e.unit_name || e.unit_id || '—'));
-    const evName = EVENTS[e.event] || (e.event && e.event !== 'none' ? e.event : null);
-    if (evName) top.append(el('span', 'evt', evName));
-    if (e.month_label || e.t != null) top.append(el('span', 'al-month', e.month_label || `month ${e.t}`));
-    li.append(top);
-
-    const dr = driversOf(e);
-    if (dr.length) {
-      const ul = el('ul', 'n-drivers');
-      dr.slice(0, 3).forEach(d => ul.append(el('li', null, d)));
-      li.append(ul);
-    }
-
-    const foot = el('div', 'al-foot');
-    const st = el('span', `al-status st-${e.status}`, lvl < 2 ? 'Watch: shown only' : (STATUS[e.status] || e.status || ''));
-    foot.append(st);
-    // Backend gives sent_count (delivered OK) and failed_count separately.
-    // Without failed_count, sent_count counts every outgoing SMS, so subtract
-    // the failures seen in /feed/messages.
-    const total = +sentOf(e) || 0;
-    const beFailed = e.failed_count ?? e.n_failed;
-    const failed = +(beFailed ?? failedByEvent.get(e.id) ?? 0) || 0;
-    const ok = e.sent_ok != null ? +e.sent_ok : beFailed != null ? total : Math.max(0, total - failed);
-    foot.append(el('span', 'al-sent', lvl < 2 ? 'not sent (only orange and red are sent)' : e.status === 'pending_approval' ? 'not sent yet'
-      : `sent to ${ok} user${ok === 1 ? '' : 's'}`));
-    if (failed > 0 && e.status !== 'pending_approval') foot.append(el('span', 'al-failed', `${failed} failed`));
-    if (e.approved_by && e.status !== 'pending_approval') foot.append(el('span', 'al-by', `by ${e.approved_by}`));
-    if (e.status === 'pending_approval') {
-      const b = el('button', 'approve', 'Approve & send');
-      b.type = 'button';
-      b.addEventListener('click', () => approve(e.id, b));
-      foot.append(b);
-    }
-    li.append(foot);
-    const rc = (e.recommendations || []).find(x => x.audience === (e.event === 'no_grass' ? 'herder' : 'farmer'));
-    if (lvl >= 2 && rc) li.append(el('div', 'n-drivers', 'Do: ' + rc.action));
-    return li;
-  }
-
-  async function approve(id, btn) {
-    btn.disabled = true;
-    btn.textContent = 'Sending…';
-    try {
-      await api(`/events/${id}/approve`, {});
-      await pollAlerts();
-    } catch (err) {
-      btn.disabled = false;
-      btn.textContent = 'Approve & send';
-      toast(err.auth ? err.message : `Approve failed: ${err.message}`);
-    }
-  }
-
-  async function pollAlerts() {
-    const [d, dm] = await Promise.all([api('/feed/alerts'), page === 'alerts' ? api('/feed/messages?limit=500') : null]);
-    if (dm) {
-      failedByEvent.clear();
-      for (const m of rowsOf(dm, 'messages')) {
-        if (m.direction === 'out' && m.event_id != null && isFailed(m.status)) {
-          failedByEvent.set(m.event_id, (failedByEvent.get(m.event_id) || 0) + 1);
-        }
-      }
-    }
-    const rows = rowsOf(d, 'events', 'alerts').slice().sort((a, b) => b.id - a.id);
-    const list = $('#alerts-list');
-    // Insert/replace in id order, newest on top.
-    for (const e of rows.slice().reverse()) {
-      const sig = `${e.status}|${sentOf(e)}|${e.approved_by || ''}|${e.failed_count ?? failedByEvent.get(e.id) ?? 0}`;
-      const old = alertRows.get(e.id);
-      if (old && old.sig === sig) continue;
-      const li = buildAlert(e);
-      if (old) {
-        old.li.replaceWith(li);
-        li.classList.add('is-changed');
-      } else {
-        if (alertsLoaded) li.classList.add('is-new');
-        list.prepend(li);
-      }
-      alertRows.set(e.id, { li, sig, status: e.status });
-      maxAlertId = Math.max(maxAlertId, e.id);
-    }
-    alertsLoaded = true;
-    if (page === 'alerts') seenAlerts = maxAlertId;
-    $('#alerts-count').textContent = String(alertRows.size);
-    $('#alerts-empty').hidden = alertRows.size > 0;
-    updateBadge();
   }
 
   // ---- Users (added by an operator; no SMS self-signup) ---------------------
@@ -388,7 +247,6 @@
   let crowd = new Map();          // unit_id -> stats from the backend
   let crowdSig = '';
   let crowdBusy = false, crowdLoaded = false;
-  const crowdRows = new Map();    // unit_id -> {li, sig}  (Alert feed rows)
 
   const crowdAlarm = s => !!s && (+s.n_reports || 0) >= CROWD_RULE.minReports &&
     s.share_bad != null && +s.share_bad >= CROWD_RULE.minShareBad;
@@ -477,37 +335,6 @@
       .htmlElementsData(data);
   }
 
-  // Alert feed rows: "crowd report: Binga 3 of 4 say failed".
-  function renderCrowdAlerts() {
-    const list = $('#alerts-list');
-    for (const s of crowd.values()) {
-      if (!s.n_reports) continue;
-      const st = mapState.live ? crowdState(s.unit_id, rowAt(s.unit_id, mapState.t)) : 'none';
-      const sig = `${s.n_reports}|${s.n_bad}|${s.n_failed}|${s.last_report_at}|${st}|${s.n_demo}`;
-      const old = crowdRows.get(s.unit_id);
-      if (old && old.sig === sig) continue;
-      const li = el('li', `al-row crowd ${sevClass(s)}`);
-      li.dataset.crowd = s.unit_id;
-      const top = el('div', 'al-top');
-      top.append(el('span', 'al-time', fmtTime(s.last_report_at)), el('span', 'chip crowd-chip', '💬 CROWD'),
-        el('span', 'al-unit', `crowd report: ${s.unit_name || s.unit_id} ${crowdLine(s)}`));
-      if (s.n_demo > 0) top.append(el('span', 'tag demo', `${s.n_demo} demo`));
-      top.append(el('span', 'al-month', `${s.n_users || s.n_reports} people · 30 days`));
-      li.append(top);
-      const foot = el('div', 'al-foot');
-      foot.append(el('span', `crowd-rule st-${st}`, st === 'none'
-        ? 'reports only — shown on the map, no level change'
-        : RULE_TXT[st] + (st === 'raised' || st === 'confirms' ? ` at ${mapState.label}` : '')));
-      li.append(foot);
-      if (old) { old.li.replaceWith(li); li.classList.add('is-changed'); }
-      else { if (alertsLoaded) li.classList.add('is-new'); list.prepend(li); }
-      crowdRows.set(s.unit_id, { li, sig });
-    }
-    for (const [id, r] of crowdRows) if (!crowd.has(id)) { r.li.remove(); crowdRows.delete(id); }
-    $('#alerts-count').textContent = String(alertRows.size + crowdRows.size);
-    $('#alerts-empty').hidden = alertRows.size + crowdRows.size > 0;
-  }
-
   function applyCrowd(units) {
     const next = new Map();
     for (const u of units) if (u && u.unit_id) next.set(u.unit_id, u);
@@ -518,7 +345,6 @@
       if (window.APP && typeof APP.repaint === 'function') APP.repaint();
     }
     renderBadges();
-    renderCrowdAlerts();
   }
 
   async function pollCrowd() {
@@ -535,7 +361,7 @@
     } finally { crowdBusy = false; }
   }
   // Month or country changed on the globe: badges and feed rows re-evaluate the rule.
-  window.addEventListener('app:state', () => { renderBadges(); renderCrowdAlerts(); });
+  window.addEventListener('app:state', () => { renderBadges(); });
   window.CROWD = { displayLevel, detailSection, state: crowdState, stats: id => crowd.get(id) || null };
 
   // ---- Polling loop ---------------------------------------------------------
@@ -549,8 +375,7 @@
     try {
       await checkHealth();
       if (online) {
-        // Alerts are always polled so the tab badge counts pending approvals.
-        const jobs = [pollAlerts()];
+        const jobs = [];
         if (page === 'users') jobs.push(pollUsers());
         if (!crowdLoaded) jobs.push(pollCrowd());   // first load right away, then every CROWD_MS
         await Promise.all(jobs);
@@ -564,7 +389,7 @@
   setInterval(() => { if (online) pollCrowd(); }, CROWD_MS);
 
   const start = new URLSearchParams(location.search).get('page');
-  if (start && ['alerts', 'users'].includes(start)) show(start);
+  if (start && ['users'].includes(start)) show(start);
   else poll();
   setInterval(() => poll(true), POLL_MS);
 })();

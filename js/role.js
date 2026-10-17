@@ -30,10 +30,24 @@ window.ROLE = (function () {
     var out = t.replace(/\{(\w+)\}/g, function (_, k) { if (c[k] == null) { miss = true; return ''; } return c[k]; });
     return miss ? null : out;
   }
+  // Same rule as backend role_tier: FEWS NET phase drives it (3 prepare, 4-5 respond);
+  // without FEWS, our alert level (L2 prepare, L3 respond). Returns {phase, basis} or null.
+  function tier(a) {
+    var lvl = +a.level || 0, fp = a.fews_phase ? Math.round(+a.fews_phase) : 0;
+    if (fp) {
+      var b = 'Based on: FEWS NET Phase ' + fp;
+      if (fp >= 4) return { phase: 'respond', basis: b };
+      if (fp === 3 || lvl >= 2) return { phase: 'prepare', basis: b };
+      return null;
+    }
+    if (lvl >= 3) return { phase: 'respond', basis: 'Based on: our model' };
+    if (lvl === 2) return { phase: 'prepare', basis: 'Based on: our model' };
+    return null;
+  }
   function recommend(a, r) {
-    var lib = window.RECS, lvl = +a.level || 0;
-    if (!lib || !lib.role_actions || lvl < 2 || !LABEL[r]) return [];
-    var phase = lvl >= 3 ? 'respond' : 'prepare';
+    var lib = window.RECS, lvl = +a.level || 0, t = tier(a);
+    if (!lib || !lib.role_actions || !t || !LABEL[r]) return [];
+    var phase = t.phase;
     var ev = !a.event || a.event === 'none' ? 'any' : a.event;
     var pop = a.pop, n = a.n_hit, N = a.n_units, pc = a.p_crisis;
     var c = { name: a.county || 'this unit', pop: pop ? Math.round(pop).toLocaleString('en-US') : null,
@@ -47,7 +61,7 @@ window.ROLE = (function () {
     return lib.role_actions.filter(function (it) {
       return it.role === r && (it.phase === phase || it.phase === 'both') && (it.events.indexOf(ev) >= 0 || it.events.indexOf('any') >= 0);
     }).sort(function (x, y) { return x.priority - y.priority || (x.id < y.id ? -1 : 1); }).map(function (it) {
-      return { id: it.id, role: r, verb: it.verb, action: fill(it.action, c), who: it.who, when: it.when,
+      return { id: it.id, role: r, phase: phase, basis: t.basis, verb: it.verb, action: fill(it.action, c), who: it.who, when: it.when,
         quantity: it.quantity ? fill(it.quantity, c) : null, evidence: evid, source: lib.sources[it.source] || it.source, note: lib.role_note };
     }).filter(function (x) { return x.action; }).slice(0, 4);
   }
@@ -56,6 +70,7 @@ window.ROLE = (function () {
     var ul = document.createElement('ul');
     recs.forEach(function (x) { var li = document.createElement('li'); li.textContent = x.action; ul.append(li); });
     box.append(ul);
+    if (recs[0] && recs[0].basis) { var bs = document.createElement('small'); bs.className = 'a-demo role-basis'; bs.textContent = recs[0].basis; box.append(bs); }
     var src = recs.map(function (x) { return x.source; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; }).join('\n');
     if (src) { var n = document.createElement('small'); n.className = 'a-demo'; n.textContent = 'sources'; n.title = src; box.append(n); }
     return box;

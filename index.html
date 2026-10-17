@@ -26,7 +26,6 @@
 <nav id="tabs" role="tablist" aria-label="Views">
   <a id="brand" href="./" aria-label="Mapema home"><img src="assets/mapema.gif" alt="Mapema" width="83" height="26"></a>
   <button role="tab" data-page="map" class="on" aria-selected="true">Map</button>
-  <button role="tab" data-page="alerts" aria-selected="false">Alert feed <span class="tab-badge" id="badge-alerts" hidden>0</span></button>
   <button role="tab" data-page="users" aria-selected="false">Users</button>
   <span id="role-switch" role="group" aria-label="Role"><button type="button" data-role="gov" aria-pressed="false">Government</button><button type="button" data-role="ngo" aria-pressed="false">NGO / Food bank</button></span>
   <span id="be-status" title="SMS backend status"><i class="dot"></i><span class="be-lab">backend …</span></span>
@@ -153,16 +152,6 @@
 </footer>
 
 <!-- ===== Live SMS pages (js/live.js) ===== -->
-<section class="live-page" id="page-alerts" role="tabpanel" hidden>
-  <header class="lp-head">
-    <div><h2>Alert feed</h2></div>
-    <span class="lp-count" id="alerts-count">0</span>
-  </header>
-  <div class="lp-offline" hidden>Backend offline. Start it on localhost:8000; the map still works.</div>
-  <div class="lp-empty" id="alerts-empty">No alert events yet.</div>
-  <ol id="alerts-list" class="lp-list" aria-live="polite"></ol>
-</section>
-
 <section class="live-page" id="page-users" role="tabpanel" hidden>
   <header class="lp-head">
     <div><h2>Users</h2></div>

@@ -126,12 +126,32 @@ def evidence(alert: dict) -> str:
     return ". ".join(parts) + "."
 
 
-def role_recommend(alert: dict, role: str, limit: int = 4) -> list[dict]:
-    """Objective, actionable advice for one role (gov|ngo). [] below Warning."""
+def role_tier(alert: dict) -> tuple[str | None, str]:
+    """(phase, basis) for role actions. FEWS NET phase drives it when present
+    (3 = prepare, 4-5 = respond); otherwise our alert level (L2 prepare, L3 respond).
+    phase is None when nothing warrants action. Missing FEWS is missing, not zero."""
     level = int(alert.get("level") or 0)
-    if level < 2 or role not in ROLES:
+    fp = alert.get("fews_phase")
+    if fp:
+        fp = int(fp)
+        if fp >= 4:
+            return "respond", f"Based on: FEWS NET Phase {fp}"
+        if fp == 3 or level >= 2:
+            return "prepare", f"Based on: FEWS NET Phase {fp}"
+        return None, ""
+    if level >= 3:
+        return "respond", "Based on: our model"
+    if level == 2:
+        return "prepare", "Based on: our model"
+    return None, ""
+
+
+def role_recommend(alert: dict, role: str, limit: int = 4) -> list[dict]:
+    """Objective, actionable advice for one role (gov|ngo), chosen by FEWS NET phase
+    (fallback: our alert level). [] when neither calls for action."""
+    phase, basis = role_tier(alert)
+    if phase is None or role not in ROLES:
         return []
-    phase = "respond" if level >= 3 else "prepare"
     ev = alert.get("event") or "none"
     ev_key = "any" if ev == "none" else ev
     lib = _lib()
@@ -144,6 +164,7 @@ def role_recommend(alert: dict, role: str, limit: int = 4) -> list[dict]:
         out.append({"id": it["id"], "role": role, "phase": phase, "verb": it["verb"],
                     "action": _fill(it["action"], ctx), "who": it["who"], "when": it["when"],
                     "quantity": _fill(it.get("quantity", ""), ctx) if it.get("quantity") else None,
-                    "evidence": evid, "source": lib["sources"].get(it["source"], it["source"]),
+                    "evidence": evid, "basis": basis,
+                    "source": lib["sources"].get(it["source"], it["source"]),
                     "note": lib["role_note"]})
     return [r for r in out if r["action"]][:limit]

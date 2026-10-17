@@ -905,11 +905,11 @@
     return row && ENGINE.recommend ? ENGINE.recommend({ ...row, level: e.to }) : [];
   }
   // Context for role advice: all numbers come from the model rows, missing stays null.
-  function roleCtx(unit, row, t, level) {
+  function roleCtx(unit, row, t, level, lead) {
     let hit = 0, tot = 0;
     for (const u of MODEL.units) { const r = u.series[t]; if (r) { tot++; if (r.level >= 2) hit++; } }
     let fp = null;
-    try { fp = (ENGINE.forecastAt(row, 1) || {}).fews_phase; } catch (_) { /* no FEWS */ }
+    try { fp = (ENGINE.forecastAt(row, lead || 1) || {}).fews_phase; } catch (_) { /* no FEWS */ }
     return { county: unit.name, level: level || row.level, event: row.event, drivers: row.drivers || [],
       p_crisis: row.p_crisis, fews_phase: fp, pop: unit.props.pop != null ? Math.round(unit.props.pop * 1e6) : null, n_hit: hit, n_units: tot,
       unit_word: (active && active.unitWord) || 'units' };
@@ -1319,14 +1319,14 @@
     // --- role actions (Government vs NGO); the SMS preview is for the NGO / sender view only
     const roleOn = window.ROLE && ROLE.get();
     if (roleOn) {
-      const ra = ROLE.recommend(roleCtx(unit, row, now, row.level), roleOn);
+      const ra = ROLE.recommend(roleCtx(unit, row, now, row.level, leadOf()), roleOn);
       if (ra.length) {
         const sr = el('div', 'd-sect d-role');
-        sr.append(el('span', 'd-lab', `${ROLE.label(roleOn)}: ${row.level >= 3 ? 'respond' : 'prepare'}`));
+        sr.append(el('span', 'd-lab', `${ROLE.label(roleOn)}: ${ra[0].phase}`));
         sr.append(ROLE.block(ra));
         body.append(sr);
       } else {
-        body.append(el('div', 'd-sect muted', 'No role actions below Warning (orange).'));
+        body.append(el('div', 'd-sect muted', 'No role actions: FEWS NET and our model show no Warning (orange) or worse.'));
       }
     }
 

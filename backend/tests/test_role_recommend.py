@@ -24,7 +24,7 @@ def test_role_has_complete_actions(event, level, role):
 
 
 def test_below_warning_and_missing_data():
-    assert recommend.role_recommend({**ALERT, "level": 1}, "gov") == []
+    assert recommend.role_recommend({**ALERT, "level": 1, "fews_phase": None}, "gov") == []
     r = recommend.role_recommend({"county": "X", "level": 2, "event": "none"}, "gov")
     assert r and all(x["quantity"] is None or "None" not in x["quantity"] for x in r)
 
@@ -35,3 +35,16 @@ def test_roles_differ_and_herder_generic_gap():
     assert not g & n
     h = recommend.recommend({"level": 2, "event": "none"})
     assert any(x["audience"] == "herder" and "herd_generic" in x["id"] for x in h)
+
+
+def test_fews_phase_drives_role_actions():
+    a = {**ALERT, "level": 2, "event": "none"}
+    p3 = recommend.role_recommend({**a, "fews_phase": 3}, "gov")
+    p4 = recommend.role_recommend({**a, "fews_phase": 4}, "gov")
+    assert {x["phase"] for x in p3} == {"prepare"} and p3[0]["basis"] == "Based on: FEWS NET Phase 3"
+    assert {x["phase"] for x in p4} == {"respond"} and p4[0]["basis"] == "Based on: FEWS NET Phase 4"
+    # FEWS missing: our alert level decides and says so
+    m = recommend.role_recommend({**a, "fews_phase": None, "level": 3}, "ngo")
+    assert {x["phase"] for x in m} == {"respond"} and m[0]["basis"] == "Based on: our model"
+    # FEWS Phase 1-2 with no alert from us: nothing
+    assert recommend.role_recommend({**a, "fews_phase": 2, "level": 1}, "ngo") == []

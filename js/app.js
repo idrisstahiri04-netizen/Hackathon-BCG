@@ -168,6 +168,8 @@
     return nul > 0;
   };
   let liveAllNull = false;
+  // FEWS NET scenario -> plain label: projected, never observed (horizons measured from fdw.fews.net: ML1 ~1.5 mo, ML2 ~5 mo)
+  const scenTxt = (s) => s === 'ML1' ? 'projected ML1 (~+1.5 mo)' : s === 'ML2' ? 'projected ML2 (~+5 mo)' : s === 'CS' ? 'observed (Current Situation)' : s;
   // FEWS layer with no outlook for the target month: say exactly why (pause vs beyond the latest outlook).
   const fewsGapNote = () => {
     const lead = leadOf();
@@ -902,6 +904,16 @@
     const row = (unitById(e.id) || { series: [] }).series[e.t];
     return row && ENGINE.recommend ? ENGINE.recommend({ ...row, level: e.to }) : [];
   }
+  // Context for role advice: all numbers come from the model rows, missing stays null.
+  function roleCtx(unit, row, t, level) {
+    let hit = 0, tot = 0;
+    for (const u of MODEL.units) { const r = u.series[t]; if (r) { tot++; if (r.level >= 2) hit++; } }
+    let fp = null;
+    try { fp = (ENGINE.forecastAt(row, 1) || {}).fews_phase; } catch (_) { /* no FEWS */ }
+    return { county: unit.name, level: level || row.level, event: row.event, drivers: row.drivers || [],
+      p_crisis: row.p_crisis, fews_phase: fp, pop: unit.props.pop != null ? Math.round(unit.props.pop * 1e6) : null, n_hit: hit, n_units: tot,
+      unit_word: (active && active.unitWord) || 'units' };
+  }
   const topRec = (recs, ev) => recs.find(x => x.audience === (ev === 'no_grass' ? 'herder' : 'farmer')) || recs[0];
   function recsBlock(recs) {
     const box = el('div', 'a-recs');
@@ -949,7 +961,7 @@
     evs.sort((a, b) => b.t - a.t);
     $('#feed-count').textContent = String(evs.length);
     evs = evs.slice(0, LOG_CAP);
-    const sig = [logFilter, now, active && active.iso3, evs.length, logStored.size,
+    const sig = [window.ROLE && ROLE.get(), logFilter, now, active && active.iso3, evs.length, logStored.size,
       [...logStored.values()].map(r => r.send_status + r.sent_count).join()].join('|');
     if (sig === logSig) return;
     logSig = sig;
@@ -980,8 +992,8 @@
       li.append(el('span', 'a-why', logReason(e)));
       li.append(e.kind === 'declaration' ? el('span', 'a-st', '—') : statusCell(e));
       if (e.kind !== 'declaration' && e.to >= 2) {
-        const recs = recsFor(e);
-        const tr = topRec(recs, ((unitById(e.id) || { series: [] }).series[e.t] || {}).event);
+        const recs = window.ROLE && ROLE.get() ? ROLE.forEvent(e, unitById(e.id), roleCtx) : recsFor(e);
+        const tr = window.ROLE && ROLE.get() ? recs[0] && { action: recs[0].action } : topRec(recs, ((unitById(e.id) || { series: [] }).series[e.t] || {}).event);
         if (tr) {
           const line = el('span', 'a-rec');
           line.append(el('b', null, 'Do: '), tr.action + ' ');
@@ -994,7 +1006,7 @@
             tg.setAttribute('aria-expanded', String(open));
             tg.textContent = open ? 'hide ▴' : 'all actions ▾';
             const ex = li.querySelector('.a-recs');
-            if (ex) ex.remove(); else li.append(recsBlock(recs));
+            if (ex) ex.remove(); else li.append(window.ROLE && ROLE.get() ? ROLE.block(recs) : recsBlock(recs));
           });
           line.append(tg);
           li.append(line);
@@ -1106,7 +1118,7 @@
       if (f.fews_phase === 1 || f.fews_phase >= 4) chip.style.color = '#fff';
       const txt = el('span');
       txt.append(el('span', null, 'FEWS NET projected '), el('b', null, f.fews_phase == null ? (ENGINE.hasFews ? 'no outlook' : 'pending') : ipcText(f.fews_phase)),
-        el('span', null, ` for ${f.target_label}` + (f.fews_scenario ? ` · ${f.fews_scenario}` : '') + (f.fews_published ? ` · published ${f.fews_published}` : '')));
+        el('span', null, ` for ${f.target_label}` + (f.fews_scenario ? ` · ${scenTxt(f.fews_scenario)}` : '') + (f.fews_published ? ` · published ${f.fews_published}` : '')));
       fl.append(chip, txt);
       sect.append(fl);
     }
@@ -1193,7 +1205,7 @@
       const ph = p.g.fews_phase;
       const r = svgEl('rect', { x: x(p.i) - half + 0.5, y: sy, width: 2 * half - 1, height: sh, rx: 2, class: 'fc-step' + (ph == null ? ' none' : '') });
       r.setAttribute('fill', ipcColor(ph));
-      r.append(svgEl('title', {}, `${p.label}: FEWS NET ${ipcText(ph)}${p.g.fews_scenario ? ` (${p.g.fews_scenario}` + (p.g.fews_published ? `, published ${p.g.fews_published}` : '') + ')' : ''}`));
+      r.append(svgEl('title', {}, `${p.label}: FEWS NET ${ipcText(ph)}${p.g.fews_scenario ? ` (${scenTxt(p.g.fews_scenario)}` + (p.g.fews_published ? `, published ${p.g.fews_published}` : '') + ')' : ''}`));
       svg.append(r);
       if (ph != null) svg.append(svgEl('text', { x: x(p.i), y: sy + 9, class: 'fc-step-lab' + (ph >= 3 ? ' dark' : ''), 'text-anchor': 'middle' }, String(ph)));
       if (p.g.fews_scenario) {
@@ -1304,6 +1316,20 @@
       body.append(s2);
     }
 
+    // --- role actions (Government vs NGO); the SMS preview is for the NGO / sender view only
+    const roleOn = window.ROLE && ROLE.get();
+    if (roleOn) {
+      const ra = ROLE.recommend(roleCtx(unit, row, now, row.level), roleOn);
+      if (ra.length) {
+        const sr = el('div', 'd-sect d-role');
+        sr.append(el('span', 'd-lab', `${ROLE.label(roleOn)}: ${row.level >= 3 ? 'respond' : 'prepare'}`));
+        sr.append(ROLE.block(ra));
+        body.append(sr);
+      } else {
+        body.append(el('div', 'd-sect muted', 'No role actions below Warning (orange).'));
+      }
+    }
+
     // --- SMS preview
     const s3 = el('div', 'd-sect');
     s3.append(el('span', 'd-lab',
@@ -1331,10 +1357,10 @@
       meta.append(el('span', segs > 1 ? 'over' : '', `${segs} segment${segs > 1 ? 's' : ''}`));
       s3.append(meta);
     }
-    body.append(s3);
+    if (roleOn === 'ngo' || !roleOn) body.append(s3);
 
     // --- recommended actions (Warning = prepare, Emergency = respond)
-    const recs = ENGINE.recommend ? ENGINE.recommend(row) : [];
+    const recs = !roleOn && ENGINE.recommend ? ENGINE.recommend(row) : [];
     if (recs.length) {
       const s4 = el('div', 'd-sect');
       s4.append(el('span', 'd-lab', row.level >= 3 ? 'Recommended actions: respond' : 'Recommended actions: prepare'));
@@ -1350,7 +1376,7 @@
   // =========================================================================
   // Small surface for js/live.js: the globe (HTML badges) and a repaint after
   // crowd data changes. Nothing else of the app state is exposed.
-  window.APP = { world, repaint() { paintGlobe(); if (selected) renderDetail(); } };
+  window.APP = { selectCountry, feed() { renderFeed(); }, world, repaint() { paintGlobe(); if (selected) renderDetail(); } };
 
   COUNTRIES.forEach(c => {
     const h = engineFor(c);
@@ -1360,11 +1386,6 @@
   // Live first, then in progress, then no coverage.
   const rank = c => (c.live ? 2 : c.inProgress ? 1 : 0);
   COUNTRIES.sort((a, b) => rank(b) - rank(a));
-  {
-    const hint = $('#empty-hint').querySelector('.muted');
-    const live = COUNTRIES.filter(c => c.live);
-    hint.innerHTML = live.map(c => `<button class="linkish" data-demo="${c.name}">${c.name}</button>`).join(', ');
-  }
 
   setTime(0);
 

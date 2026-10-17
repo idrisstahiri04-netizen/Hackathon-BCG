@@ -3,19 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMS Shortage Early Warning</title>
+<title>Mapema</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="css/app.css">
 <link rel="stylesheet" href="css/live.css">
+<link rel="stylesheet" href="css/role.css">
 </head>
 <body class="viz-root has-tabs">
 
 <!-- ===== Top tabs (js/live.js). "Map" is the globe; the rest talk to the
      SMS backend on localhost:8000 and say "backend offline" if it is down. ===== -->
+<!-- Landing: logo = assets/mapema-typing.gif (plays once) then assets/mapema.gif (loop). Replace those two files to rebrand. -->
+<section id="landing" aria-label="Choose your role">
+  <img id="land-logo" alt="Mapema" width="640" height="200">
+  <p class="tag">Early warning of food shortage, in time to act.</p>
+  <div class="picks">
+    <button type="button" data-pick="gov">Government</button>
+    <button type="button" data-pick="ngo">NGO / Food bank</button>
+  </div>
+</section>
+
 <nav id="tabs" role="tablist" aria-label="Views">
+  <a id="brand" href="./" aria-label="Mapema home"><img src="assets/mapema.gif" alt="Mapema" width="83" height="26"></a>
   <button role="tab" data-page="map" class="on" aria-selected="true">Map</button>
   <button role="tab" data-page="alerts" aria-selected="false">Alert feed <span class="tab-badge" id="badge-alerts" hidden>0</span></button>
   <button role="tab" data-page="users" aria-selected="false">Users</button>
+  <span id="role-switch" role="group" aria-label="Role"><button type="button" data-role="gov" aria-pressed="false">Government</button><button type="button" data-role="ngo" aria-pressed="false">NGO / Food bank</button></span>
   <span id="be-status" title="SMS backend status"><i class="dot"></i><span class="be-lab">backend …</span></span>
 </nav>
 
@@ -89,7 +102,6 @@
 
     <div id="empty-hint">
       <p>Search for a country to begin.</p>
-      <p class="muted"></p>
     </div>
   </section>
 
@@ -178,6 +190,7 @@
 
 <script src="vendor/globe.gl.min.js"></script>
 <script src="js/real.js"></script>
+<script src="js/role.js"></script>
 <!-- Local operator key + API base (gitignored, made by backend/make_ui_config.py).
      May be missing: the onerror keeps the page going, live.js then runs without a key. -->
 <script src="js/config.local.js" onerror="void 0"></script>

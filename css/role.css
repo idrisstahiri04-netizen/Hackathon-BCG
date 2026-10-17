@@ -1,0 +1,19 @@
+body.on-landing { overflow: hidden; }
+#landing { position: fixed; inset: 0; z-index: 1000; background: var(--surface-0); color: var(--text-primary);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center; }
+#landing[hidden] { display: none; }
+#land-logo { width: min(520px, 80vw); height: auto; }
+#landing .tag { color: var(--text-secondary); font-size: 1.15rem; margin: 0; }
+#landing .picks { display: flex; gap: 20px; margin-top: 18px; flex-wrap: wrap; justify-content: center; }
+#landing .picks button { min-width: 240px; padding: 28px 36px; font-size: 1.35rem; font-weight: 600; color: inherit;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; cursor: pointer; }
+#landing .picks button:hover, #landing .picks button:focus-visible { border-color: var(--accent); background: var(--surface-3); outline: none; }
+#brand { display: inline-flex; align-items: center; margin-right: 10px; }
+#brand img { height: 26px; width: auto; display: block; }
+#role-switch { margin-left: auto; display: inline-flex; gap: 4px; }
+#role-switch button { background: transparent; color: var(--text-secondary); border: 1px solid var(--line); border-radius: 6px; padding: 3px 9px; font-size: .8rem; cursor: pointer; }
+#role-switch button.on { background: var(--surface-3); color: var(--text-primary); border-color: var(--accent); }
+.role-recs ol { margin: 4px 0 0; padding-left: 18px; }
+.role-recs li { margin-bottom: 8px; }
+.role-recs small { display: block; color: var(--text-secondary); }
+body.role-gov .a-st { display: none; }

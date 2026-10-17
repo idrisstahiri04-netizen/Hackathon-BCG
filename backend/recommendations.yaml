@@ -40,10 +40,20 @@ items:
      action_sw: "Lisha wazazi na wachanga kwanza. Omba chakula cha mifugo kwa kaunti.",
      detail: "Supplementary feed (hay, pellets, mineral licks) targeted to breeding females and young stock; request county or NDMA livestock feed distribution.",
      source: "fao_aa"}
-  - {id: herd_crop_fail_sell, audience: herder, events: [crop_failure, cant_plant, any], phase: both, priority: 1, drivers: [rain],
+  - {id: herd_crop_fail_sell, audience: herder, events: [crop_failure, cant_plant], phase: both, priority: 1, drivers: [rain],
      action: "Crops are failing: sell weak animals early, keep breeding stock, save water.",
      action_sw: "Mazao yanaharibika: uza mifugo dhaifu mapema, weka wazazi, hifadhi maji.",
      detail: "Where cropping fails, livestock become the main buffer; sell early and conserve water and residues for the herd.",
+     source: "ndma"}
+  - {id: herd_generic_prepare, audience: herder, events: [any], phase: prepare, priority: 1, drivers: [rain, veg],
+     action: "Dry spell coming: sell weak animals early, keep breeding stock, check water points.",
+     action_sw: "Ukame unakuja: uza mifugo dhaifu mapema, weka wazazi, kagua maji.",
+     detail: "Generic drought watch: early offtake of weak and old animals, protect breeding females, confirm which water points still work before herds move.",
+     source: "ndma"}
+  - {id: herd_generic_respond, audience: herder, events: [any], phase: respond, priority: 1, drivers: [rain, veg],
+     action: "Drought: sell weak animals now, keep breeding females, move herds to water.",
+     action_sw: "Ukame: uza mifugo dhaifu sasa, weka wazazi, peleka mifugo penye maji.",
+     detail: "Generic drought response: emergency offtake of animals unlikely to survive, protect breeding females, move to water and residual pasture agreed with elders.",
      source: "ndma"}
   # ---------------- farmer / crops
   - {id: farm_keep_grain, audience: farmer, events: [crop_failure, any], phase: both, priority: 1, drivers: [price],
@@ -139,3 +149,130 @@ items:
      action: "Distribute food to affected wards.",
      detail: "Release stock to the worst-hit wards through the county relief committee; prioritise households with children and livestock losses.",
      source: "wfp"}
+
+# ---------------------------------------------------------------------------------------
+# Role actions (Government vs NGO / food bank). Deterministic, no LLM.
+# Tokens filled from the alert context: {name} {pop} {ration_t} {n_hit} {n_units} {pct_units} {unit_word}.
+# If a token of `quantity` is missing the quantity line is dropped (missing is missing, not zero).
+# `when` is relative to the forecast window (chance of IPC 3+ within the next 3 months).
+# ration_t = pop x 15 kg x 1 month / 1000: upper bound if the whole population were covered
+# (assumed WFP-style planning ration; validate with WFP/NDMA).
+role_note: "Demo content, validate with NDMA/WHH."
+role_actions:
+  # ---------------- Government (county / national)
+  - {id: gov_activate_plan, role: gov, phase: prepare, events: [any], priority: 1,
+     verb: Activate, action: "Activate the County Steering Group and the drought contingency plan for {name}",
+     who: "County Steering Group, chaired by the County Commissioner with the NDMA county office",
+     when: "within 2 weeks, ahead of the 3-month forecast window",
+     quantity: "Covers {pop} people", source: ndma}
+  - {id: gov_offtake, role: gov, phase: prepare, events: [no_grass, any], priority: 2,
+     verb: Authorise, action: "Authorise a livestock offtake programme with a guaranteed floor price in {name}",
+     who: "County livestock department with the livestock marketing association",
+     when: "within 4 weeks, before body condition falls and prices drop",
+     quantity: "Pastoral share of {pop} people in {name}", source: cabot}
+  - {id: gov_water_contracts, role: gov, phase: prepare, events: [any], priority: 3,
+     verb: Pre-authorise, action: "Pre-authorise water trucking contracts and repair boreholes in {name}",
+     who: "County water department",
+     when: "contracts signed within 4 weeks; trucks ready before the forecast window ends",
+     quantity: "Target the driest wards among {pop} people", source: ndma}
+  - {id: gov_hsnp_scaleup, role: gov, phase: prepare, events: [any], priority: 4,
+     verb: Request, action: "Request pre-agreed scale-up of HSNP / NDMA cash transfers for {name}",
+     who: "NDMA with the HSNP secretariat",
+     when: "request lodged within 4 weeks so payments can start if the forecast holds",
+     quantity: "Up to {pop} people; select households from the HSNP register", source: hsnp}
+  - {id: gov_reserve_position, role: gov, phase: prepare, events: [crop_failure, cant_plant, any], priority: 5,
+     verb: Position, action: "Position strategic grain reserve stock near {name}",
+     who: "National Cereals and Produce Board with the national Treasury",
+     when: "order placed within 6 weeks, in place before the next 3 months end",
+     quantity: "Upper bound {ration_t} t cereal per month if all {pop} people were covered", source: wfp}
+  - {id: gov_seed_extension, role: gov, phase: prepare, events: [cant_plant, crop_failure], priority: 6,
+     verb: Distribute, action: "Distribute short-season, drought-tolerant seed through extension officers in {name}",
+     who: "County agriculture department",
+     when: "before the next planting rains",
+     quantity: "Farming households among {pop} people", source: fao_aa}
+  - {id: gov_declare, role: gov, phase: respond, events: [any], priority: 1,
+     verb: Declare, action: "Declare a county drought emergency for {name} and request national support",
+     who: "Governor and County Steering Group, with NDMA",
+     when: "within 1 week",
+     quantity: "{n_hit} of {n_units} {unit_word} ({pct_units}%) now at Warning or higher", source: ndma}
+  - {id: gov_release_reserve, role: gov, phase: respond, events: [any], priority: 2,
+     verb: Release, action: "Release strategic grain reserve into {name}",
+     who: "National Cereals and Produce Board",
+     when: "first deliveries within 2 weeks, then monthly while the Crisis outlook holds",
+     quantity: "Upper bound {ration_t} t cereal per month if all {pop} people were covered", source: wfp}
+  - {id: gov_water_trucking, role: gov, phase: respond, events: [any], priority: 3,
+     verb: Start, action: "Start water trucking to the driest wards of {name}",
+     who: "County water department",
+     when: "within 1 week",
+     quantity: "Serving up to {pop} people and their herds", source: ndma}
+  - {id: gov_emergency_cash, role: gov, phase: respond, events: [any], priority: 4,
+     verb: Trigger, action: "Trigger emergency cash transfers through NDMA / HSNP in {name}",
+     who: "NDMA with the HSNP secretariat",
+     when: "first payment within 2 weeks",
+     quantity: "Up to {pop} people", source: hsnp}
+  - {id: gov_offtake_emergency, role: gov, phase: respond, events: [no_grass], priority: 5,
+     verb: Buy, action: "Buy weak livestock through emergency offtake and move breeding herds to water in {name}",
+     who: "County livestock department with the livestock marketing association",
+     when: "weekly rounds starting within 2 weeks",
+     quantity: "Pastoral share of {pop} people", source: cabot}
+  - {id: gov_coordinate, role: gov, phase: both, events: [any], priority: 6,
+     verb: Convene, action: "Convene the food security working group every two weeks and share this alert with partners",
+     who: "NDMA county office",
+     when: "next meeting within 2 weeks",
+     quantity: "{n_hit} of {n_units} {unit_word} at Warning or higher", source: ndma}
+  # ---------------- NGO / food bank
+  - {id: ngo_target, role: ngo, phase: prepare, events: [any], priority: 1,
+     verb: Target, action: "Target the wards of {name} with the weakest food access for registration",
+     who: "NGO programme and monitoring team, with the county NDMA office",
+     when: "list agreed within 2 weeks, ahead of the 3-month forecast window",
+     quantity: "Up to {pop} people in the unit", source: wfp}
+  - {id: ngo_prepos, role: ngo, phase: prepare, events: [any], priority: 2,
+     verb: Pre-position, action: "Pre-position cereal and pulses at a sub-county store near {name}",
+     who: "Logistics and warehouse lead",
+     when: "stock in place within 6 weeks, before roads and prices worsen",
+     quantity: "Upper bound {ration_t} t cereal per month if all {pop} people were covered", source: wfp}
+  - {id: ngo_procure_timing, role: ngo, phase: prepare, events: [any], priority: 3,
+     verb: Place, action: "Place cereal orders now, before the forecast price peak",
+     who: "Procurement officer",
+     when: "orders placed within 2 weeks; delay pushes delivery into the Crisis window",
+     quantity: "Size the first order against {ration_t} t per month and scale down to the targeted share", source: wfp}
+  - {id: ngo_sms_register, role: ngo, phase: prepare, events: [any], priority: 4,
+     verb: Register, action: "Register target households for beneficiary SMS in {name}",
+     who: "Field officers",
+     when: "registration open within 3 weeks",
+     quantity: "Up to {pop} people; feature-phone SMS only", source: wfp}
+  - {id: ngo_livestock_feed, role: ngo, phase: prepare, events: [no_grass], priority: 5,
+     verb: Fund, action: "Fund livestock offtake and pre-position feed for breeding stock in {name}",
+     who: "Livelihoods programme with the county livestock department",
+     when: "within 4 weeks, before body condition falls",
+     quantity: "Pastoral households among {pop} people", source: fao_aa}
+  - {id: ngo_partner_prepare, role: ngo, phase: prepare, events: [any], priority: 6,
+     verb: Share, action: "Share targeting lists and store locations with the County Steering Group and partners",
+     who: "Country programme manager",
+     when: "within 2 weeks",
+     quantity: "{n_hit} of {n_units} {unit_word} at Warning or higher", source: ndma}
+  - {id: ngo_distribute, role: ngo, phase: respond, events: [any], priority: 1,
+     verb: Start, action: "Start general food or cash distribution in {name}",
+     who: "Distribution team",
+     when: "first round within 2 weeks, then monthly while the Crisis outlook holds",
+     quantity: "Upper bound {ration_t} t cereal per month if all {pop} people were covered", source: wfp}
+  - {id: ngo_sms_send, role: ngo, phase: respond, events: [any], priority: 2,
+     verb: Send, action: "Send beneficiary SMS with distribution points and dates in {name}",
+     who: "Field officers",
+     when: "before each distribution round, at least 3 days ahead",
+     quantity: "Registered households among {pop} people", source: wfp}
+  - {id: ngo_procure_now, role: ngo, phase: respond, events: [any], priority: 3,
+     verb: Buy, action: "Buy cereal now; do not wait for the next tender cycle",
+     who: "Procurement officer",
+     when: "within 1 week",
+     quantity: "Cover at least 1 month at {ration_t} t, then reassess", source: wfp}
+  - {id: ngo_water_feed, role: ngo, phase: respond, events: [no_grass], priority: 4,
+     verb: Truck, action: "Truck water and livestock feed to the driest grazing areas of {name}",
+     who: "Livelihoods programme with the county water department",
+     when: "within 1 week",
+     quantity: "Pastoral share of {pop} people", source: fao_aa}
+  - {id: ngo_partner_respond, role: ngo, phase: respond, events: [any], priority: 5,
+     verb: Coordinate, action: "Coordinate with the County Steering Group so ward coverage does not overlap",
+     who: "Country programme manager",
+     when: "at the next meeting, within 2 weeks",
+     quantity: "{n_hit} of {n_units} {unit_word} at Warning or higher", source: ndma}

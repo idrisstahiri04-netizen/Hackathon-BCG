@@ -12,9 +12,28 @@ def ev(level, event, name=LONG):
             "confidence": "medium", "drivers": ["3-month rain index -1.4 (very dry)"]}
 
 
+def test_watch_not_sent():
+    _user("+n1", "ngo", "Binga")
+    _user("+o1", "officer", "Binga")
+    r = composer.send_event(_event(1, "no_grass"))
+    assert r["sent"] == 0 and r["audiences"] == []
+    assert not db.q("SELECT 1 FROM messages WHERE direction='out'")
+
+
+def test_sms_uses_top_recommendation():
+    from backend import recommend
+    e = ev(3, "no_grass", "Binga")
+    e["recommendations"] = recommend.recommend({"level": 3, "event": "no_grass", "drivers": []})
+    for lang in ("en", "sw"):
+        t = composer.compose("herder", e, lang)
+        assert composer.is_gsm7(t) and composer.gsm_len(t) <= 160, t
+    assert "breeding" in composer.compose("herder", e, "en") or "water" in composer.compose("herder", e, "en")
+
+
 def test_audiences():
     assert composer.audiences(0, "crop_failure") == []
-    assert composer.audiences(1, "crop_failure") == ["ngo", "officer"]
+    assert composer.audiences(1, "crop_failure") == []  # Watch is never sent
+    assert composer.audiences(1, "no_grass") == []
     assert composer.audiences(2, "crop_failure") == ["ngo", "officer", "farmer"]
     assert composer.audiences(2, "cant_plant") == ["ngo", "officer", "farmer"]
     assert composer.audiences(2, "no_grass") == ["ngo", "officer", "herder"]

@@ -21,7 +21,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from . import composer, crowd, db, gateway, router
+from . import composer, crowd, db, gateway, recommend, router
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"))
 log = logging.getLogger("app")
@@ -156,8 +156,8 @@ def sim_inbound(body: dict):
 # ------------------------------------------------------------------ alerts broker
 def run_alerts(iso3: str, t: int, dispatch: bool = True) -> dict:
     """Create events for month t (level rose vs t-1). Idempotent: (iso3, unit, t, level) is unique.
-    dispatch=True: Watch goes out at once, Warning+ waits for approval. dispatch=False (scheduler): store only,
-    nothing is sent; every event waits for approval."""
+    Only Warning and Emergency are notified, and only after approval. Watch is stored and shown, never sent
+    (status 'approved', nobody to message)."""
     iso3 = iso3.upper()
     risk = db.load_risk(iso3)
     meta = risk.get("meta", {})
@@ -176,27 +176,30 @@ def run_alerts(iso3: str, t: int, dispatch: bool = True) -> dict:
             continue
         if db.q1("SELECT 1 FROM events WHERE iso3=? AND unit_id=? AND t=? AND level=?", (iso3, u["id"], t, lvl)):
             continue
-        auto = dispatch and lvl == 1
+        auto = lvl == 1  # Watch is stored and shown, never sent
+        recs = recommend.recommend({"iso3": iso3, "county": u.get("name"), "level": lvl, "event": cur.get("event"),
+                                    "drivers": cur.get("drivers") or [], "p_crisis": cur.get("p_crisis"),
+                                    "livelihood": u.get("livelihood")})
         eid = db.ex(
             "INSERT INTO events (created_at, iso3, unit_id, unit_name, t, month_label, level, event, p, "
-            "drivers_json, status, approved_by, horizon, confidence, agreeing, model_version) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "drivers_json, status, approved_by, horizon, confidence, agreeing, model_version, recommendations_json) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (db.now_iso(), iso3, u["id"], u.get("name"), t, db.month_label(t, start),
              lvl, cur.get("event"), cur.get("p"), json.dumps(cur.get("drivers") or []),
-             "approved" if auto else "pending_approval", "auto (Watch)" if auto else None,
-             cur.get("horizon"), cur.get("confidence"), cur.get("agreeing"), meta.get("model_version")))
+             "approved" if auto else "pending_approval", "not sent (Watch)" if auto else None,
+             cur.get("horizon"), cur.get("confidence"), cur.get("agreeing"), meta.get("model_version"),
+             json.dumps(recs)))
         created.append(eid)
-        if auto:  # Watch: NGO/officer only, no human gate
-            auto_sent.append(composer.send_event(eid, "auto (Watch)"))
     events = []
     for eid in created:
         e = db.q1("SELECT * FROM events WHERE id=?", (eid,))
         e["drivers"] = json.loads(e.pop("drivers_json") or "[]")
+        e["recommendations"] = json.loads(e.pop("recommendations_json", None) or "[]")
         e.update(composer.event_counts(eid))
         events.append(e)
     return {"created": len(created), "events": events, "iso3": iso3, "t": t, "month": db.month_label(t, start),
             "model_version": meta.get("model_version"), "event_ids": created, "watch_sent": auto_sent,
-            "pending_approval": len(created) - len(auto_sent)}
+            "pending_approval": len([1 for eid in created if db.q1("SELECT 1 FROM events WHERE id=? AND status='pending_approval'", (eid,))])}
 
 
 def process_live_months() -> list[dict]:
@@ -257,8 +260,10 @@ def alerts_log(iso3: str | None = None, since: int = 0, limit: int = 500):
     rows = db.q(sql + " ORDER BY id DESC LIMIT ?", (*args, min(limit, 2000)))
     for r in rows:
         r["drivers"] = json.loads(r.pop("drivers_json") or "[]")
+        r["recommendations"] = json.loads(r.pop("recommendations_json", None) or "[]")
         r.update(composer.event_counts(r["id"]))
         r["send_status"] = ("cancelled" if r["status"] == "cancelled" else
+                            "not_sent" if r["level"] < 2 else
                             "sent" if r["status"] == "sent" else
                             "failed" if r["failed_count"] else "pending")
     return {"events": rows, "last_id": max([r["id"] for r in rows], default=since)}
@@ -276,6 +281,7 @@ def approve(event_id: int, body: ApproveIn | None = None):
     res = composer.send_event(event_id, by)
     e = db.q1("SELECT * FROM events WHERE id=?", (event_id,))
     e["drivers"] = json.loads(e.pop("drivers_json") or "[]")
+    e["recommendations"] = json.loads(e.pop("recommendations_json", None) or "[]")
     e.update(composer.event_counts(event_id))
     return {"ok": True, "event": e, **res}
 
@@ -296,6 +302,7 @@ def feed_alerts(since: int = 0, limit: int = 100):
                 "FROM events e WHERE e.id>? ORDER BY e.id DESC LIMIT ?", (since, limit))
     for r in rows:
         r["drivers"] = json.loads(r.pop("drivers_json") or "[]")
+        r["recommendations"] = json.loads(r.pop("recommendations_json", None) or "[]")
         r.update(composer.event_counts(r["id"]))
         r["sent_to"] = r["sent_count"]
         r["audiences"] = composer.audiences(r["level"], r["event"])

@@ -1,9 +1,10 @@
 """Match an event to users and compose one-segment SMS (GSM-7, <=160 chars).
 
-Audience rules (API.md / spec):
-  Watch (1)      -> ngo, officer
-  Warning (2)    -> + farmer (crop events: cant_plant, crop_failure, none) or herder (no_grass)
+Audience rules (API.md / spec): only Warning (orange) and Emergency (red) are notified.
+  Watch (1)      -> nobody (shown in the UI and the alert log only)
+  Warning (2)    -> ngo, officer + farmer (crop events: cant_plant, crop_failure, none) or herder (no_grass)
   Emergency (3)  -> everyone subscribed in the district: ngo, officer, farmer, herder, resident
+Farmer/herder SMS carry the top recommended action of backend/recommend.py when it fits one segment.
 Farmers, herders and residents get an action, never a probability. NGO gets p + drivers.
 Skips opted-out users, users without consent, duplicates, and users over the monthly cap.
 """
@@ -16,7 +17,7 @@ import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
-from . import db, gateway
+from . import db, gateway, recommend
 
 GSM7 = set("@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡"
            "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà")
@@ -62,7 +63,7 @@ def fit(s: str, limit: int = MAX_LEN) -> str:
 # ------------------------------------------------------------------ templates
 def audiences(level: int, event: str | None) -> list[str]:
     out = []
-    if level >= 1:
+    if level >= 2:
         out += ["ngo", "officer"]
     if level >= 3:  # Emergency: everyone subscribed in the district (spec)
         return out + ["farmer", "herder", "resident"]
@@ -132,6 +133,14 @@ def compose(role: str, ev: dict, language: str = "en") -> str:
         raise ValueError(f"unknown role {role}")
 
     name = gsm_safe(ev.get("unit_name") or "your area")
+    act = None
+    if role in ("farmer", "herder") and ev.get("recommendations") and (language or "en")[:2] in ("en", "sw"):
+        act = recommend.top_action(ev["recommendations"], role, language or "en")
+    if act:  # top recommended action, same reply tail as the template; fall back if it does not fit
+        tail = ("Jibu 1 sawa 2 hafifu 3 mbaya. ACHA kujiondoa" if sw else "Reply 1 ok 2 poor 3 bad. STOP to quit")
+        cand = gsm_safe(f"{L} {name}: {act} {tail}")
+        if gsm_len(cand) <= MAX_LEN:
+            return cand
     text = build(name)
     while gsm_len(text) > MAX_LEN and len(name) > 6:  # shorten long district names first
         name = name[:-2]
@@ -155,7 +164,7 @@ def _alerts_this_month(user_id: int) -> int:
 def recipients(ev: dict) -> tuple[list[dict], dict]:
     roles = audiences(int(ev["level"]), ev.get("event"))
     if not roles:
-        return [], {}
+        return [], {"opted_out": 0, "no_consent": 0, "monthly_cap": 0, "already_sent": 0}
     marks = ",".join("?" * len(roles))
     users = db.q(
         f"SELECT * FROM users WHERE iso3=? AND role IN ({marks}) AND "
@@ -181,6 +190,7 @@ def recipients(ev: dict) -> tuple[list[dict], dict]:
 def event_dict(row: dict) -> dict:
     ev = dict(row)
     ev["drivers"] = json.loads(row.get("drivers_json") or "[]")
+    ev["recommendations"] = json.loads(row.get("recommendations_json") or "[]")
     return ev
 
 

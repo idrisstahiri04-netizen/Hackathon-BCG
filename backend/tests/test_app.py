@@ -37,12 +37,12 @@ def test_run_approve_send(isolated):
         db.upsert_user(phone, role=role, iso3="ZWE", district_id=ids[d], district_name=d, consent_at=db.now_iso())
 
     r = client.post("/alerts/run", json={"iso3": "ZWE", "t": 60}).json()
-    assert r["created"] == 2 and r["pending_approval"] == 1  # Binga Warning pending; Hwange Watch auto
+    assert r["created"] == 2 and r["pending_approval"] == 1  # Binga Warning pending; Hwange Watch stored, never sent
     assert r["month"] == "Jan 2024"
     alerts = client.get("/feed/alerts").json()["events"]
     binga = next(a for a in alerts if a["unit_name"] == "Binga")
     hw = next(a for a in alerts if a["unit_name"] == "Hwange")
-    assert binga["status"] == "pending_approval" and hw["status"] == "sent" and hw["sent_count"] == 1
+    assert binga["status"] == "pending_approval" and hw["sent_count"] == 0 and hw["level"] == 1
     assert db.q1("SELECT COUNT(*) n FROM messages WHERE phone='+f'")["n"] == 0  # not before approval
 
     s = client.post(f"/events/{binga['id']}/approve", json={"approved_by": "WHH desk"}).json()

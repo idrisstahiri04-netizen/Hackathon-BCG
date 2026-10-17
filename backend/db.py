@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS events (
   confidence TEXT,
   agreeing INTEGER,
   model_version TEXT,
+  recommendations_json TEXT,
   UNIQUE (iso3, unit_id, t, level)
 );
 CREATE TABLE IF NOT EXISTS messages (
@@ -214,6 +215,9 @@ def connect(path: str | None = None) -> sqlite3.Connection:
             c.row_factory = sqlite3.Row
             c.execute("PRAGMA journal_mode=WAL") if path != ":memory:" else None
             c.executescript(SCHEMA)
+            cols = [r[1] for r in c.execute('PRAGMA table_info(events)')]
+            if 'recommendations_json' not in cols:  # migrate older DBs
+                c.execute('ALTER TABLE events ADD COLUMN recommendations_json TEXT')
             _conns[path] = c
         return _conns[path]
 

@@ -216,7 +216,7 @@
     }
 
     const foot = el('div', 'al-foot');
-    const st = el('span', `al-status st-${e.status}`, STATUS[e.status] || e.status || '');
+    const st = el('span', `al-status st-${e.status}`, lvl < 2 ? 'Watch: shown only' : (STATUS[e.status] || e.status || ''));
     foot.append(st);
     // Backend gives sent_count (delivered OK) and failed_count separately.
     // Without failed_count, sent_count counts every outgoing SMS, so subtract
@@ -225,7 +225,7 @@
     const beFailed = e.failed_count ?? e.n_failed;
     const failed = +(beFailed ?? failedByEvent.get(e.id) ?? 0) || 0;
     const ok = e.sent_ok != null ? +e.sent_ok : beFailed != null ? total : Math.max(0, total - failed);
-    foot.append(el('span', 'al-sent', e.status === 'pending_approval' ? 'not sent yet'
+    foot.append(el('span', 'al-sent', lvl < 2 ? 'not sent (only orange and red are sent)' : e.status === 'pending_approval' ? 'not sent yet'
       : `sent to ${ok} user${ok === 1 ? '' : 's'}`));
     if (failed > 0 && e.status !== 'pending_approval') foot.append(el('span', 'al-failed', `${failed} failed`));
     if (e.approved_by && e.status !== 'pending_approval') foot.append(el('span', 'al-by', `by ${e.approved_by}`));
@@ -236,6 +236,8 @@
       foot.append(b);
     }
     li.append(foot);
+    const rc = (e.recommendations || []).find(x => x.audience === (e.event === 'no_grass' ? 'herder' : 'farmer'));
+    if (lvl >= 2 && rc) li.append(el('div', 'n-drivers', 'Do: ' + rc.action));
     return li;
   }
 

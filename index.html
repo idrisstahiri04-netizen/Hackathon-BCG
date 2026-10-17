@@ -189,7 +189,7 @@
   (function () {
     var ISO3 = ['ZWE', 'KEN', 'MWI', 'ZMB',
                 'MOZ', 'TZA', 'ETH', 'SOM', 'NAM', 'BWA', 'ZAF', 'MDG', 'AGO', 'UGA'];
-    var files = [];
+    var files = ['data/recommendations.js'];
     ISO3.forEach(function (c) { files.push('data/geo/' + c + '.js', 'data/risk/' + c + '.js'); });
     var left = files.length;
     function done() {

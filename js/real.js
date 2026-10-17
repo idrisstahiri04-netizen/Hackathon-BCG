@@ -29,9 +29,9 @@ const REAL = (() => {
     farmer:    { label: 'Farmers',            minLevel: 2 },
     herder:    { label: 'Herders',            minLevel: 2 },
     coop:      { label: 'Cooperatives',       minLevel: 2 },
-    extension: { label: 'Extension officers', minLevel: 1 },
-    foodbank:  { label: 'Food banks',         minLevel: 1 },
-    ngo:       { label: 'NGOs & funds',       minLevel: 1 },
+    extension: { label: 'Extension officers', minLevel: 2 },
+    foodbank:  { label: 'Food banks',         minLevel: 2 },
+    ngo:       { label: 'NGOs & funds',       minLevel: 2 },
     gov:       { label: 'Government',         minLevel: 2 },
   };
 
@@ -85,6 +85,43 @@ const REAL = (() => {
       .map(([k]) => k);
   }
 
+  // ---- Recommendation engine: JS port of backend/recommend.py (same library, same ranking).
+  // Only Warning (prepare) and Emergency (respond) get recommendations. Demo content.
+  const REC_AUD = { herder: 'Herders', farmer: 'Farmers', resident: 'Residents', ngo: 'NGOs & funds',
+    officer: 'Government & officers', foodbank: 'Food banks' };
+  const DRIVER_WORDS = { rain: ['rain', 'spi', 'precip'], veg: ['green', 'vci', 'ndvi', 'vegetation', 'grass'],
+    heat: ['hot', 'temperature', 'heat'], soil: ['soil', 'moisture'], fews: ['fews', 'ipc', 'crisis'], price: ['price', 'market'] };
+  function recommend(row, livelihood) {
+    const lib = window.RECS;
+    const level = +(row && row.level) || 0;
+    if (!lib || level < 2) return [];
+    const phase = level >= 3 ? 'respond' : 'prepare';
+    const evKey = !row.event || row.event === 'none' ? 'any' : row.event;
+    const live = livelihood || (row.event === 'no_grass' ? 'pastoral' : 'agricultural');
+    const txt = (row.drivers || []).join(' ').toLowerCase();
+    const tags = new Set(Object.entries(DRIVER_WORDS).filter(([, ws]) => ws.some(w => txt.includes(w))).map(([k]) => k));
+    const scored = [];
+    for (const it of lib.items) {
+      if (it.phase !== phase && it.phase !== 'both') continue;
+      if (!it.events.includes(evKey) && !it.events.includes('any')) continue;
+      let score = (it.priority ?? 5) * 10 - 3 * (it.drivers || []).filter(d => tags.has(d)).length;
+      if (it.events.includes(evKey)) score -= 2;
+      if (it.audience === 'farmer' && live === 'pastoral') score += 20;
+      if (it.audience === 'herder' && live === 'agricultural' && evKey !== 'no_grass') score += 20;
+      scored.push([score, it]);
+    }
+    scored.sort((a, b) => a[0] - b[0] || (a[1].id < b[1].id ? -1 : 1));
+    const count = {}, out = [];
+    for (const [, it] of scored) {
+      if ((count[it.audience] || 0) >= 3) continue;
+      count[it.audience] = (count[it.audience] || 0) + 1;
+      out.push({ id: it.id, audience: it.audience, action: it.action, detail: it.detail || it.action,
+        priority: count[it.audience], source: lib.sources[it.source] || it.source, phase });
+    }
+    return out;
+  }
+  const topAction = (recs, aud) => (recs.find(r => r.audience === aud) || {}).action || null;
+
   // Farmers and herders: an action, never a probability.
   function composeSMS(unitName, row, audience) {
     const name = gsmSafe(unitName);
@@ -96,6 +133,14 @@ const REAL = (() => {
       ? 'level held, needs 3 calm months'
       : `${row.agreeing}/3 families agree`;
     const em = row.level >= 3;
+    if (audience === 'farmer' || audience === 'herder') {   // top recommended action, if it fits one segment
+      const act = topAction(recommend(row), audience);
+      if (act) {
+        const tail = audience === 'farmer' ? 'Reply 1 ok 2 poor 3 failed. STOP to quit' : 'Reply 1 ok 2 poor 3 bad. STOP to quit';
+        const msg = gsmSafe(`${L} ${name}: ${act} ${tail}`);
+        if (septets(msg) <= 160) return msg;
+      }
+    }
     switch (audience) {
       case 'farmer':
         if (row.event === 'cant_plant')
@@ -274,7 +319,7 @@ const REAL = (() => {
       REPLAY_END_T: 71,            // t > 71 = live months added after the replay window
       isReal: true, isStub, meta,
       START_YEAR, N_MONTHS, LEVELS, AUDIENCES, EVENTS, FAMILIES, N_FAMILIES,
-      dateAt, build, composeSMS, audiencesFor,
+      dateAt, build, composeSMS, audiencesFor, recommend, REC_AUD,
       forecastAt, hasForecast, WATCH_P_CRISIS, MAX_LEAD,
       maxModelLead, hasFews, fewsLeads: [...fewsLeads].sort((a, b) => a - b),
       pCrisisAvailable: pcMeta.available !== false,   // false = IPC model not run for this country
@@ -285,5 +330,5 @@ const REAL = (() => {
     };
   }
 
-  return { forCountry, LEVELS, AUDIENCES, EVENTS, composeSMS, audiencesFor };
+  return { forCountry, LEVELS, AUDIENCES, EVENTS, composeSMS, audiencesFor, recommend, REC_AUD };
 })();

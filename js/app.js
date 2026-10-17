@@ -895,10 +895,33 @@
       renderFeed({});
     } catch (_) { /* offline: status stays "—" */ }
   }
+  // Recommendations for one log event: stored by the backend when available, else computed from the replay row.
+  function recsFor(e) {
+    const r = logStored.get(`${e.id}|${e.t}|${e.to}`);
+    if (r && r.recommendations && r.recommendations.length) return r.recommendations;
+    const row = (unitById(e.id) || { series: [] }).series[e.t];
+    return row && ENGINE.recommend ? ENGINE.recommend({ ...row, level: e.to }) : [];
+  }
+  const topRec = (recs, ev) => recs.find(x => x.audience === (ev === 'no_grass' ? 'herder' : 'farmer')) || recs[0];
+  function recsBlock(recs) {
+    const box = el('div', 'a-recs');
+    const order = Object.keys(ENGINE.REC_AUD || {}).sort((a, b) => (b === (recs[0] || {}).audience) - (a === (recs[0] || {}).audience));
+    for (const a of order) {
+      const items = recs.filter(x => x.audience === a);
+      if (!items.length) continue;
+      box.append(el('b', null, ENGINE.REC_AUD[a]));
+      const ul = el('ul');
+      items.forEach(x => { const li = el('li'); li.append(x.action, el('small', null, ` ${x.detail} (${x.source})`)); ul.append(li); });
+      box.append(ul);
+    }
+    box.append(el('small', 'a-demo', 'Demo content, to be validated with NDMA / WHH.'));
+    return box;
+  }
   function statusCell(e) {
     const td = el('span', 'a-st', '—');
     const r = logStored.get(`${e.id}|${e.t}|${e.to}`);
-    if (!r) return td;
+    if (!r) { if (e.to === 1) td.textContent = 'not sent'; return td; }
+    if (r.level < 2) { td.textContent = 'not sent'; return td; }
     if (r.send_status === 'pending') {
       td.textContent = '';
       if (r.level >= 1) {
@@ -956,6 +979,29 @@
       }
       li.append(el('span', 'a-why', logReason(e)));
       li.append(e.kind === 'declaration' ? el('span', 'a-st', '—') : statusCell(e));
+      if (e.kind !== 'declaration' && e.to >= 2) {
+        const recs = recsFor(e);
+        const tr = topRec(recs, ((unitById(e.id) || { series: [] }).series[e.t] || {}).event);
+        if (tr) {
+          const line = el('span', 'a-rec');
+          line.append(el('b', null, 'Do: '), tr.action + ' ');
+          const tg = el('button', 'a-tg', 'all actions ▾');
+          tg.type = 'button';
+          tg.setAttribute('aria-expanded', 'false');
+          tg.addEventListener('click', ev => {
+            ev.stopPropagation();
+            const open = tg.getAttribute('aria-expanded') !== 'true';
+            tg.setAttribute('aria-expanded', String(open));
+            tg.textContent = open ? 'hide ▴' : 'all actions ▾';
+            const ex = li.querySelector('.a-recs');
+            if (ex) ex.remove(); else li.append(recsBlock(recs));
+          });
+          line.append(tg);
+          li.append(line);
+        }
+      } else if (e.kind !== 'declaration') {
+        li.append(el('span', 'a-rec muted', 'Shown only, no SMS sent at this level.'));
+      }
       const go = () => {
         setTime(e.t);
         const poly = e.id != null || e.county ? FEATURES.find(f => (e.id != null ? f.properties.id === e.id : f.properties.name === e.county)) : null;
@@ -1261,10 +1307,12 @@
     // --- SMS preview
     const s3 = el('div', 'd-sect');
     s3.append(el('span', 'd-lab',
-      auds.length ? 'Message each audience would receive' : 'No alert at this level'));
+      auds.length ? 'Message each audience would receive' : 'No alert sent at this level'));
 
     if (!auds.length) {
-      s3.append(el('div', 'sms', 'Level 0 — nobody is messaged. A monthly digest is optional.'));
+      s3.append(el('div', 'sms', row.level === 1
+        ? 'No alert sent at this level. Watch is shown on the map and in the log only; orange and red alerts are sent.'
+        : 'No alert sent at this level.'));
     } else {
       const tabs = el('div', 'aud-tabs');
       auds.forEach(a => {
@@ -1284,6 +1332,15 @@
       s3.append(meta);
     }
     body.append(s3);
+
+    // --- recommended actions (Warning = prepare, Emergency = respond)
+    const recs = ENGINE.recommend ? ENGINE.recommend(row) : [];
+    if (recs.length) {
+      const s4 = el('div', 'd-sect');
+      s4.append(el('span', 'd-lab', row.level >= 3 ? 'Recommended actions: respond' : 'Recommended actions: prepare'));
+      s4.append(recsBlock(recs));
+      body.append(s4);
+    }
 
     d.append(body);
   }
@@ -1335,6 +1392,6 @@
       renderDetail();
       }
   } else {
-    searchInput.focus();
+    // no autofocus: focusing opens the country list
   }
 })();

@@ -95,3 +95,9 @@ Expected visual effect: the FEWS NET layer changes in steps when a new outlook i
 - Watch "fews_outlook": latest FEWS projection published <= issue month puts the unit at phase_w20 >= 3 for any of months +1..+3, while the latest known CS phase is < 3; Oct-Apr decision window only. Precedence: district_evidence > fews_outlook > ipc_outlook > climate_readiness.
 - Warning/Emergency keep the satellite two-family rule, but when a FEWS outlook (published <= issue month) exists they also need agreement: latest outlook phase_max >= 3 in any covered month to +8, or current known CS >= 3. Disagreement caps the raw level at Watch. No outlook -> satellite rule alone. Hysteresis and Emergency rules unchanged.
 - Live months (after 2024-12): p_crisis = eo_fews LightGBM fitted once on issue months <= 2024-12 (no retraining of the published model) with the real FEWS inputs (pipeline/ipc_model/rescore_live.py -> out/ipc_eofews_live.parquet); proxy only where FEWS inputs are missing.
+
+### Kenya sub-county inheritance (pipeline/ken_subcounty.py)
+KEN is exported at 290 sub-counties (each unit carries its parent `county`). NMME seasonal forecast (~1 deg) and market
+prices exist only per county, so each sub-county inherits its parent county's values (seasonal_fc_KEN, prices_KEN);
+satellite signals are per sub-county. `pipeline/shrink_risk.py KEN` then trims data/risk/KEN.js (rounding, null/false
+fields dropped, only UI-read signals kept). Sub-county history ends 2024-12 (no live months yet).

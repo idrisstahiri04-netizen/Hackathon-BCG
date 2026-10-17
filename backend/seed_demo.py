@@ -24,16 +24,16 @@ SEED_ZWE = [
     ("+212600000008", "Demo Herder Binga", "Binga", "herder", "en"),
 ]
 
-# Kenya demo: West Pokot herder Warning (no_grass) in Sep 2026 (t=92). Swahili texts need native review.
+# Kenya demo: Kacheliba (West Pokot) herder Warning (no_grass) in Sep 2023 (t=56). Swahili texts need native review.
 SEED_KEN = [
-    ("+212600000001", "Demo Herder West Pokot", "West Pokot", "herder", "sw"),
-    ("+212600000002", "Demo Farmer West Pokot", "West Pokot", "farmer", "en"),
-    ("+212600000003", "Demo Herder Turkana", "Turkana", "herder", "sw"),
-    ("+212600000004", "Demo Officer West Pokot", "West Pokot", "officer", "en"),
-    ("+212600000005", "Demo NGO Marsabit", "Marsabit", "ngo", "en"),
-    ("+212600000006", "Demo Resident Kilifi", "Kilifi", "resident", "sw"),
-    ("+212600000007", "Demo Farmer Kilifi", "Kilifi", "farmer", "sw"),
-    ("+212600000008", "Demo Herder Wajir", "Wajir", "herder", "en"),
+    ("+212600000001", "Demo Herder Kacheliba", "Kacheliba", "herder", "sw"),
+    ("+212600000002", "Demo Farmer Kacheliba", "Kacheliba", "farmer", "en"),
+    ("+212600000003", "Demo Herder Turkana", "Turkana Central", "herder", "sw"),
+    ("+212600000004", "Demo Officer Kacheliba", "Kacheliba", "officer", "en"),
+    ("+212600000005", "Demo NGO Marsabit", "North Horr", "ngo", "en"),
+    ("+212600000006", "Demo Resident Kilifi", "Kilifi North", "resident", "sw"),
+    ("+212600000007", "Demo Farmer Kilifi", "Kilifi North", "farmer", "sw"),
+    ("+212600000008", "Demo Herder Wajir", "Wajir East", "herder", "en"),
 ]
 SEEDS = {"ZWE": SEED_ZWE, "KEN": SEED_KEN}
 SEED = SEED_ZWE  # default country (kept for tests)

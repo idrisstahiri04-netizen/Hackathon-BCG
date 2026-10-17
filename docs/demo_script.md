@@ -16,14 +16,14 @@ Keys: `space` play/pause, arrows one month, `0` Now, `1`..`8` lead, `L` layer (m
 | Isiolo, t=30 | FEWS Phase 3, our chance 87 %. Marsabit 69 %. Top: Wajir 87 %, Isiolo 87 % |
 | Sep 2021 (t=32) | 26 Watch, 4 Warning (Garissa, Isiolo, Kilifi, Lamu). 10 counties >= 57 % (6.1 M people) |
 | Lead | Of the 4 Warnings at declaration, the run had lasted a median 11 weeks. Watch ran a median 35 weeks in 26 counties. Watch is noisy (on in 31 counties in Mar 2021 and also in non-drought months) |
-| Today (t=92, Sep 2026) | 28 Normal, 17 Watch, **2 Warning: West Pokot (no_grass, 3 of 3 families, high) and Kilifi (1 family)** |
+| Demo month (t=56, Sep 2023), sub-county data | Kacheliba: Warning, no_grass, 3 of 3 families, high (county-level counts above are from the 47-county run) |
 | Today forecast +1..+3 (Oct-Dec 2026) | 8 counties >= 57 % chance of Crisis, 4.9 M people: Garissa, Isiolo, Mandera, Marsabit, Samburu, Tana River, Turkana, Wajir. FEWS Phase 3+: Garissa, Lamu, Mandera, Tana River, Turkana, Wajir |
-| West Pokot, t=92 | Rises Watch (Aug) to Warning (Sep). Drivers: topsoil moisture -3.3 SD, temperature +4.2 SD, cropland greenness 3/100. Population 0.62 M |
+| Kacheliba (West Pokot), t=56 | Rises Watch (Aug) to Warning (Sep). Drivers: topsoil moisture -3.3 SD, temperature +4.2 SD, cropland greenness 3/100. Population 0.62 M |
 
 Herder SMS (138 septets, GSM-7, one segment, no probability):
-`WARNING West Pokot: grazing drying fast. Sell weak animals early while prices hold, plan herd moves. Reply 1 ok 2 poor 3 bad. STOP to quit`
+`WARNING Kacheliba: grazing drying fast. Sell weak animals early while prices hold, plan herd moves. Reply 1 ok 2 poor 3 bad. STOP to quit`
 Swahili (146 septets, **needs native review**):
-`ONYO West Pokot: malisho yanakauka haraka. Uza mifugo dhaifu mapema bei ikiwa nzuri, panga kuhamisha. Jibu 1 sawa 2 hafifu 3 mbaya. ACHA kujiondoa`
+`ONYO Kacheliba: malisho yanakauka haraka. Uza mifugo dhaifu mapema bei ikiwa nzuri, panga kuhamisha. Jibu 1 sawa 2 hafifu 3 mbaya. ACHA kujiondoa`
 
 Kenya has two rainy seasons (long rains Mar-May, short rains Oct-Dec). Forecast labels for model leads can read "Nov 2021 season" instead of a month: say "short-rains season".
 
@@ -45,11 +45,11 @@ Press `0`. Step to Sep 2021 (t=32): 4 orange (Garissa, Isiolo, Kilifi, Lamu).
 Say: "Observed levels. Warning needs proof from space, two months in a row. Four counties on the day of the declaration. It is honest: Warning is not early here, the forecast is."
 
 ### 1:20-2:30 Live SMS loop (jury member), today
-Click **Go to today** (Sep 2026), click **West Pokot**: No grass, 3/3, high, Herders tab.
+Go to Sep 2023 (t=56), click **Kacheliba**: No grass, 3/3, high, Herders tab.
 | Who | Does |
 | --- | --- |
-| Jury member | Texts "JOIN West Pokot herder" (or the operator adds them on Users). Replies YES |
-| Driver | Alert log: West Pokot "Waiting for approval". **Approve & send** on West Pokot only. Say: "A person approves every Warning." |
+| Jury member | Texts "JOIN Kacheliba herder" (or the operator adds them on Users). Replies YES |
+| Driver | Alert log: Kacheliba "Waiting for approval". **Approve & send** on Kacheliba only. Say: "A person approves every Warning." |
 | Jury member | Phone buzzes with the Warning (English, or Swahili if the user language is sw). Reads it out |
 | Jury member | Texts "how do I save my goats?" (advice from the approved list), then "3" (crowd report: 3 of 5 say bad), then "We need help" (goes to a person) |
 15-second rule: no buzz 15 s after Approve, switch to Fallback A silently.
@@ -67,14 +67,14 @@ http://localhost:8777/?country=Kenya&t=30                                     Ju
 http://localhost:8777/?country=Kenya&t=30&view=f2&layer=fews                  FEWS Phase 3+ in 13 counties
 http://localhost:8777/?country=Kenya&t=30&view=f2&layer=both&county=Isiolo    Isiolo FEWS 3, our 87 %
 http://localhost:8777/?country=Kenya&t=32                                     Sep 2021: 4 Warning
-http://localhost:8777/?country=Kenya&t=92&county=West%20Pokot                 Today: West Pokot Warning, no grass
+http://localhost:8777/?country=Kenya&t=56&county=Kacheliba                 Today: Kacheliba Warning, no grass
 http://localhost:8777/?country=Kenya&t=92&view=f2&layer=both                  Today: 8 counties >= 57 %
 ```
 Add `&api=http://localhost:8000` if the backend is on another host.
 
 ## Fallbacks
 - **A. On-screen simulator** (`GATEWAY=sim`): add the herder on the Users tab, approve in the alert log. "Same code path, no radio."
-- **B. Pre-seeded herder:** `python -m backend.seed_demo --iso3 KEN` creates "Demo Herder West Pokot" (language sw). Re-point to a team phone in the local `.env` only.
+- **B. Pre-seeded herder:** `python -m backend.seed_demo --iso3 KEN` creates "Demo Herder Kacheliba" (language sw). Re-point to a team phone in the local `.env` only.
 - **C. Backend down:** the map works alone; play the video for the SMS loop.
 - **D. Backup video** (Tab 3).
 
@@ -93,7 +93,7 @@ EOF
 ```
 Expected: `2026-10-17T01:30:10+00:00 92`, `30 [22, 5]`, `32 [26, 4]`, `92 [19, 2]` (Watch or above, Warning or above), `12`, `8`. If different, the file changed: update this page and slides 4-6.
 
-- [ ] `scripts/start_demo.sh --fresh` (seeds Kenya users), then `python -m backend.seed_crowd --iso3 KEN` (West Pokot, 4 reports, share 0.50).
-- [ ] Backend dot green. Dry run: add a West Pokot herder, approve at t=92, then `--fresh` again and re-seed.
+- [ ] `scripts/start_demo.sh --fresh` (seeds Kenya users), then `python -m backend.seed_crowd --iso3 KEN` (Kacheliba, 4 reports, share 0.50).
+- [ ] Backend dot green. Dry run: add a Kacheliba herder, approve at t=56, then `--fresh` again and re-seed.
 - [ ] Real SMS: `GATEWAY=android`, phone charged, SIM credit. Else `GATEWAY=sim` and Fallback A.
 - [ ] Chrome, one window, zoom 125 %, speed 1x. Nobody says a number not on this page or a slide.

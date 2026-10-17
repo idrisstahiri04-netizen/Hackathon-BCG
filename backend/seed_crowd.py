@@ -10,7 +10,7 @@ label them as demo. Idempotent: re-running refreshes the same 4 reports (no dupl
 
     python -m backend.seed_crowd                 # default district (Hurungwe: Watch + satellite alarm Apr 2024)
     python -m backend.seed_crowd --district Kariba
-    python -m backend.seed_crowd --iso3 KEN      # West Pokot
+    python -m backend.seed_crowd --iso3 KEN      # Kacheliba (West Pokot)
     python -m backend.seed_crowd --clear         # remove the demo reports and users
 """
 from __future__ import annotations
@@ -21,7 +21,7 @@ import json
 from . import db
 
 DEFAULT_DISTRICT = "Hurungwe"
-DEFAULT_BY_ISO3 = {"ZWE": "Hurungwe", "KEN": "West Pokot"}  # KEN: herder Warning (no_grass) Sep 2026
+DEFAULT_BY_ISO3 = {"ZWE": "Hurungwe", "KEN": "Kacheliba"}  # KEN: herder Warning (no_grass) Sep 2023 (t=56)
 SEED_TAG = "seed_crowd"
 # (phone, name, role, report value)
 SEED = [

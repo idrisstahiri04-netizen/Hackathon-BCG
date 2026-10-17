@@ -102,44 +102,38 @@
   const fewsOn = () => leadOf() > 0 && layer !== 'model';
   const modelOn = () => leadOf() > 0 && layer !== 'fews';
 
-  // Sequential scale for a probability: one hue, light -> dark, 5 bins with
-  // the Watch threshold as a bin edge. Validated with the dataviz checker on
-  // the dark surface (monotone lightness, step gaps, 2:1 at the dark end).
-  // Deliberately not the status ramp, which is reserved for alert levels.
+  // Predicted-risk classes use the SAME ramp as the Now view alert levels
+  // (green / yellow / orange / red), so a forecast reads like an alert. The
+  // class name and number always sit beside the colour (colour-blind safe).
   const FC = {
-    colors: ['#fde0ef', '#f4a6cf', '#e765a8', '#c4267f', '#9e1468'],
+    colors: ['#0ca30c', '#ffd43b', '#ec833a', '#d03b3b'],
+    names: ['Low', 'Moderate', 'High', 'Very high'],
     none: '#6b6a64',
-    glyphs: ['1', '2', '3', '4', '5'],
+    glyphs: ['1', '2', '3', '4'],
+    dark: [true, false, false, true],      // swatch text colour: white on green/red
   };
-  // IPC phase colours (IPC / FEWS NET standard, with the phase number and
-  // name always beside them). Reserved for the FEWS NET outlook layer.
+  // IPC phase colours on the same ramp; Phase 5 (Famine) is dark red.
   const IPC = {
-    colors: { 1: '#cdfacd', 2: '#fae61e', 3: '#e67800', 4: '#c80000', 5: '#640000' },
+    colors: { 1: '#0ca30c', 2: '#ffd43b', 3: '#ec833a', 4: '#d03b3b', 5: '#8b1a1a' },
     labels: { 1: 'Minimal', 2: 'Stressed', 3: 'Crisis', 4: 'Emergency', 5: 'Famine' },
     none: '#6b6a64',
   };
   const ipcColor = ph => (ph == null ? IPC.none : IPC.colors[ph] || IPC.none);
   const ipcText = ph => (ph == null ? 'no outlook' : `Phase ${ph} ${IPC.labels[ph] || ''}`.trim());
   const fcThr = () => (ENGINE.WATCH_P_CRISIS != null ? ENGINE.WATCH_P_CRISIS : 0.57);
-  // Four bin edges, always ascending: the country's Watch threshold plus the
-  // three fixed edges furthest from it (thresholds differ per country).
-  const fcEdges = () => {
-    const thr = fcThr();
-    const fixed = [0.2, 0.4, 0.6, 0.75].filter(e => Math.abs(e - thr) >= 0.05)
-      .sort((a, b) => Math.abs(b - thr) - Math.abs(a - thr)).slice(0, 3);
-    return [...fixed, thr].sort((a, b) => a - b);
-  };
+  // Class edges: 30%, the country's Watch threshold, 80% (ascending).
+  const fcEdges = () => [0.3, Math.min(0.79, Math.max(0.31, fcThr())), 0.8];
   const pct = v => `${Math.round(v * 100)}%`;
   const fcLabels = () => {
-    const edges = fcEdges(), thr = fcThr(), e = edges.map(pct);
-    const watch = i => (edges[i] === thr ? ' (Watch)' : '');
-    return [`< ${e[0]}`, `${e[0]} – ${e[1]}${watch(0)}`, `${e[1]} – ${e[2]}${watch(1)}`, `${e[2]} – ${e[3]}${watch(2)}`, `≥ ${e[3]}${watch(3)}`];
+    const e = fcEdges().map(pct);
+    return [`< ${e[0]}`, `${e[0]} – <${e[1]}`, `${e[1]} – <${e[2]}`, `≥ ${e[2]}`];
   };
   const binOf = v => {
     if (v == null || Number.isNaN(v)) return -1;
     const i = fcEdges().findIndex(e => v < e);
-    return i === -1 ? 4 : i;
+    return i === -1 ? 3 : i;
   };
+  const fcName = v => { const b = binOf(v); return b < 0 ? 'no forecast' : `${FC.names[b]} (${b + 1})`; };
   const fcColor = v => { const b = binOf(v); return b < 0 ? FC.none : FC.colors[b]; };
   const fcAt = (unit, t, lead) => ENGINE.forecastAt(unit.series[t], lead);
   // Ranking score for the next 3 months: the highest chance over leads 1..3.
@@ -246,14 +240,14 @@
         .polygonCapColor(d => {
           const f = fOf(d), c = fill(f);
           if (d === selected) return c;
-          return c + (low(f) ? 'c0' : 'e6');
+          return c + (low(f) ? 'a0' : 'c8')   // forecasts sit lighter than issued alerts;
         })
         .polygonSideColor(d => { const f = fOf(d); return (layer === 'both' ? ipcColor(f.fews_phase) : fill(f)) + '88'; })
         .polygonStrokeColor(d => {
           if (d === selected) return '#ffffff';
           if (d === hovered) return '#ffffffaa';
           if (layer === 'both') { const ph = fOf(d).fews_phase; return ph == null ? '#00000055' : ipcColor(ph); }
-          return '#00000055';
+          return '#ffffff40';      // light outline = forecast, not an issued alert
         });
       return;
     }
@@ -577,7 +571,7 @@
       const tgt = ENGINE.dateAt(now + lead).label, iss = ENGINE.dateAt(now).label;
       const what = layer === 'fews' ? 'FEWS NET projected IPC phase' : layer === 'both'
         ? 'Our chance of Crisis (IPC 3+) as fill, FEWS NET projected phase on the outline' : 'Predicted chance of Crisis (IPC 3+)';
-      cap.append(el('div', null, `${what} for ${tgt} · issued end of ${iss}` + (layer === 'fews' ? '' : ' · darker = higher')));
+      cap.append(el('div', null, `${what} for ${tgt} · issued end of ${iss}` + (layer === 'fews' ? '' : ' · same colours as the Now view')));
       cap.append(el('div', 'vc-conf', `Confidence ${cf.label} — ${cf.source}`));
       if (lead >= 3) cap.append(el('div', 'vc-note', noteSeason(lead)));
       if (liveGaps(now)) cap.append(el('div', 'vc-note', liveNote()));
@@ -788,13 +782,14 @@
     const both = layer === 'both';
     if (modelOn()) {
       if (both) ul.append(el('li', 'lg-group', 'Our model · chance of Crisis (fill)'));
+      else ul.append(el('li', 'lg-group', `Predicted risk at +${leadOf()} month${leadOf() > 1 ? 's' : ''} (chance of Crisis)`));
       fcLabels().forEach((lab, i) => {
         const li = el('li');
         li.dataset.bin = i;
         const sw = el('span', 'sw', FC.glyphs[i]);
         sw.style.background = FC.colors[i];
-        if (i >= 2) sw.style.color = '#fff';
-        li.append(sw, el('span', null, lab), el('span', 'ct', '0'));
+        if (FC.dark[i]) sw.style.color = '#fff';
+        li.append(sw, el('span', null, `${FC.names[i]} · ${lab}`), el('span', 'ct', '0'));
         ul.append(li);
       });
       const li = el('li');
@@ -812,7 +807,7 @@
         li.dataset.phase = ph;
         const sw = el('span', 'sw', String(ph));
         sw.style.background = IPC.colors[ph];
-        if (ph >= 3) sw.style.color = '#fff';
+        if (ph === 1 || ph >= 4) sw.style.color = '#fff';
         li.append(sw, el('span', null, `Phase ${ph} ${IPC.labels[ph]}`), el('span', 'ct', '0'));
         ul.append(li);
       });
@@ -842,7 +837,8 @@
     }
     title.textContent = `Forecast issued end of ${ENGINE.dateAt(now).label} for ` +
       `${ENGINE.dateAt(now + lead).label} — using only data available then`;
-    const counts = [0, 0, 0, 0, 0], phases = [0, 0, 0, 0, 0, 0];
+    title.prepend(el('span', 'fc-badge', 'FORECAST'));
+    const counts = [0, 0, 0, 0], phases = [0, 0, 0, 0, 0, 0];
     let none = 0;
     MODEL.units.forEach(u => {
       const f = fcAt(u, now, lead);
@@ -908,9 +904,11 @@
       const thr = el('b');
       thr.style.left = `${fcThr() * 100}%`;
       bar.append(thr);
+      const pc = el('span', 'pc', pct(f.chance));
+      pc.dataset.cl = `C${binOf(f.chance) + 1}`;   // class number, shown via CSS (not colour alone)
       li.append(el('span', 'rk', String(i + 1)), el('span', 'nm', u.name), bar,
-        el('span', 'pc', pct(f.chance)), dot);
-      li.title = `${chanceWord(f.kind)} by ${f.target_label}: ${pct(f.chance)}`;
+        pc, dot);
+      li.title = `${chanceWord(f.kind)} by ${f.target_label}: ${pct(f.chance)} · ${fcName(f.chance)}`;
       const go = () => {
         selected = u.feature;
         smsAudience = null;
@@ -1100,7 +1098,7 @@
       sect.append(head);
       sect.append(el('div', 'fc-sub',
         f.chance == null ? (f.pending ? `No model forecast fields for +${lead} yet.` : 'No forecast for this district and month.') :
-        `issued end of ${ENGINE.dateAt(now).label}` +
+        `${fcName(f.chance)} risk class · issued end of ${ENGINE.dateAt(now).label}` +
         (f.kind === 'crisis' ? ` · IPC 3+ · Watch threshold ${pct(thr)}` : ' · satellite event model') +
         (f.chance >= thr && f.kind === 'crisis' ? ' · above threshold' : '') +
         (f.source ? ` · ${f.source}` : '')));
@@ -1110,7 +1108,7 @@
       const fl = el('div', layer === 'fews' ? 'fc-head fc-fews-head' : 'fc-fews-line');
       const chip = el('span', 'fc-ph', f.fews_phase == null ? '?' : String(f.fews_phase));
       chip.style.background = ipcColor(f.fews_phase);
-      if (f.fews_phase != null && f.fews_phase >= 3) chip.style.color = '#fff';
+      if (f.fews_phase === 1 || f.fews_phase >= 4) chip.style.color = '#fff';
       const txt = el('span');
       txt.append(el('span', null, 'FEWS NET projected '), el('b', null, f.fews_phase == null ? (ENGINE.hasFews ? 'no outlook' : 'pending') : ipcText(f.fews_phase)),
         el('span', null, ` for ${f.target_label}` + (f.fews_scenario ? ` · ${f.fews_scenario}` : '') + (f.fews_published ? ` · published ${f.fews_published}` : '')));
@@ -1178,7 +1176,10 @@
       const sel = !p.past && p.lead === lead;
       const c = svgEl('circle', { cx: x(p.i), cy: y(p.v), r: sel ? 5 : p.past ? 2.6 : 3,
         class: p.past ? 'fc-dot' : `fc-dot fut${sel ? ' sel' : ''}` });
-      c.append(svgEl('title', {}, `${p.label}: ${pct(p.v)}${p.past ? '' : ` (our model, +${p.lead} month${p.lead > 1 ? 's' : ''}, confidence ${fcConf(p.lead).label})`}`));
+      if (p.past) c.style.fill = fcColor(p.v);
+      else if (sel) c.style.fill = fcColor(p.v);
+      else c.style.stroke = fcColor(p.v);
+      c.append(svgEl('title', {}, `${p.label}: ${pct(p.v)} · ${fcName(p.v)}${p.past ? '' : ` (our model, +${p.lead} month${p.lead > 1 ? 's' : ''}, confidence ${fcConf(p.lead).label})`}`));
       svg.append(c);
     });
     // x labels: past at -6, -3, 0; every forecast lead

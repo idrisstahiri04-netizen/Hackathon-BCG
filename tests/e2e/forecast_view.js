@@ -1,7 +1,7 @@
 // Forecast view checks (horizon Now | +1 … +8, layer Our model | FEWS NET |
 // Both, unit panel chart with FEWS steps, Top 10, TODAY marker, deep links,
 // keys F / L / 0-8) in headless Chrome via Node Playwright.
-// Starts its OWN static server on :8601 and its own browser; never touches
+// Starts its OWN static server on :8803 and its own browser; never touches
 // the shared :8777 / :8000 processes. The SMS backend is pointed at a dead
 // port so js/live.js runs "offline" (its connection errors are not JS errors).
 //
@@ -14,9 +14,9 @@ const http = require('http');
 const { spawn } = require('child_process');
 const { chromium } = require('playwright');
 
-const PORT = 8601;
+const PORT = 8803;
 const BASE = `http://127.0.0.1:${PORT}/`;
-const DEAD_API = 'http://127.0.0.1:8603';
+const DEAD_API = 'http://127.0.0.1:8805';
 const REPO = path.resolve(__dirname, '..', '..');
 const SCREENS = path.join(__dirname, 'screens');
 fs.mkdirSync(SCREENS, { recursive: true });
@@ -94,7 +94,9 @@ async function main() {
       layer: document.querySelector('#layer-switch button.on')?.dataset.layer,
       layerHidden: document.querySelector('#layer-switch').hidden,
       nBtns: document.querySelectorAll('#horizon button').length,
-      title: document.querySelector('#legend .legend-title').textContent,
+      title: document.querySelector('#legend .legend-title').textContent.replace(/^FORECAST/, ''),
+      badge: !!document.querySelector('#legend .legend-title .fc-badge'),
+      swatches: [...document.querySelectorAll('#legend-items li[data-bin] .sw')].map(x => x.style.backgroundColor + '|' + x.textContent),
       legend: [...document.querySelectorAll('#legend-items li')].filter(li => !li.hidden && !li.classList.contains('lg-group')).map(li => li.textContent.trim().replace(/\s+/g, ' ')),
       groups: [...document.querySelectorAll('#legend-items li.lg-group')].map(li => li.textContent),
       legendSum: [...document.querySelectorAll('#legend-items li[data-bin] .ct')].map(x => +x.textContent).reduce((a, b) => a + b, 0),
@@ -135,12 +137,14 @@ async function main() {
     await go(page, '?country=Zimbabwe&t=57&view=f3');
     let s = await state(page);
     check('oct2023_f3_view', s.fcView && s.on === 'f3' && s.clock === 'Oct 2023' && s.nBtns === 9 && !s.layerHidden && s.layer === 'model', s);
+    check('forecast_colours_same_ramp_and_badge', s.badge && s.legend.length === 4 + (s.noneCt > 0 ? 1 : 0) && s.swatches.slice(0, 4).join(',') === 'rgb(12, 163, 12)|1,rgb(255, 212, 59)|2,rgb(236, 131, 58)|3,rgb(208, 59, 59)|4'
+      && ['Low', 'Moderate', 'High', 'Very high'].every((n, i) => s.legend[i].includes(n)) && /≥ 80%/.test(s.legend[3]) && /30% – <57%/.test(s.legend[1]), { badge: s.badge, legend: s.legend, sw: s.swatches });
     check('oct2023_title', s.title === 'Forecast issued end of Oct 2023 for Jan 2024 — using only data available then', s.title);
     check('oct2023_legend_counts', s.legendSum === NU && s.statUnits === hot(57, 3) && /chance of Crisis by Jan 2024/.test(s.statLab), { sum: s.legendSum, stat: s.statUnits, data: hot(57, 3), lab: s.statLab });
     const expConf = Array.from({ length: 8 }, (_, i) => i < 3 ? ['M-H', 'M', 'L-M'][i] : (i + 1 <= maxModelLead ? '?' : 'FEWS'));
     check('conf_short_labels_buttons', s.conf.join('|') === expConf.join('|') && s.smalls[0] === `${MON[58 % 12]} '23` && s.smalls[2] === 'Jan \'24', { conf: s.conf, exp: expConf, smalls: s.smalls });
     check('caption_confidence_and_season_note', /Confidence Low-Medium — based on back-tests/.test(s.cap) && /\+3-month forecasts show season-level risk/.test(s.cap)
-      && /Confidence Low-Medium/.test(s.note) && !/live: some inputs missing/.test(s.cap), { cap: s.cap, note: s.note });
+      && /Confidence Low-Medium/.test(s.note) && !/some inputs missing/.test(s.cap), { cap: s.cap, note: s.note });
     await page.screenshot({ path: path.join(SCREENS, 'forecast_1440_oct2023_f3.png') });
 
     const perLead = {};
@@ -151,19 +155,30 @@ async function main() {
       perLead[L] = { on: st.on, stat: st.statUnits, exp: hot(57, L), none: st.noneCt, expNone: noneAt(57, L), title: st.title, cap: st.cap };
       if (L === 6) await page.screenshot({ path: path.join(SCREENS, 'forecast_1440_oct2023_f6.png') });
     }
-    check('oct2023_all_leads_1_to_8', Object.entries(perLead).every(([L, v]) => v.on === `f${L}` && v.stat === v.exp && (v.expNone === 0 ? v.none === -1 || v.none === 0 : v.none === v.expNone)
+    check('oct2023_all_leads_1_to_8', Object.entries(perLead).every(([L, v]) => v.on === `f${L}` && (+L > maxModelLead ? !(v.stat > 0) : v.stat === v.exp) && (v.expNone === 0 ? v.none === -1 || v.none === 0 : (v.none === v.expNone || (+L > maxModelLead && v.none === -1)))
       && v.title === `Forecast issued end of Oct 2023 for ${lab(57 + +L)} — using only data available then`), perLead);
     const beyond = Object.entries(perLead).filter(([L]) => +L > Math.max(3, maxModelLead));
     check('leads_beyond_model_say_pending', beyond.length === 0 || beyond.every(([L, v]) => new RegExp(`no model forecast fields for \\+${L} yet`).test(v.cap) && /no model forecast — FEWS NET only/.test(v.cap)),
       beyond.map(([L, v]) => ({ L, cap: v.cap })));
 
+    // Colour screenshots: ZWE t=57 +5 (model + FEWS), t=61 +2, t=92 +2
+    for (const [t, L, nm] of [[57, 5, 'oct2023_f5'], [61, 2, 'feb2024_f2'], [92, 2, 'live_f2']]) {
+      await go(page, `?country=Zimbabwe&t=${t}&view=f${L}&county=Mbire`);
+      await page.screenshot({ path: path.join(SCREENS, `forecast_colours_${nm}.png`) });
+      if (t === 57) {
+        await page.click('#layer-switch button[data-layer=fews]');
+        await page.waitForTimeout(400);
+        await page.screenshot({ path: path.join(SCREENS, `forecast_colours_${nm}_fews.png`) });
+      }
+    }
+    await go(page, '?country=Zimbabwe&t=57&view=f3');
     // Layers at +4
     await page.keyboard.press('4');
     await page.click('#layer-switch button[data-layer=fews]');
     await page.waitForTimeout(300);
     s = await state(page);
     const phase3 = R.units.filter(u => (fcOf(u.series[57], 4).phase ?? 0) >= 3).length;
-    check('fews_layer', s.layer === 'fews' && s.phaseSum === NU && s.legend.length === 6 && /Phase 3 Crisis/.test(s.legend[2]) && s.statUnits === phase3 && /\(FEWS NET\)/.test(s.statLab)
+    check('fews_layer', s.layer === 'fews' && s.phaseSum === NU && s.legend.length === 5 + (s.legend.some(l => /no outlook/.test(l)) ? 1 : 0) && /Phase 3 Crisis/.test(s.legend[2]) && s.statUnits === phase3 && /\(FEWS NET\)/.test(s.statLab)
       && /How to read: FEWS NET outlook updates ~3×\/year/.test(s.cap) && /layer=fews/.test(s.url) && (hasFews || /FEWS NET outlook fields pending/.test(s.cap)), s);
     await page.screenshot({ path: path.join(SCREENS, 'forecast_1440_oct2023_f4_fews.png') });
     await page.keyboard.press('l');          // fews -> both

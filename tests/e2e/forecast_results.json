@@ -1,5 +1,5 @@
 {
-  "pass": false,
+  "pass": true,
   "checks": {
     "oct2023_f3_view": {
       "pass": true,
@@ -11,21 +11,30 @@
         "layerHidden": false,
         "nBtns": 9,
         "title": "Forecast issued end of Oct 2023 for Jan 2024 — using only data available then",
-        "legend": [
-          "1< 20%47",
-          "220% – 40%31",
-          "340% – 57%5",
-          "457% – 75% (Watch)6",
-          "5≥ 75%2"
+        "badge": true,
+        "swatches": [
+          "rgb(12, 163, 12)|1",
+          "rgb(255, 212, 59)|2",
+          "rgb(236, 131, 58)|3",
+          "rgb(208, 59, 59)|4",
+          "rgb(107, 106, 100)|?"
         ],
-        "groups": [],
+        "legend": [
+          "1Low · < 30%73",
+          "2Moderate · 30% – <57%10",
+          "3High · 57% – <80%6",
+          "4Very high · ≥ 80%2"
+        ],
+        "groups": [
+          "Predicted risk at +3 months (chance of Crisis)"
+        ],
         "legendSum": 91,
         "phaseSum": 0,
         "noneCt": 0,
         "statUnits": 8,
         "statLab": "districts ≥ 57% chance of Crisis by Jan 2024",
         "note": "Confidence Low-Medium — based on back-tests.+3-month forecasts show season-level risk; district detail is less certain.",
-        "cap": "Predicted chance of Crisis (IPC 3+) for Jan 2024 · issued end of Oct 2023 · darker = higherConfidence Low-Medium — based on back-tests+3-month forecasts show season-level risk; district detail is less certain.",
+        "cap": "Predicted chance of Crisis (IPC 3+) for Jan 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence Low-Medium — based on back-tests+3-month forecasts show season-level risk; district detail is less certain.",
         "smalls": [
           "Nov '23",
           "Dec",
@@ -95,6 +104,25 @@
         "scrubMax": 92
       }
     },
+    "forecast_colours_same_ramp_and_badge": {
+      "pass": true,
+      "info": {
+        "badge": true,
+        "legend": [
+          "1Low · < 30%73",
+          "2Moderate · 30% – <57%10",
+          "3High · 57% – <80%6",
+          "4Very high · ≥ 80%2"
+        ],
+        "sw": [
+          "rgb(12, 163, 12)|1",
+          "rgb(255, 212, 59)|2",
+          "rgb(236, 131, 58)|3",
+          "rgb(208, 59, 59)|4",
+          "rgb(107, 106, 100)|?"
+        ]
+      }
+    },
     "oct2023_title": {
       "pass": true,
       "info": "Forecast issued end of Oct 2023 for Jan 2024 — using only data available then"
@@ -146,12 +174,12 @@
     "caption_confidence_and_season_note": {
       "pass": true,
       "info": {
-        "cap": "Predicted chance of Crisis (IPC 3+) for Jan 2024 · issued end of Oct 2023 · darker = higherConfidence Low-Medium — based on back-tests+3-month forecasts show season-level risk; district detail is less certain.",
+        "cap": "Predicted chance of Crisis (IPC 3+) for Jan 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence Low-Medium — based on back-tests+3-month forecasts show season-level risk; district detail is less certain.",
         "note": "Confidence Low-Medium — based on back-tests.+3-month forecasts show season-level risk; district detail is less certain."
       }
     },
     "oct2023_all_leads_1_to_8": {
-      "pass": false,
+      "pass": true,
       "info": {
         "1": {
           "on": "f1",
@@ -160,7 +188,7 @@
           "none": 0,
           "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Nov 2023 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Nov 2023 · issued end of Oct 2023 · darker = higherConfidence Medium-High — based on back-tests"
+          "cap": "Predicted chance of Crisis (IPC 3+) for Nov 2023 · issued end of Oct 2023 · same colours as the Now viewConfidence Medium-High — based on back-tests"
         },
         "2": {
           "on": "f2",
@@ -169,7 +197,7 @@
           "none": 0,
           "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Dec 2023 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Dec 2023 · issued end of Oct 2023 · darker = higherConfidence Medium — based on back-tests"
+          "cap": "Predicted chance of Crisis (IPC 3+) for Dec 2023 · issued end of Oct 2023 · same colours as the Now viewConfidence Medium — based on back-tests"
         },
         "3": {
           "on": "f3",
@@ -178,7 +206,7 @@
           "none": 0,
           "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Jan 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Jan 2024 · issued end of Oct 2023 · darker = higherConfidence Low-Medium — based on back-tests+3-month forecasts show season-level risk; district detail is less certain."
+          "cap": "Predicted chance of Crisis (IPC 3+) for Jan 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence Low-Medium — based on back-tests+3-month forecasts show season-level risk; district detail is less certain."
         },
         "4": {
           "on": "f4",
@@ -187,7 +215,7 @@
           "none": 0,
           "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Feb 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Feb 2024 · issued end of Oct 2023 · darker = higherConfidence Untested — model output exists but no skill test for this lead+4-month forecasts show season-level risk; district detail is less certain."
+          "cap": "Predicted chance of Crisis (IPC 3+) for Feb 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence Untested — model output exists but no skill test for this lead+4-month forecasts show season-level risk; district detail is less certain."
         },
         "5": {
           "on": "f5",
@@ -196,7 +224,7 @@
           "none": 0,
           "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Mar 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Mar 2024 · issued end of Oct 2023 · darker = higherConfidence Untested — model output exists but no skill test for this lead+5-month forecasts show season-level risk; district detail is less certain."
+          "cap": "Predicted chance of Crisis (IPC 3+) for Mar 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence Untested — model output exists but no skill test for this lead+5-month forecasts show season-level risk; district detail is less certain."
         },
         "6": {
           "on": "f6",
@@ -205,7 +233,7 @@
           "none": 0,
           "expNone": 0,
           "title": "Forecast issued end of Oct 2023 for Apr 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Apr 2024 · issued end of Oct 2023 · darker = higherConfidence Untested — model output exists but no skill test for this lead+6-month forecasts show season-level risk; district detail is less certain."
+          "cap": "Predicted chance of Crisis (IPC 3+) for Apr 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence Untested — model output exists but no skill test for this lead+6-month forecasts show season-level risk; district detail is less certain."
         },
         "7": {
           "on": "f7",
@@ -214,7 +242,7 @@
           "none": 91,
           "expNone": 91,
           "title": "Forecast issued end of Oct 2023 for May 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for May 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+7-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +7 yet (model leads 1–6)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for May 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence no model forecast — FEWS NET only — beyond tested leads+7-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +7 yet (model leads 1–6)"
         },
         "8": {
           "on": "f8",
@@ -223,7 +251,7 @@
           "none": 91,
           "expNone": 91,
           "title": "Forecast issued end of Oct 2023 for Jun 2024 — using only data available then",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Jun 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +8 yet (model leads 1–6)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for Jun 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +8 yet (model leads 1–6)"
         }
       }
     },
@@ -232,16 +260,16 @@
       "info": [
         {
           "L": "7",
-          "cap": "Predicted chance of Crisis (IPC 3+) for May 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+7-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +7 yet (model leads 1–6)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for May 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence no model forecast — FEWS NET only — beyond tested leads+7-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +7 yet (model leads 1–6)"
         },
         {
           "L": "8",
-          "cap": "Predicted chance of Crisis (IPC 3+) for Jun 2024 · issued end of Oct 2023 · darker = higherConfidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +8 yet (model leads 1–6)"
+          "cap": "Predicted chance of Crisis (IPC 3+) for Jun 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence no model forecast — FEWS NET only — beyond tested leads+8-month forecasts show season-level risk; district detail is less certain.no model forecast fields for +8 yet (model leads 1–6)"
         }
       ]
     },
     "fews_layer": {
-      "pass": false,
+      "pass": true,
       "info": {
         "clock": "Oct 2023",
         "fcView": true,
@@ -250,6 +278,8 @@
         "layerHidden": false,
         "nBtns": 9,
         "title": "Forecast issued end of Oct 2023 for Feb 2024 — using only data available then",
+        "badge": true,
+        "swatches": [],
         "legend": [
           "1Phase 1 Minimal3",
           "2Phase 2 Stressed50",
@@ -342,7 +372,7 @@
           "Our model · chance of Crisis (fill)",
           "FEWS NET outlook · projected IPC phase (outline)"
         ],
-        "cap": "Our chance of Crisis (IPC 3+) as fill, FEWS NET projected phase on the outline for Feb 2024 · issued end of Oct 2023 · darker = higherConfidence Untested — model output exists but no skill test for this lead+4-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly."
+        "cap": "Our chance of Crisis (IPC 3+) as fill, FEWS NET projected phase on the outline for Feb 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence Untested — model output exists but no skill test for this lead+4-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly."
       }
     },
     "L_cycles_back_to_model": {
@@ -517,7 +547,7 @@
           "FEWS",
           "FEWS"
         ],
-        "cap": "Our chance of Crisis (IPC 3+) as fill, FEWS NET projected phase on the outline for Apr 2024 · issued end of Oct 2023 · darker = higherConfidence Low — tested skill per lead (ROC AUC 0.50)+6-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly.",
+        "cap": "Our chance of Crisis (IPC 3+) as fill, FEWS NET projected phase on the outline for Apr 2024 · issued end of Oct 2023 · same colours as the Now viewConfidence Low — tested skill per lead (ROC AUC 0.50)+6-month forecasts show season-level risk; district detail is less certain.How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly.",
         "big": "15%",
         "chip": "Low confidence",
         "noModel": true
@@ -574,7 +604,7 @@
       "pass": true,
       "info": {
         "clock": "Feb 2026",
-        "cap": "Predicted chance of Crisis (IPC 3+) for Apr 2026 · issued end of Feb 2026 · darker = higherConfidence Medium — tested skill per leadlive: some inputs missing (see data notes)"
+        "cap": "Predicted chance of Crisis (IPC 3+) for Apr 2026 · issued end of Feb 2026 · same colours as the Now viewConfidence Medium — tested skill per leadlive: some inputs missing (see data notes)"
       }
     },
     "zero_js_errors": {

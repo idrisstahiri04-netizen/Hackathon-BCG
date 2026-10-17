@@ -62,7 +62,7 @@ def run(iso3):
         name = (pr.get("unit_name") or pr.get("shapeName") or pr.get("name") or "").strip()
         feats.append(ee.Feature(ee.Geometry(geom, None, False), {"unit_id": uid, "unit_name": name}))
 
-    col = ee.ImageCollection(COLLECTION).filter(ee.Filter.eq("country", iso3))
+    col = ee.ImageCollection(COLLECTION).filter(ee.Filter.eq("country", iso3[:3]))  # KENSUB -> KEN
     img = col.sort("year", False).first()
     year = img.get("year").getInfo()
     scale = img.projection().nominalScale().getInfo()

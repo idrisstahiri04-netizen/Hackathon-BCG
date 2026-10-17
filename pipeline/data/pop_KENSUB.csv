@@ -1,0 +1,291 @@
+unit_id,unit_name,pop_millions,source,year
+KEN.uasin-gishu.ainabkoi,Ainabkoi,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kericho.ainamoi,Ainamoi,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nandi.aldai,Aldai,0.23,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.siaya.alego-usonga,Alego Usonga,0.24,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.migori.awendo,Awendo,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.bahati,Bahati,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.garissa.balambala,Balambala,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mandera.banissa,Banissa,0.36,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.baringo.baringo-central,Baringo Central,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.baringo.baringo-north,Baringo North,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.baringo.baringo-south,Baringo South,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kericho.belgut,Belgut,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisii.bobasi,Bobasi,0.24,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisii.bomachoge-borabu,Bomachoge Borabu,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisii.bomachoge-chache,Bomachoge Chache,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bomet.bomet-central,Bomet Central,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bomet.bomet-east,Bomet East,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisii.bonchari,Bonchari,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.siaya.bondo,Bondo,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyamira.borabu,Borabu,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.busia.budalangi,Budalangi,0.09,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bungoma.bumula,Bumula,0.24,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.tana-river.bura,Bura,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kericho.buret,Buret,0.25,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.butere,Butere,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.busia.butula,Butula,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.meru.buuri,Buuri,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.meru.cental-imenti,Cental Imenti,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mombasa.changamwe,Changamwe,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bomet.chepalungu,Chepalungu,0.25,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.trans-nzoia.cherangany,Cherangany,0.30,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nandi.chesumei,Chesumei,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.garissa.dadaab,Dadaab,0.38,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.dagoretti,Dagoretti,0.28,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.garissa.dujis,Dujis,0.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.baringo.eldama-ravine,Eldama Ravine,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.wajir.eldas,Eldas,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.embakasi-central,Embakasi Central,0.31,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.embakasi-east,Embakasi East,0.34,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.embakasi-north,Embakasi North,0.30,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.embakasi-south,Embakasi South,0.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.embakasi-west,Embakasi West,0.25,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nandi.emgwen,Emgwen,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.vihiga.emuhaya,Emuhaya,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.narok.emurua-dikirr,Emurua Dikirr,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.trans-nzoia.endebess,Endebess,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.garissa.fafi,Fafi,0.31,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.busia.funyula,Funyula,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.embu.gachoka,Gachoka,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.tana-river.galole,Galole,0.09,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kilifi.ganze,Ganze,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.tana-river.garsen,Garsen,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.murang-a.gatanga,Gatanga,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.gatundu-north,Gatundu North,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.gatundu-south,Gatundu South,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.siaya.gem,Gem,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kirinyaga.gichugu,Gichugu,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.gilgil,Gilgil,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.githunguri,Githunguri,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.vihiga.hamisi,Hamisi,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.homa-bay.homa-bay,Homa Bay,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.meru.igembe-central,Igembe Central,0.23,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.meru.igembe-north,Igembe North,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.meru.igembe-south,Igembe South,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.garissa.ijara,Ijara,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.ikolomani,Ikolomani,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.isiolo.isiolo-north,Isiolo North,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.isiolo.isiolo-south,Isiolo South,0.06,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mombasa.jomvu,Jomvu,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.juja,Juja,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.kabete,Kabete,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.homa-bay.kabondo-kasipul,Kabondo Kasipul,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bungoma.kabuchai,Kabuchai,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.west-pokot.kacheliba,Kacheliba,0.23,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.makueni.kaiti,Kaiti,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kajiado.kajiado-central,Kajiado Central,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kajiado.kajiado-east,Kajiado East,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kajiado.kajiado-north,Kajiado North,0.29,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kajiado.kajiado-south,Kajiado South,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kajiado.kajiado-west,Kajiado West,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kilifi.kaloleni,Kaloleni,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.kamukunji,Kamukunji,0.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.murang-a.kandara,Kandara,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bungoma.kanduyi,Kanduyi,0.31,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.murang-a.kangema,Kangema,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.machakos.kangundo,Kangundo,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.west-pokot.kapenguria,Kapenguria,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.uasin-gishu.kapseret,Kapseret,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.homa-bay.karachuonyo,Karachuonyo,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.kasarani,Kasarani,0.28,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.homa-bay.kasipul,Kasipul,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.machakos.kathiani,Kathiani,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.elgeyo-marakwet.keiyo-north,Keiyo North,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.elgeyo-marakwet.keiyo-south,Keiyo South,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.uasin-gishu.kesses,Kesses,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.khwisero,Khwisero,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.kiambaa,Kiambaa,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.kiambu,Kiambu,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.kibra,Kibra,0.23,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.makueni.kibwezi-east,Kibwezi East,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.makueni.kibwezi-west,Kibwezi West,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyeri.kieni,Kieni,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.murang-a.kigumo,Kigumo,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.murang-a.kiharu,Kiharu,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.kikuyu,Kikuyu,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.narok.kilgoris,Kilgoris,0.28,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kilifi.kilifi-north,Kilifi North,0.26,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kilifi.kilifi-south,Kilifi South,0.23,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.kilimani,Kilimani,0.32,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.makueni.kilome,Kilome,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bungoma.kimilili,Kimilili,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.trans-nzoia.kiminini,Kiminini,0.29,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kwale.kinango,Kinango,0.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyandarua.kinangop,Kinangop,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyandarua.kipipiri,Kipipiri,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kericho.kipkelion-east,Kipkelion East,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kericho.kipkelion-west,Kipkelion West,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kirinyaga.kirinyaga-central,Kirinyaga Central,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mombasa.kisauni,Kisauni,0.28,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisumu.kisumu-central,Kisumu Central,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisumu.kisumu-east,Kisumu East,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisumu.kisumu-west,Kisumu West,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kitui.kitui-central,Kitui Central,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kitui.kitui-east,Kitui East,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kitui.kitui-rural,Kitui Rural,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kitui.kitui-south,Kitui South,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kitui.kitui-west,Kitui West,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisii.kitutu-chache-north,Kitutu Chache North,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisii.kitutu-chache-south,Kitutu Chache South,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyamira.kitutu-masaba,Kitutu Masaba,0.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bomet.konoin,Konoin,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.kuresoi-north,Kuresoi North,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.kuresoi-south,Kuresoi South,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.migori.kuria-east,Kuria East,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.migori.kuria-west,Kuria West,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.trans-nzoia.kwanza,Kwanza,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mandera.lafey,Lafey,0.29,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.garissa.lagdera,Lagdera,0.24,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.laikipia.laikipia-east,Laikipia East,0.33,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.laikipia.laikipia-north,Laikipia North,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.laikipia.laikipia-west,Laikipia West,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.marsabit.laisamis,Laisamis,0.08,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.lamu.lamu-east,Lamu East,0.00,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.lamu.lamu-west,Lamu West,0.08,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.langata,Langata,0.31,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.lari,Lari,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mombasa.likoni,Likoni,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.likuyani,Likuyani,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.limuru,Limuru,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.turkana.loima,Loima,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.vihiga.luanda,Luanda,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.lugari,Lugari,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kwale.lunga-lunga,Lunga Lunga,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.lurambi,Lurambi,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.tharaka-nithi.maara,Maara,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.machakos.machakos-town,Machakos Town,0.24,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kilifi.magarini,Magarini,0.25,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.makadara,Makadara,0.28,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.makueni.makueni,Makueni,0.30,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.malava,Malava,0.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kilifi.malindi,Malindi,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mandera.mandera-east,Mandera East,0.44,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mandera.mandera-north,Mandera North,0.44,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mandera.mandera-south,Mandera South,0.67,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mandera.mandera-west,Mandera West,0.46,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.embu.manyatta,Manyatta,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.murang-a.maragwa,Maragwa,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.elgeyo-marakwet.marakwet-east,Marakwet East,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.elgeyo-marakwet.marakwet-west,Marakwet West,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.machakos.masinga,Masinga,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.busia.matayos,Matayos,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.mathare,Mathare,0.31,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.murang-a.mathioya,Mathioya,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyeri.mathira,Mathira,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kwale.matuga,Matuga,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.matungu,Matungu,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.machakos.matungulu,Matungulu,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.machakos.mavoko,Mavoko,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.makueni.mbooni,Mbooni,0.24,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.baringo.mogotio,Mogotio,0.09,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.uasin-gishu.moiben,Moiben,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.molo,Molo,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nandi.mosop,Mosop,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.marsabit.moyale,Moyale,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kwale.msambweni,Msambweni,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bungoma.mt-elgon,Mt. Elgon,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisumu.muhoroni,Muhoroni,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyeri.mukurweni,Mukurweni,0.10,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.mumias-east,Mumias East,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.mumias-west,Mumias West,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mombasa.mvita,Mvita,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.machakos.mwala,Mwala,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.taita-taveta.mwatate,Mwatate,0.09,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kirinyaga.mwea,Mwea,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kitui.mwingi-east,Mwingi East,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kitui.mwingi-north,Mwingi North,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kitui.mwingi-west,Mwingi West,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.naivasha,Naivasha,0.34,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.nakuru-town-east,Nakuru Town East,0.23,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.nakuru-town-west,Nakuru Town West,0.23,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.busia.nambale,Nambale,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nandi.nandi-hills,Nandi Hills,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.narok.narok-east,Narok East,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.narok.narok-north,Narok North,0.27,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.narok.narok-south,Narok South,0.26,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.narok.narok-west,Narok West,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.navakholo,Navakholo,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyandarua.ndaragwa,Ndaragwa,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.homa-bay.ndhiwa,Ndhiwa,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kirinyaga.ndia,Ndia,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.tharaka-nithi.nithi,Nithi,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.njoro,Njoro,0.28,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.marsabit.north-horr,North Horr,0.09,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.meru.north-imenti,North Imenti,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyamira.north-mugirango,North Mugirango,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisumu.nyakach,Nyakach,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.mombasa.nyali,Nyali,0.21,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisumu.nyando,Nyando,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisii.nyaribari-chache,Nyaribari Chache,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisii.nyaribari-masaba,Nyaribari Masaba,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.migori.nyatike,Nyatike,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyeri.nyeri-town,Nyeri Town,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyandarua.ol-jorok,Ol Jorok,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyandarua.ol-kalou,Ol Kalou,0.07,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyeri.othaya,Othaya,0.10,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.west-pokot.pokot-south,Pokot South,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kilifi.rabai,Rabai,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.homa-bay.rangwe,Rangwe,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.siaya.rarieda,Rarieda,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.rongai,Rongai,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.migori.rongo,Rongo,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.roysambu,Roysambu,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.ruaraka,Ruaraka,0.33,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.ruiru,Ruiru,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.embu.runyenjes,Runyenjes,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.vihiga.sabatia,Sabatia,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.trans-nzoia.saboti,Saboti,0.26,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.marsabit.saku,Saku,0.06,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.samburu.samburu-east,Samburu East,0.09,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.samburu.samburu-north,Samburu North,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.samburu.samburu-west,Samburu West,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisumu.seme,Seme,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kakamega.shinyalu,Shinyalu,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.embu.siakago,Siakago,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.west-pokot.sigor,Sigor,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kericho.sigowet-soin,Sigowet/Soin,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bungoma.sirisia,Sirisia,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bomet.sotik,Sotik,0.25,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.meru.south-imenti,South Imenti,0.23,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kisii.south-mugirango,South Mugirango,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.uasin-gishu.soy,Soy,0.28,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.starehe,Starehe,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.homa-bay.suba-north,Suba North,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.homa-bay.suba-south,Suba South,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nakuru.subukia,Subukia,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.migori.suna-east,Suna East,0.13,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.migori.suna-west,Suna West,0.10,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.wajir.tarbaj,Tarbaj,0.25,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.taita-taveta.taveta,Taveta,0.09,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.busia.teso-north,Teso North,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.busia.teso-south,Teso South,0.18,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyeri.tetu,Tetu,0.09,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.tharaka-nithi.tharaka,Tharaka,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.kiambu.thika-town,Thika Town,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.baringo.tiaty,Tiaty,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.meru.tigania-east,Tigania East,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.meru.tigania-west,Tigania West,0.16,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nandi.tinderet,Tinderet,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bungoma.tongaren,Tongaren,0.25,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.uasin-gishu.turbo,Turbo,0.29,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.turkana.turkana-central,Turkana Central,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.turkana.turkana-east,Turkana East,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.turkana.turkana-north,Turkana North,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.turkana.turkana-south,Turkana South,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.turkana.turkana-west,Turkana West,0.34,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.siaya.ugenya,Ugenya,0.15,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.siaya.ugunja,Ugunja,0.11,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.migori.uriri,Uriri,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.vihiga.vihiga,Vihiga,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.taita-taveta.voi,Voi,0.12,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.wajir.wajir-east,Wajir East,0.31,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.wajir.wajir-north,Wajir North,0.39,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.wajir.wajir-south,Wajir South,0.36,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.wajir.wajir-west,Wajir West,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bungoma.webuye-east,Webuye East,0.14,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.bungoma.webuye-west,Webuye West,0.17,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nyamira.west-mugirango,West Mugirango,0.20,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.nairobi.westlands,Westlands,0.22,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.taita-taveta.wundanyi,Wundanyi,0.08,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020
+KEN.machakos.yatta,Yatta,0.19,"WorldPop WorldPop/GP/100m/pop (Earth Engine), CC BY 4.0",2020

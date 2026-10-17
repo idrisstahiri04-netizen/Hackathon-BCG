@@ -75,7 +75,11 @@ def units_fc(iso3: str, ids: set):
         got = set(fc.aggregate_array("shapeID").getInfo())
         if got == ids:
             return fc, adm
-    raise RuntimeError(f"{iso3}: no geoBoundaries ADM level matches units geojson ids")
+    # custom units (e.g. KENSUB sub-counties): build the collection from the local geojson
+    g = json.loads((DATA / f"units_{iso3}.geojson").read_text())
+    fc = ee.FeatureCollection([ee.Feature(ee.Geometry(f["geometry"], None, False),
+                                          {"shapeID": f["properties"]["shapeID"]}) for f in g["features"]])
+    return fc, "custom"
 
 
 def pentad_year(fc, y: int, tile_scale: int = 4) -> list[dict]:

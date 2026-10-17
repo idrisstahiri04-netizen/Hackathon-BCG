@@ -237,6 +237,7 @@ def build(iso3):
             "type": "Feature",
             "properties": {
                 "id": uid, "name": name,
+                **({"county": pr["county"]} if pr.get("county") else {}),
                 "lat": round(cy, 3), "lng": round(cx, 3),
                 "pop": None if pop is None else round(pop, 3),
                 "crop": None if crop is None else round(crop, 3),

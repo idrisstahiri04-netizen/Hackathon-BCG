@@ -53,6 +53,15 @@ def units_fc(iso3: str, adm: int) -> ee.FeatureCollection:
         ee.Filter.eq("shapeGroup", iso3))
 
 
+def fc_from_geojson(path: str) -> ee.FeatureCollection:
+    """Units from a local GeoJSON (props shapeID, shapeName), e.g. Kenya sub-counties."""
+    gj = json.loads(Path(path).read_text())
+    return ee.FeatureCollection([
+        ee.Feature(ee.Geometry(f["geometry"], None, False),
+                   {"shapeID": f["properties"]["shapeID"], "shapeName": f["properties"]["shapeName"]})
+        for f in gj["features"]])
+
+
 def landcover_masks():
     wc = ee.ImageCollection(WORLDCOVER).first().select("Map")
     crop = wc.eq(40)
@@ -258,13 +267,18 @@ def main():
     ap.add_argument("--start", type=int, default=2001)
     ap.add_argument("--end", type=int, default=2024)
     ap.add_argument("--workers", type=int, default=6)
+    ap.add_argument("--geojson", help="local unit geometries instead of geoBoundaries (e.g. pipeline/data/units_KENSUB.geojson)")
+    ap.add_argument("--tag", help="name for cache dir + output files (default: ISO3); use with --geojson")
     ap.add_argument("--no-geojson", action="store_true")
     args = ap.parse_args()
     iso3 = args.iso3.upper()
+    tag = (args.tag or iso3).upper()
     t0 = time.time()
 
     ee.Initialize(project=EE_PROJECT)
-    fc = units_fc(iso3, args.adm)
+    fc = fc_from_geojson(args.geojson) if args.geojson else units_fc(iso3, args.adm)
+    if args.geojson:
+        args.no_geojson = True
     meta = fc.select(["shapeID", "shapeName"], None, False).getInfo()["features"]
     names = {f["properties"]["shapeID"]: f["properties"]["shapeName"] for f in meta}
     print(f"{iso3} ADM{args.adm}: {len(names)} units", flush=True)
@@ -272,7 +286,7 @@ def main():
         sys.exit("no units found")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    gj_path = OUT / f"units_{iso3}.geojson"
+    gj_path = OUT / f"units_{tag}.geojson"
     if not args.no_geojson and not gj_path.exists():
         gj = fc.map(lambda f: f.simplify(maxError=100)).select(
             ["shapeID", "shapeName"]).getInfo()
@@ -292,7 +306,7 @@ def main():
 
     results = {}
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        futs = [pool.submit(fetch_cached, k, iso3, b, fc, s) for k, b, s in tasks]
+        futs = [pool.submit(fetch_cached, k, tag, b, fc, s) for k, b, s in tasks]
         for fu in as_completed(futs):
             k, recs, cached = fu.result()
             results[k] = recs
@@ -321,11 +335,11 @@ def main():
     for k in (1, 3, 6):
         acc = pr.rolling(k, min_periods=k).sum()
         out.append(to_long(spi_series(acc), f"spi_{k}m", months))
-    for tag in ("crop", "grass"):
-        w = wide[f"ndvi_{tag}"].reindex(months)
-        out += [to_long(w, f"ndvi_{tag}", months),
-                to_long(zscore(w), f"ndvi_z_{tag}", months),
-                to_long(vci(w), f"vci_{tag}", months)]
+    for lc in ("crop", "grass"):
+        w = wide[f"ndvi_{lc}"].reindex(months)
+        out += [to_long(w, f"ndvi_{lc}", months),
+                to_long(zscore(w), f"ndvi_z_{lc}", months),
+                to_long(vci(w), f"vci_{lc}", months)]
     for v in ("sm1", "sm2", "t2m"):
         out.append(to_long(zscore(wide[v].reindex(months)), f"{v}_z", months))
 
@@ -342,7 +356,7 @@ def main():
     df["month"] = pd.to_datetime(df["month"]).dt.strftime("%Y-%m-01")
     df["value"] = df["value"].astype("float64")
     df = df[["unit_id", "unit_name", "iso3", "month", "signal_type", "value"]]
-    path = OUT / f"signals_{iso3}.parquet"
+    path = OUT / f"signals_{tag}.parquet"
     df.to_parquet(path, index=False)
 
     print(f"wrote {path}: {len(df)} rows, {df['value'].isna().sum()} NaN, "

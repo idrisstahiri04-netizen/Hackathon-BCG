@@ -1,6 +1,6 @@
 # HANDOFF — read this first (state as of 2026-10-17)
 
-Drought early-warning demo for the BCG Platinion / Welthungerhilfe hackathon (case: livestock-dependent communities, northern Zimbabwe). Satellite + weather + forecasts + FEWS NET → district risk levels and 1–8-month forecasts on a 3D globe → one-segment SMS per person, two-way via Claude.
+Drought early-warning demo for the BCG Platinion / Welthungerhilfe hackathon (case: livestock-dependent communities). **Demo country: Kenya** (47 counties, declaration 2021-09-08, live Sep 2026; SMS demo West Pokot herder). Zimbabwe, Zambia, Malawi remain available. Satellite + weather + forecasts + FEWS NET → district risk levels and 1–8-month forecasts on a 3D globe → one-segment SMS per person, two-way via Claude.
 
 Branch: **`zimbabwe-real-data`** (pushed to `idrisstahiri04-netizen/Hackathon-BCG`). Never commit to `main`. Commit messages must **not** contain any Claude co-author line.
 
@@ -8,8 +8,9 @@ Branch: **`zimbabwe-real-data`** (pushed to `idrisstahiri04-netizen/Hackathon-BC
 ```bash
 cd Hackathon-BCG
 scripts/start_demo.sh --fresh          # backend :8000 + static site :8777 + demo users
-python backend/seed_crowd.py            # crowd-signal demo (Hurungwe); --clear to remove
-# open http://localhost:8777   (deep link: ?country=Zimbabwe&t=63)
+python -m backend.seed_crowd --iso3 KEN   # crowd-signal demo (West Pokot); --clear to remove
+python -m backend.seed_demo --iso3 KEN    # Kenya demo users (Swahili needs native review)
+# open http://localhost:8777   (deep link: ?country=Kenya&t=92)
 scripts/stop_demo.sh
 ```
 Python venv expected at `../.venv` (repo parent). Install: `pip install -r pipeline/requirements.txt -r backend/requirements.txt`.

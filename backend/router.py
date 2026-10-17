@@ -25,25 +25,28 @@ from rapidfuzz import fuzz, process
 from . import composer, db, gateway, llm
 
 CONF_MIN = float(os.environ.get("ROUTER_CONF_MIN", "0.6"))
-COUNTRIES = [c.strip().upper() for c in os.environ.get("COUNTRIES", "ZWE,MWI,ZMB").split(",") if c.strip()]
+COUNTRIES = [c.strip().upper() for c in os.environ.get("COUNTRIES", "ZWE,MWI,ZMB,KEN").split(",") if c.strip()]
 ROLES = ["farmer", "herder", "ngo", "officer", "resident"]
 
 STOP_WORDS = {"STOP", "STOP ALL", "STOP PLEASE", "PLEASE STOP", "UNSUBSCRIBE", "QUIT", "END", "CANCEL",
               "ARRET", "ARRÊT", "ARRETER", "STOPP",
               # Shona: mira / misa / rega (stop, quit); Ndebele: yima / yekela (stop, leave off)
-              "MIRA", "MIRA KUTUMIRA", "MISA", "REGA", "REGAI", "YIMA", "YEKELA", "YEKELANI"}
-JOIN_WORDS = {"JOIN", "START", "SUBSCRIBE", "REGISTER", "INSCRIRE", "INSCRIPTION", "REJOINDRE"}
-HELP_WORDS = {"HELP", "AIDE", "SOS"}
+              "MIRA", "MIRA KUTUMIRA", "MISA", "REGA", "REGAI", "YIMA", "YEKELA", "YEKELANI",
+              # Swahili (needs native review): acha / sitisha / simama (stop), jiondoe (opt out)
+              "ACHA", "SITISHA", "SIMAMA", "JIONDOE", "ACHA KUTUMA"}
+JOIN_WORDS = {"JOIN", "START", "SUBSCRIBE", "REGISTER", "INSCRIRE", "INSCRIPTION", "REJOINDRE", "JIUNGE", "JISAJILI"}
+HELP_WORDS = {"HELP", "AIDE", "SOS", "MSAADA", "SAIDIA"}
 # Safety-critical: distress phrases go straight to ask_help (no Claude, no confidence gate). EN/FR/SN/ND.
 HELP_PHRASES = re.compile(
     r"(can'?t|cannot|can not|unable to) (manage|cope|survive)|not (managing|coping)|"
     r"\bhelp (us|me)\b|please help|need (help|food)|no food|nothing to eat|starving|"
     r"\b(aidez|aide)[- ]?(nous|moi)\b|besoin d'aide|au secours|pas de nourriture|on a faim|"
     r"hatina chikafu|handina chikafu|tibatsir|ndibatsir|\bbatsirai\b|"
-    r"\bsiza(ni)?\b|sicela uncedo|asilakudla|angilakudla", re.I)
+    r"\bsiza(ni)?\b|sicela uncedo|asilakudla|angilakudla|"
+    r"tunahitaji msaada|naomba msaada|\bsaidia\b|hatuna chakula|sina chakula|njaa", re.I)
 HELP_MIN_CONF = float(os.environ.get("ROUTER_HELP_MIN_CONF", "0.4"))
-YES_WORDS = {"YES", "Y", "OK", "OUI", "O", "YEP", "YA", "EHE"}
-NO_WORDS = {"NO", "N", "NON", "KWETE"}
+YES_WORDS = {"YES", "Y", "OK", "OUI", "O", "YEP", "YA", "EHE", "NDIO", "NDIYO"}
+NO_WORDS = {"NO", "N", "NON", "KWETE", "HAPANA"}
 ROLE_WORDS = {
     "farmer": ["farmer", "farm", "farming", "crops", "fermier", "agriculteur", "agricultrice", "cultivateur", "murimi"],
     "herder": ["herder", "herd", "cattle", "livestock", "goats", "pastoralist", "eleveur", "éleveur", "berger", "betail", "bétail"],
@@ -55,6 +58,7 @@ ROLE_WORDS = {
 # ------------------------------------------------------------------ replies (en / fr)
 R = {
     "en": {
+        "register_contact": "To register, please contact your local officer.",
         "ask_district": "Welcome to drought alerts. Which district do you live in? Reply with the district name, e.g. Binga.",
         "ask_role": "Are you a farmer, herder, NGO, officer or resident? Reply with one word.",
         "confirm": "Join drought alerts for {district} as {role}? Max {cap} SMS a month, free. Reply YES to confirm or NO to cancel.",
@@ -63,23 +67,24 @@ R = {
         "joined_resident": "You are registered for {district} (resident). Reply 1 ok 2 short 3 none for food and water at home, HELP for an officer, STOP to quit.",
         "joined_ngo": "You are registered for {district} ({role}). You get Watch, Warning and Emergency alerts with risk and drivers. STOP to quit.",
         "joined_officer": "You are registered for {district} ({role}). You get Watch, Warning and Emergency alerts with risk and drivers. STOP to quit.",
-        "cancelled": "OK, not registered. Reply JOIN any time to sign up.",
+        "cancelled": "OK, not registered. Contact your local officer to register.",
         "district_unknown": "Sorry, we do not know that district. Please send the district name again, e.g. Binga or Hwange.",
         "district_choice": "Which district? {options}. Reply with the number.",
-        "stopped": "You will get no more alerts. Reply JOIN to come back.",
-        "not_member": "You are not registered. Reply JOIN to get free drought alerts.",
+        "stopped": "You will get no more alerts. Contact your local officer to come back.",
+        "not_member": "You are not registered. To register, contact your local officer.",
         "report_thanks": "Thank you. Crop report '{label}' saved for {district}. It helps us check our alerts.",
         "report_thanks_herder": "Thank you. Grazing and animals report '{label}' saved for {district}. It helps us check our alerts.",
         "report_thanks_resident": "Thank you. Food and water report '{label}' saved for {district}. It helps us check our alerts.",
-        "report_anon": "Thank you for your report. Reply JOIN to get drought alerts for your district.",
+        "report_anon": "Thank you for your report. To register, contact your local officer.",
         "help": "Thank you. An officer will contact you soon. If life is in danger call your local emergency number.",
-        "clarify": "Sorry, I did not understand. Reply JOIN to sign up, 1 2 3 to report crops, HELP for an officer, or STOP to quit.",
+        "clarify": "Sorry, I did not understand. Reply 1 2 3 to report crops, HELP for an officer, or STOP to quit.",
         "changed": "Updated: {district}, {role}. Reply STOP to quit.",
         "change_what": "What changed? Send e.g. 'I moved to Binga' or 'I am a herder'.",
         "no_advice": "Sorry, no advice for that yet. Reply HELP to talk to an officer.",
         "off_scope": "Sorry, we cannot answer weather forecasts or prices. We send drought alerts and farm advice. Reply HELP for an officer.",
     },
     "fr": {
+        "register_contact": "Pour vous inscrire, contactez votre agent local.",
         "ask_district": "Bienvenue aux alertes secheresse. Dans quel district vivez-vous? Repondez avec le nom, ex. Binga.",
         "ask_role": "Etes-vous agriculteur, eleveur, ONG, agent ou habitant? Repondez en un mot.",
         "confirm": "Recevoir les alertes pour {district} ({role})? Max {cap} SMS par mois, gratuit. Repondez OUI pour confirmer ou NON.",
@@ -88,43 +93,78 @@ R = {
         "joined_resident": "Inscrit pour {district} (habitant). Repondez 1 ok 2 peu 3 rien pour eau et nourriture, AIDE pour un agent, STOP pour arreter.",
         "joined_ngo": "Inscrit pour {district} ({role}). Alertes Vigilance, Alerte et Urgence avec risque et causes. STOP pour arreter.",
         "joined_officer": "Inscrit pour {district} ({role}). Alertes Vigilance, Alerte et Urgence avec risque et causes. STOP pour arreter.",
-        "cancelled": "OK, pas d'inscription. Envoyez JOIN pour vous inscrire.",
+        "cancelled": "OK, pas d'inscription. Contactez votre agent local.",
         "district_unknown": "Desole, district inconnu. Renvoyez le nom du district, ex. Binga ou Hwange.",
         "district_choice": "Quel district? {options}. Repondez avec le numero.",
-        "stopped": "Vous ne recevrez plus d'alertes. Envoyez JOIN pour revenir.",
-        "not_member": "Vous n'etes pas inscrit. Envoyez JOIN pour les alertes gratuites.",
+        "stopped": "Vous ne recevrez plus d'alertes. Contactez votre agent local.",
+        "not_member": "Vous n'etes pas inscrit. Contactez votre agent local.",
         "report_thanks": "Merci. Rapport cultures '{label}' enregistre pour {district}.",
         "report_thanks_herder": "Merci. Rapport paturages et animaux '{label}' enregistre pour {district}.",
         "report_thanks_resident": "Merci. Rapport eau et nourriture '{label}' enregistre pour {district}.",
-        "report_anon": "Merci pour votre rapport. Envoyez JOIN pour recevoir les alertes.",
+        "report_anon": "Merci pour votre rapport. Contactez votre agent local.",
         "help": "Merci. Un agent va vous contacter bientot. En cas de danger, appelez les urgences.",
-        "clarify": "Desole, je n'ai pas compris. JOIN pour s'inscrire, 1 2 3 pour les cultures, AIDE pour un agent, STOP pour arreter.",
+        "clarify": "Desole, je n'ai pas compris. 1 2 3 pour les cultures, AIDE pour un agent, STOP pour arreter.",
         "changed": "Mis a jour: {district}, {role}. STOP pour arreter.",
         "change_what": "Qu'est-ce qui a change? Ex. 'je suis a Binga' ou 'je suis eleveur'.",
         "no_advice": "Desole, pas de conseil pour cela. Envoyez AIDE pour parler a un agent.",
         "off_scope": "Desole, pas de meteo ni de prix ici. Nous envoyons des alertes secheresse et des conseils. AIDE pour un agent.",
     },
+    "sw": {  # Swahili: needs native review before any real use
+        "register_contact": "Ili kujisajili, wasiliana na afisa wako wa eneo.",
+        "ask_district": "Karibu kwenye tahadhari za ukame. Unaishi kaunti gani? Jibu kwa jina, mfano Marsabit.",
+        "ask_role": "Wewe ni mkulima, mfugaji, NGO, afisa au mkazi? Jibu kwa neno moja.",
+        "confirm": "Pata tahadhari za {district} ({role})? SMS {cap} kwa mwezi, bure. Jibu NDIO kuthibitisha au HAPANA.",
+        "joined": "Umesajiliwa {district} ({role}). Jibu 1 sawa 2 hafifu 3 imeharibika kuhusu mazao, MSAADA kwa afisa, ACHA kujiondoa.",
+        "joined_herder": "Umesajiliwa {district} (mfugaji). Jibu 1 sawa 2 hafifu 3 mbaya kuhusu malisho na mifugo, MSAADA kwa afisa, ACHA kujiondoa.",
+        "joined_resident": "Umesajiliwa {district} (mkazi). Jibu 1 sawa 2 pungufu 3 hamna kuhusu chakula na maji, MSAADA kwa afisa, ACHA kujiondoa.",
+        "joined_ngo": "Umesajiliwa {district} ({role}). Utapata tahadhari na vyanzo vyake. ACHA kujiondoa.",
+        "joined_officer": "Umesajiliwa {district} ({role}). Utapata tahadhari na vyanzo vyake. ACHA kujiondoa.",
+        "cancelled": "Sawa, hujasajiliwa. Wasiliana na afisa wako wa eneo.",
+        "district_unknown": "Samahani, kaunti haijulikani. Tuma jina tena, mfano Marsabit au Turkana.",
+        "district_choice": "Kaunti ipi? {options}. Jibu kwa namba.",
+        "stopped": "Hutapata tahadhari tena. Wasiliana na afisa wako wa eneo kurudi.",
+        "not_member": "Hujasajiliwa. Wasiliana na afisa wako wa eneo.",
+        "report_thanks": "Asante. Ripoti ya mazao '{label}' imehifadhiwa kwa {district}.",
+        "report_thanks_herder": "Asante. Ripoti ya malisho na mifugo '{label}' imehifadhiwa kwa {district}.",
+        "report_thanks_resident": "Asante. Ripoti ya chakula na maji '{label}' imehifadhiwa kwa {district}.",
+        "report_anon": "Asante kwa ripoti. Wasiliana na afisa wako wa eneo kujisajili.",
+        "help": "Asante. Afisa atawasiliana nawe hivi karibuni. Hatari ya maisha, piga simu ya dharura.",
+        "clarify": "Samahani, sijaelewa. Jibu 1 2 3 kuripoti, MSAADA kwa afisa, au ACHA.",
+        "changed": "Imesasishwa: {district}, {role}. ACHA kujiondoa.",
+        "change_what": "Nini kimebadilika? Tuma mfano 'nimehamia Turkana' au 'mimi ni mfugaji'.",
+        "no_advice": "Samahani, hakuna ushauri bado. Jibu MSAADA kuongea na afisa.",
+        "off_scope": "Samahani, hatujibu hali ya hewa wala bei. Tunatuma tahadhari za ukame. MSAADA kwa afisa.",
+    },
 }
+ROLE_SW = {"farmer": "mkulima", "herder": "mfugaji", "ngo": "NGO", "officer": "afisa", "resident": "mkazi"}
 ROLE_FR = {"farmer": "agriculteur", "herder": "eleveur", "ngo": "ONG", "officer": "agent", "resident": "habitant"}
 REPORT_LABEL = {1: "ok", 2: "poor", 3: "failed"}
 # same codes as each role's alert SMS ("Reply 1 ok 2 poor 3 failed|bad")
 REPORT_LABELS = {
     "en": {"farmer": REPORT_LABEL, "herder": {1: "ok", 2: "poor", 3: "bad"}, "resident": {1: "ok", 2: "short", 3: "none"}},
+    "sw": {"farmer": {1: "sawa", 2: "hafifu", 3: "imeharibika"}, "herder": {1: "sawa", 2: "hafifu", 3: "mbaya"},
+           "resident": {1: "sawa", 2: "pungufu", 3: "hamna"}},
     "fr": {"farmer": {1: "ok", 2: "moyen", 3: "perdu"}, "herder": {1: "ok", 2: "moyen", 3: "grave"},
            "resident": {1: "ok", 2: "peu", 3: "rien"}},
 }
 
 
+def _lc(lang: str | None) -> str:
+    """Language code we have strings for: en | fr | sw (anything else -> en)."""
+    l = (lang or "").lower()
+    return "fr" if l.startswith("fr") else "sw" if l.startswith("sw") else "en"
+
+
 def say_role(lang: str, key: str, role: str | None, **kw) -> str:
     """Role-specific variant `key_role` if it exists (herder -> grazing, resident -> food/water)."""
-    l2 = "fr" if (lang or "").startswith("fr") else "en"
+    l2 = _lc(lang)
     return say(lang, f"{key}_{role}" if f"{key}_{role}" in R[l2] else key, role=role or "", **kw)
 
 
 def say(lang: str, key: str, **kw) -> str:
-    lang = "fr" if (lang or "").startswith("fr") else "en"
-    if lang == "fr" and "role" in kw:
-        kw["role"] = ROLE_FR.get(kw["role"], kw["role"])
+    lang = _lc(lang)
+    if lang != "en" and "role" in kw:
+        kw["role"] = (ROLE_FR if lang == "fr" else ROLE_SW).get(kw["role"], kw["role"])
     kw.setdefault("cap", composer.monthly_cap())
     return composer.fit(R[lang][key].format(**kw))
 
@@ -228,6 +268,9 @@ def _draft_next(ctx: Ctx, draft: dict) -> str:
         ["JOIN", "I want alerts, I farm maize in Binga", "Je veux m'inscrire, je suis eleveur a Hwange",
          "Ndinoda kujoina, ndiri murimi kuMbire"])
 def h_subscribe(ctx: Ctx) -> str:
+    if not ctx.user or ctx.user.get("opted_out_at"):  # users are added by an officer, no SMS self-signup
+        db.set_session(ctx.phone, None)
+        return say(ctx.lang, "register_contact")
     p = ctx.parsed
     draft = dict(ctx.session.get("draft") or {})
     draft.setdefault("language", p.get("language") or ctx.lang)
@@ -256,7 +299,7 @@ def h_report(ctx: Ctx) -> str:
     if not ctx.user:
         return say(ctx.lang, "report_anon")
     role = ctx.user.get("role") or "farmer"
-    l2 = "fr" if (ctx.lang or "").startswith("fr") else "en"
+    l2 = _lc(ctx.lang)
     label = REPORT_LABELS[l2].get(role, REPORT_LABELS[l2]["farmer"])[v]
     return say_role(ctx.lang, "report_thanks", role, label=label, district=ctx.user["district_name"] or "?")
 
@@ -344,7 +387,7 @@ def _router_schema() -> dict:
         "properties": {
             "intent": {"type": "string", "enum": registry_names()},
             "confidence": {"type": "number"},
-            "language": {"type": "string", "enum": ["en", "fr", "sn", "nd", "other"]},
+            "language": {"type": "string", "enum": ["en", "fr", "sw", "sn", "nd", "other"]},
             "district": {"type": ["string", "null"]},
             "role": {"anyOf": [{"type": "string", "enum": ROLES}, {"type": "null"}]},
             "name": {"type": ["string", "null"]},
@@ -368,7 +411,7 @@ def _router_system() -> str:
         "role = farmer|herder|ngo|officer|resident or null; name = person's own name or null; "
         "report_value = 1 ok, 2 poor, 3 failed, only when the SMS clearly states crop/pasture condition "
         "(a bare number other than 1/2/3 is unknown); "
-        "language = language of the SMS (sn = Shona, nd = Ndebele, other = anything else); "
+        "language = language of the SMS (sw = Swahili, sn = Shona, nd = Ndebele, other = anything else); "
         "confidence = 0..1 how sure you are of the intent (use <= 0.6 when unsure).",
         "Return only the JSON object.",
     ]
@@ -607,7 +650,7 @@ def handle_inbound(phone: str, text: str, send_reply: bool = True) -> dict:
             if session.get("step"):
                 hint = f"(We just asked this user a sign-up question: step={session['step']}.)\n"
             ctx.parsed = classify(text, hint)
-            if ctx.parsed.get("language") in ("en", "fr"):
+            if ctx.parsed.get("language") in ("en", "fr", "sw"):
                 ctx.lang = ctx.parsed["language"]
             if (ctx.parsed.get("intent") == "unknown" and not user and ctx.parsed.get("district")
                     and len(text.split()) <= 4 and "?" not in text and not is_off_scope(text)

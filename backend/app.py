@@ -50,6 +50,8 @@ async def lifespan(_app):
     """Build the Claude client and pay the cold-start cost before the first SMS (background thread)."""
     from . import llm
     threading.Thread(target=llm.warm_up, daemon=True).start()
+    if os.environ.get("SCHEDULER", "on") != "off":
+        threading.Thread(target=_scheduler_loop, daemon=True).start()
     try:
         db.purge_old()
     except Exception as e:  # pragma: no cover
@@ -152,40 +154,39 @@ def sim_inbound(body: dict):
 
 
 # ------------------------------------------------------------------ alerts broker
-@app.post("/alerts/run", dependencies=[Depends(require_admin)])
-def alerts_run(body: RunIn):
-    try:
-        risk = db.load_risk(body.iso3)
-    except db.RiskFileError as e:
-        raise HTTPException(409, str(e))
+def run_alerts(iso3: str, t: int, dispatch: bool = True) -> dict:
+    """Create events for month t (level rose vs t-1). Idempotent: (iso3, unit, t, level) is unique.
+    dispatch=True: Watch goes out at once, Warning+ waits for approval. dispatch=False (scheduler): store only,
+    nothing is sent; every event waits for approval."""
+    iso3 = iso3.upper()
+    risk = db.load_risk(iso3)
     meta = risk.get("meta", {})
     n = int(meta.get("n_months") or 0)
-    if not 0 <= body.t < max(n, 1):
-        raise HTTPException(422, f"t must be 0..{n - 1}")
+    if not 0 <= t < max(n, 1):
+        raise ValueError(f"t must be 0..{n - 1}")
     start = int(meta.get("start_year") or 2019)
     created, auto_sent = [], []
     for u in risk.get("units", []):
         series = {r["t"]: r for r in u.get("series", [])}
-        cur, prev = series.get(body.t), series.get(body.t - 1)
+        cur, prev = series.get(t), series.get(t - 1)
         if not cur or cur.get("level") is None:
             continue  # missing is missing
         lvl, plvl = int(cur["level"]), int((prev or {}).get("level") or 0)
         if lvl < 1 or lvl <= plvl:
             continue
-        if db.q1("SELECT 1 FROM events WHERE iso3=? AND unit_id=? AND t=? AND level=?",
-                 (body.iso3.upper(), u["id"], body.t, lvl)):
+        if db.q1("SELECT 1 FROM events WHERE iso3=? AND unit_id=? AND t=? AND level=?", (iso3, u["id"], t, lvl)):
             continue
-        status = "approved" if lvl == 1 else "pending_approval"
+        auto = dispatch and lvl == 1
         eid = db.ex(
             "INSERT INTO events (created_at, iso3, unit_id, unit_name, t, month_label, level, event, p, "
             "drivers_json, status, approved_by, horizon, confidence, agreeing, model_version) "
             "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (db.now_iso(), body.iso3.upper(), u["id"], u.get("name"), body.t, db.month_label(body.t, start),
-             lvl, cur.get("event"), cur.get("p"), json.dumps(cur.get("drivers") or []), status,
-             "auto (Watch)" if lvl == 1 else None, cur.get("horizon"), cur.get("confidence"),
-             cur.get("agreeing"), meta.get("model_version")))
+            (db.now_iso(), iso3, u["id"], u.get("name"), t, db.month_label(t, start),
+             lvl, cur.get("event"), cur.get("p"), json.dumps(cur.get("drivers") or []),
+             "approved" if auto else "pending_approval", "auto (Watch)" if auto else None,
+             cur.get("horizon"), cur.get("confidence"), cur.get("agreeing"), meta.get("model_version")))
         created.append(eid)
-        if lvl == 1:  # Watch: NGO/officer only, no human gate
+        if auto:  # Watch: NGO/officer only, no human gate
             auto_sent.append(composer.send_event(eid, "auto (Watch)"))
     events = []
     for eid in created:
@@ -193,10 +194,74 @@ def alerts_run(body: RunIn):
         e["drivers"] = json.loads(e.pop("drivers_json") or "[]")
         e.update(composer.event_counts(eid))
         events.append(e)
-    return {"created": len(created), "events": events, "iso3": body.iso3.upper(), "t": body.t, "month": db.month_label(body.t, start),
-            "model_version": meta.get("model_version"),
-            "event_ids": created, "watch_sent": auto_sent,
+    return {"created": len(created), "events": events, "iso3": iso3, "t": t, "month": db.month_label(t, start),
+            "model_version": meta.get("model_version"), "event_ids": created, "watch_sent": auto_sent,
             "pending_approval": len(created) - len(auto_sent)}
+
+
+def process_live_months() -> list[dict]:
+    """For every country with a risk file: store alerts for the latest issued month (meta.live_t) once.
+    Stores only; sending stays behind the approval."""
+    done = []
+    for f in sorted(db.risk_dir().glob("*.js")):
+        iso3 = f.stem.upper()
+        try:
+            t = db.load_risk(iso3).get("meta", {}).get("live_t")
+        except Exception as e:
+            log.info("scheduler skips %s: %s", iso3, e)
+            continue
+        if t is None or db.q1("SELECT 1 FROM processed_runs WHERE iso3=? AND t=?", (iso3, int(t))):
+            continue
+        try:
+            r = run_alerts(iso3, int(t), dispatch=False)
+        except Exception as e:
+            log.warning("scheduler %s t=%s failed: %s", iso3, t, e)
+            continue
+        db.ex("INSERT OR IGNORE INTO processed_runs (iso3, t, processed_at, created) VALUES (?,?,?,?)",
+              (iso3, int(t), db.now_iso(), r["created"]))
+        log.info("scheduler %s t=%s: %s events stored", iso3, t, r["created"])
+        done.append({"iso3": iso3, "t": int(t), "created": r["created"]})
+    return done
+
+
+SCHED_EVERY = int(os.environ.get("SCHED_SECONDS", "3600"))
+
+
+def _scheduler_loop():
+    while True:
+        try:
+            process_live_months()
+        except Exception as e:  # pragma: no cover
+            log.warning("scheduler error: %s", e)
+        time.sleep(SCHED_EVERY)
+
+
+@app.post("/alerts/run", dependencies=[Depends(require_admin)])
+def alerts_run(body: RunIn):
+    try:
+        return run_alerts(body.iso3, body.t)
+    except db.RiskFileError as e:
+        raise HTTPException(409, str(e))
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+
+
+@app.get("/alerts/log")
+def alerts_log(iso3: str | None = None, since: int = 0, limit: int = 500):
+    """Stored alerts with send status (no phones). Replay months have no rows: the UI shows risk-file changes."""
+    args: list = [since]
+    sql = "SELECT * FROM events WHERE id>?"
+    if iso3:
+        sql += " AND iso3=?"
+        args.append(iso3.upper())
+    rows = db.q(sql + " ORDER BY id DESC LIMIT ?", (*args, min(limit, 2000)))
+    for r in rows:
+        r["drivers"] = json.loads(r.pop("drivers_json") or "[]")
+        r.update(composer.event_counts(r["id"]))
+        r["send_status"] = ("cancelled" if r["status"] == "cancelled" else
+                            "sent" if r["status"] == "sent" else
+                            "failed" if r["failed_count"] else "pending")
+    return {"events": rows, "last_id": max([r["id"] for r in rows], default=since)}
 
 
 @app.post("/events/{event_id}/approve", dependencies=[Depends(require_admin)])
@@ -260,6 +325,91 @@ def feed_users(since: int = 0, limit: int = 100, x_api_key: str | None = Header(
     return {"users": rows, "last_id": max([r["id"] for r in rows], default=since),
             "counters": {"total": sum(c["n"] for c in counts), "today": n_today,
                          "by_role": {c["role"]: c["n"] for c in counts}}}
+
+
+# ------------------------------------------------------------------ users (added by an operator, no SMS sign-up)
+ROLES = ("farmer", "herder", "resident", "ngo", "officer")
+LANGS = ("en", "fr", "sw", "sn", "nd")
+
+
+class UserIn(BaseModel):
+    phone: str
+    district_id: str
+    role: str
+    name: str | None = None
+    language: str = "en"
+    iso3: str | None = None
+
+
+class UserPatch(BaseModel):
+    name: str | None = None
+    district_id: str | None = None
+    role: str | None = None
+    language: str | None = None
+    opted_out: bool | None = None
+
+
+def _district(did: str, iso3: str | None = None) -> dict:
+    iso3s = [iso3.upper()] if iso3 else router.COUNTRIES
+    for c in iso3s:
+        for u in db.geo_units(c):
+            if u["id"] == did:
+                return {"district_id": did, "district_name": u["name"], "iso3": c}
+    raise HTTPException(422, "unknown district id")
+
+
+def _check(role: str | None, language: str | None) -> None:
+    if role is not None and role not in ROLES:
+        raise HTTPException(422, f"role must be one of {', '.join(ROLES)}")
+    if language is not None and language not in LANGS:
+        raise HTTPException(422, f"language must be one of {', '.join(LANGS)}")
+
+
+@app.post("/users", dependencies=[Depends(require_admin)], status_code=201)
+def create_user(body: UserIn):
+    phone = body.phone.strip()
+    if not SIM_PHONE.match(phone):
+        raise HTTPException(422, "phone must be E.164, e.g. +263771000001")
+    _check(body.role, body.language)
+    d = _district(body.district_id, body.iso3)
+    if db.get_user(phone):
+        raise HTTPException(409, "phone already registered")
+    now = db.now_iso()
+    uid = db.upsert_user(phone, name=(body.name or "").strip()[:60] or None, role=body.role,
+                         language=body.language, consent_at=now, created_at=now, **d)
+    return db.q1("SELECT * FROM users WHERE id=?", (uid,))
+
+
+@app.patch("/users/{user_id}", dependencies=[Depends(require_admin)])
+def patch_user(user_id: int, body: UserPatch):
+    if not db.q1("SELECT 1 FROM users WHERE id=?", (user_id,)):
+        raise HTTPException(404, "no such user")
+    _check(body.role, body.language)
+    upd: dict = {}
+    if body.name is not None:
+        upd["name"] = body.name.strip()[:60] or None
+    if body.role is not None:
+        upd["role"] = body.role
+    if body.language is not None:
+        upd["language"] = body.language
+    if body.district_id is not None:
+        upd.update(_district(body.district_id))
+    if body.opted_out is not None:
+        upd["opted_out_at"] = db.now_iso() if body.opted_out else None
+    if upd:
+        cols = ", ".join(f"{k}=?" for k in upd)
+        db.ex(f"UPDATE users SET {cols} WHERE id=?", (*upd.values(), user_id))
+    return db.q1("SELECT * FROM users WHERE id=?", (user_id,))
+
+
+@app.delete("/users/{user_id}", dependencies=[Depends(require_admin)])
+def delete_user(user_id: int):
+    row = db.q1("SELECT phone FROM users WHERE id=?", (user_id,))
+    if not row:
+        raise HTTPException(404, "no such user")
+    db.ex("DELETE FROM users WHERE id=?", (user_id,))
+    db.ex("DELETE FROM sessions WHERE phone=?", (row["phone"],))
+    return {"ok": True, "deleted": user_id}
 
 
 @app.get("/feed/messages")

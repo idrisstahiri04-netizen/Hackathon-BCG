@@ -10,6 +10,7 @@ label them as demo. Idempotent: re-running refreshes the same 4 reports (no dupl
 
     python -m backend.seed_crowd                 # default district (Hurungwe: Watch + satellite alarm Apr 2024)
     python -m backend.seed_crowd --district Kariba
+    python -m backend.seed_crowd --iso3 KEN      # West Pokot
     python -m backend.seed_crowd --clear         # remove the demo reports and users
 """
 from __future__ import annotations
@@ -20,6 +21,7 @@ import json
 from . import db
 
 DEFAULT_DISTRICT = "Hurungwe"
+DEFAULT_BY_ISO3 = {"ZWE": "Hurungwe", "KEN": "West Pokot"}  # KEN: herder Warning (no_grass) Sep 2026
 SEED_TAG = "seed_crowd"
 # (phone, name, role, report value)
 SEED = [
@@ -70,13 +72,13 @@ def seed(district: str = DEFAULT_DISTRICT, iso3: str = "ZWE") -> dict:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--district", default=DEFAULT_DISTRICT)
+    ap.add_argument("--district", default=None)
     ap.add_argument("--iso3", default="ZWE")
     ap.add_argument("--clear", action="store_true")
     a = ap.parse_args()
     if a.clear:
         print(f"removed {clear()} demo crowd reports from {db.db_path()}")
     else:
-        r = seed(a.district, a.iso3)
+        r = seed(a.district or DEFAULT_BY_ISO3.get(a.iso3, DEFAULT_DISTRICT), a.iso3)
         print(f"seeded {r['reports']} DEMO crowd reports in {r['district']} (share_bad {r['share_bad']:.2f}, "
               f"one more '3' tips it to >= 0.60) into {db.db_path()}")

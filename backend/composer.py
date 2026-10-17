@@ -23,6 +23,7 @@ GSM7 = set("@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&
 GSM7_EXT = set("^{}\\[~]|€")  # count as 2 chars
 LEVELS = {0: "NORMAL", 1: "WATCH", 2: "WARNING", 3: "EMERGENCY"}
 LEVELS_FR = {0: "NORMAL", 1: "VIGILANCE", 2: "ALERTE", 3: "URGENCE"}
+LEVELS_SW = {0: "KAWAIDA", 1: "TAHADHARI", 2: "ONYO", 3: "DHARURA"}  # needs native review
 EVENT_LABEL = {"cant_plant": "Can't plant", "crop_failure": "Crop failure", "no_grass": "No grass",
                "none": "Drought risk"}
 CROP_EVENTS = {"cant_plant", "crop_failure", "none", None}
@@ -74,12 +75,24 @@ def compose(role: str, ev: dict, language: str = "en") -> str:
     """ev: dict with unit_name, level, event, p, drivers (list), horizon, agreeing, confidence."""
     level = int(ev["level"])
     fr = (language or "en").startswith("fr") and role in ("farmer", "herder", "resident")
-    L = (LEVELS_FR if fr else LEVELS)[level]
+    sw = (language or "en").startswith("sw") and role in ("farmer", "herder", "resident")
+    L = (LEVELS_SW if sw else LEVELS_FR if fr else LEVELS)[level]
     em = level >= 3
     event = ev.get("event") or "none"
     drivers = ev.get("drivers") or []
 
     def build(name: str) -> str:
+        if sw:  # Swahili, needs native review before real use. GSM-7 only, one segment.
+            tail = "Jibu 1 sawa 2 hafifu 3 {x}. ACHA kujiondoa"
+            if role == "farmer":
+                if event == "cant_plant" and not em:
+                    return f"{L} {name}: mvua ni hafifu. Subiri mvua nzuri 2 kabla ya kupanda, tumia mbegu za muda mfupi. " + tail.format(x="imeharibika")
+                return (f"{L} {name}: mazao yameharibika. Weka nafaka yako, usiuze mifugo kwa bei ndogo. " + tail.format(x="imeharibika") if em else
+                        f"{L} {name}: mazao yanakauka. Weka nafaka ya miezi 2, usiuze kwa bei ndogo. " + tail.format(x="imeharibika"))
+            if role == "herder":
+                return (f"{L} {name}: malisho yameisha. Uza mifugo dhaifu sasa, weka wazazi, peleka mifugo penye maji. " + tail.format(x="mbaya") if em else
+                        f"{L} {name}: malisho yanakauka haraka. Uza mifugo dhaifu mapema bei ikiwa nzuri, panga kuhamisha. " + tail.format(x="mbaya"))
+            return f"{L} {name}: ukame, chakula kinaweza kupungua. Weka maji safi, jisajili kwa kamati ya chakula. Jibu MSAADA. ACHA kujiondoa"
         if role == "farmer":
             if fr:
                 if event == "cant_plant" and not em:

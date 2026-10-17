@@ -8,7 +8,7 @@
 #
 # Env overrides: GATEWAY=sim|log|android  BACKEND_PORT=8000  SITE_PORT=8777
 #                BACKEND_HOST=127.0.0.1 (use 0.0.0.0 if the Android gateway must reach us)
-#                VENV=/path/to/venv     ENV_FILE=/path/to/.env
+#                DEMO_ISO3=KEN (seed country)  VENV=/path/to/venv     ENV_FILE=/path/to/.env
 # Logs + pids: scripts/.run/   Stop with scripts/stop_demo.sh
 set -u
 
@@ -101,7 +101,7 @@ fi
 [ -f "$REPO/backend/app.py" ] && ok "backend/app.py present" || bad "backend/app.py missing"
 [ -f "$REPO/js/live.js" ] && ok "js/live.js present" || warn "js/live.js missing (Alert/Users/Phone tabs will not work)"
 [ -f "$REPO/vendor/globe.gl.min.js" ] && ok "vendor/globe.gl.min.js present (offline globe)" || bad "vendor/globe.gl.min.js missing"
-for iso in ZWE; do
+for iso in KEN; do
   f="$REPO/data/risk/$iso.js"
   if [ ! -f "$f" ]; then bad "data/risk/$iso.js missing"
   elif grep -q '"model_version":"STUB"' "$f" || grep -q '"model_version": *"STUB"' "$f"; then
@@ -176,14 +176,14 @@ curl -fsS -m 3 -o /dev/null "http://127.0.0.1:$SITE_PORT/index.html" && ok "stat
 if [ "$SEED" = 1 ]; then
   echo "== seeding demo users"
   # team seeder (backend/seed_demo.py): writes straight to the same SQLite db, keyed on phone -> idempotent
-  "$PY" -m backend.seed_demo 2>&1 | sed 's/^/  /'; rc=${PIPESTATUS[0]}
+  "$PY" -m backend.seed_demo --iso3 "${DEMO_ISO3:-KEN}" 2>&1 | sed 's/^/  /'; rc=${PIPESTATUS[0]}
   [ "$rc" = 0 ] && ok "demo users seeded" || warn "seeding failed rc=$rc (demo still works; users can join live)"
 fi
 
 echo
 green "== ready"
 echo "  Globe + tabs : http://localhost:$SITE_PORT/"
-echo "  Stage deep link: http://localhost:$SITE_PORT/?country=Zimbabwe&t=63"
+echo "  Stage deep link: http://localhost:$SITE_PORT/?country=Kenya&t=92"
 echo "  Backend       : $BE/health   docs: $BE/docs"
 echo "  Gateway mode  : $GATEWAY"
 echo "  Logs          : $RUN/backend.log  $RUN/site.log"

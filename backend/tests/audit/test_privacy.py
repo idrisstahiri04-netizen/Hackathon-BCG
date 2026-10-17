@@ -36,13 +36,9 @@ def test_stop_is_honoured_and_rejoin_clears_it(isolated):
     write_risk(isolated, make_risk({"Binga": {60: (2, "crop_failure")}}))
     eid = client.post("/alerts/run", json={"iso3": "ZWE", "t": 60}).json()["event_ids"][0]
     assert client.post(f"/events/{eid}/approve", json={}).json()["skipped"]["opted_out"] == 1
-    # re-join: district -> role -> YES
-    router.handle_inbound(VICTIM, "JOIN")
-    router.handle_inbound(VICTIM, "Binga")
-    router.handle_inbound(VICTIM, "farmer")
-    router.handle_inbound(VICTIM, "YES")
-    u = db.get_user(VICTIM)
-    assert u["opted_out_at"] is None and u["consent_at"]
+    # no self re-join by SMS: an officer must re-add
+    r = router.handle_inbound(VICTIM, "JOIN")
+    assert "local officer" in r["reply"] and db.get_user(VICTIM)["opted_out_at"]
 
 
 def test_stop_variants_never_call_llm(fake_llm):
@@ -89,16 +85,6 @@ def test_phone_not_stored_in_plaintext():
         if "phone" in cols:
             raw = db.q(f"SELECT phone FROM {table}")
             assert all(r["phone"] != VICTIM for r in raw), f"{table}.phone holds the clear number"
-
-
-def test_raw_signup_text_stores_whole_sms_today(fake_llm):
-    """Minimum-data check: the full sign-up SMS (incl. anything else the user typed) is kept."""
-    from ._helpers import llm_result
-    fake_llm.set(lambda *a: llm_result(intent="subscribe", confidence=1.0, role="farmer", district="Binga", name="Rudo"))
-    secret = "my ID number is 63-123456A70"
-    router.handle_inbound(VICTIM, f"I am Rudo farmer in Binga, {secret}")
-    router.handle_inbound(VICTIM, "YES")
-    assert secret in db.get_user(VICTIM)["raw_signup_text"]
 
 
 # ------------------------------------------------------------- P3: retention

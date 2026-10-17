@@ -78,7 +78,6 @@
   let byName = new Map();      // lower-case name -> unit
 
   let now = 0;            // month index
-  let rendered = -1;      // how far the feed has been filled, for incremental appends
   let playing = false;
   let speed = 1;
   let timer = null;
@@ -158,7 +157,6 @@
   };
   const noteSeason = lead => `+${lead}-month forecasts show season-level risk; district detail is less certain.`;
   const NOTE_LIVE = 'live: some inputs missing (see data notes)';
-  const NOTE_READ = 'How to read: FEWS NET outlook updates ~3×/year, so its layer changes in steps; our model updates monthly.';
   // Live month (after the replay window) with model forecast fields partly null.
   const liveGaps = t => {
     const end = ENGINE.REPLAY_END_T != null ? ENGINE.REPLAY_END_T : 71;
@@ -280,7 +278,6 @@
     smsAudience = null;                 // let the panel pick a sensible default
     paintGlobe();
     renderDetail();
-    renderTop10();
   }
 
   // =========================================================================
@@ -374,36 +371,23 @@
       $('#spark').style.opacity = '1';
       $('#legend').hidden = false;
       $('#view-switch').hidden = false;
-      $('#top10').hidden = false;
       $('#go-today').hidden = ENGINE.liveT == null;
       renderLegend();
-      $('#feed-sub').textContent = `${c.name} · ${n} ${c.unitWord}`;
-      $('#disclaimer').textContent = ENGINE.disclaimer;
-      $('#disclaimer').hidden = false;
       setTime(0, { rebuild: true });
     } else {
       $('#hud-sub').textContent = c.inProgress ? 'data in progress' : 'not yet modelled';
-      $('#disclaimer').hidden = true;
       buildTicks();
       // Honest empty state rather than a fake map.
       world.polygonsData([]);
       $('#legend').hidden = true;
       $('#view-switch').hidden = true;
-      $('#top10').hidden = true;
       $('#go-today').hidden = true;
-      $('#feed-sub').textContent = `${c.name} · ${c.inProgress ? 'data in progress' : 'no coverage'}`;
-      $('#feed').innerHTML = '';
+      $('#alog-list').innerHTML = '';
       $('#feed-count').textContent = '0';
       MODEL = { units: [], events: [], national: [] };
       buildSpark();                         // no curve: nothing real to show
-      $('#feed-empty').hidden = false;
-      $('#feed-empty').innerHTML = c.inProgress
-        ? `<p>Data in progress for ${c.name}.</p>` +
-          `<p class="muted">Boundaries are ready; the risk model has not published ` +
-          `real output for this country yet. Nothing is shown until it does.</p>`
-        : `<p>No model for ${c.name} yet.</p>` +
-        `<p class="muted">Adding a country needs its admin boundaries, ` +
-        `a crop/grass mask and the satellite + weather signals run through the model.</p>`;
+      $('#alog-empty').hidden = false;
+      $('#alog-empty').textContent = c.inProgress ? 'Data in progress.' : 'No model yet.';
       ['#stat-units', '#stat-people', '#stat-sms'].forEach(s => $(s).textContent = '—');
       pause();
       announce();
@@ -533,7 +517,6 @@
     updateStats();
     updateViewCaption();
     updateLegend();
-    renderTop10();
     if (selected) renderDetail();
     announce();
   }
@@ -572,10 +555,7 @@
       const what = layer === 'fews' ? 'FEWS NET projected IPC phase' : layer === 'both'
         ? 'Our chance of Crisis (IPC 3+) as fill, FEWS NET projected phase on the outline' : 'Predicted chance of Crisis (IPC 3+)';
       cap.append(el('div', null, `${what} for ${tgt} · issued end of ${iss}` + (layer === 'fews' ? '' : ' · same colours as the Now view')));
-      cap.append(el('div', 'vc-conf', `Confidence ${cf.label} — ${cf.source}`));
-      if (lead >= 3) cap.append(el('div', 'vc-note', noteSeason(lead)));
       if (liveGaps(now)) cap.append(el('div', 'vc-note', liveNote()));
-      if (layer !== 'model') cap.append(el('div', 'vc-read', NOTE_READ));
       const pend = pendingText(lead);
       if (pend) cap.append(el('div', 'vc-pending', pend));
     }
@@ -617,8 +597,7 @@
     updateStats();
     updateViewCaption();
     updateLegend();
-    renderTop10();
-    renderFeed({ rebuild: rebuild || wentBack });
+    renderFeed({});
     if (selected) renderDetail();
   }
 
@@ -859,104 +838,13 @@
       }
     });
     const cf = fcConf(lead);
-    const lines = [{ c: 'ln-conf', s: `Confidence ${cf.label} — ${cf.source}.` }];
-    if (lead >= 3) lines.push({ c: 'ln-note', s: noteSeason(lead) });
+    const lines = [];
     if (liveGaps(now)) lines.push({ c: 'ln-note', s: liveNote() });
-    if (layer !== 'model') lines.push({ c: 'ln-read', s: NOTE_READ });
     const pend = pendingText(lead);
     if (pend) lines.push({ c: 'ln-pending', s: pend[0].toUpperCase() + pend.slice(1) + '.' });
     note.hidden = false;
     note.innerHTML = '';
     lines.forEach(l => note.append(el('div', l.c, l.s)));
-  }
-
-  // =========================================================================
-  //  Top 10 most at risk, next 3 months (for the issue month on the slider)
-  // =========================================================================
-  function renderTop10() {
-    const box = $('#top10'), ol = $('#top10-list');
-    if (!active || !active.live) { box.hidden = true; return; }
-    box.hidden = false;
-    const ranked = MODEL.units
-      .map(u => ({ u, f: fcMax3(u, now) }))
-      .filter(x => x.f && x.f.chance != null)
-      .sort((a, b) => b.f.chance - a.f.chance || a.u.name.localeCompare(b.u.name))
-      .slice(0, 10);
-    $('#top10-sub').textContent = `issued end of ${ENGINE.dateAt(now).label} · ${ENGINE.dateAt(now + 1).label} – ${ENGINE.dateAt(now + 3).label}`;
-    ol.innerHTML = '';
-    if (!ranked.length) {
-      ol.append(el('li', 't10-empty', 'No forecast for this month.'));
-    }
-    ranked.forEach(({ u, f }, i) => {
-      const li = el('li', u.feature === selected ? 'is-sel' : '');
-      li.dataset.id = u.id;
-      li.setAttribute('role', 'button');
-      li.tabIndex = 0;
-      const lvl = dispLevel(u, u.series[now]), L = ENGINE.LEVELS[lvl];
-      const dot = el('span', 'lv', `L${lvl}`);
-      dot.style.background = L.color;
-      dot.title = `${L.label} now`;
-      const bar = el('span', 'bar');
-      const fill = el('i');
-      fill.style.width = `${Math.round(f.chance * 100)}%`;
-      fill.style.background = fcColor(f.chance);
-      bar.append(fill);
-      const thr = el('b');
-      thr.style.left = `${fcThr() * 100}%`;
-      bar.append(thr);
-      const pc = el('span', 'pc', pct(f.chance));
-      pc.dataset.cl = `C${binOf(f.chance) + 1}`;   // class number, shown via CSS (not colour alone)
-      li.append(el('span', 'rk', String(i + 1)), el('span', 'nm', u.name), bar,
-        pc, dot);
-      li.title = `${chanceWord(f.kind)} by ${f.target_label}: ${pct(f.chance)} · ${fcName(f.chance)}`;
-      const go = () => {
-        selected = u.feature;
-        smsAudience = null;
-        world.pointOfView({ lat: u.props.lat, lng: u.props.lng, altitude: 0.55 }, 900);
-        paintGlobe();
-        renderDetail();
-        renderTop10();
-      };
-      li.addEventListener('click', go);
-      li.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
-      ol.append(li);
-    });
-    const note = $('#top10-note');
-    note.hidden = false;
-    note.textContent = `Ranked on the highest chance over +1 to +3 months · ${confLine()}` +
-      (ENGINE.hasForecast ? '' : ' · forecast fields pending (p_crisis shown)') +
-      (liveGaps(now) ? ` · ${liveNote()}` : '');
-  }
-
-  // =========================================================================
-  //  Alert feed
-  // =========================================================================
-  const feedEl = $('#feed');
-
-  function renderFeed({ rebuild }) {
-    if (rebuild) { feedEl.innerHTML = ''; rendered = -1; }
-
-    const due = MODEL.events.filter(e => e.t > rendered && e.t <= now);
-    // Newest first, so prepend in reverse.
-    for (const e of due) feedEl.prepend(buildNote(e, !rebuild));
-    rendered = now;
-
-    const total = MODEL.events.filter(e => e.t <= now).length;
-    $('#feed-count').textContent = String(total);
-    $('#feed-empty').hidden = total > 0;
-    if (total === 0) {
-      $('#feed-empty').innerHTML =
-        '<p>No alerts yet.</p><p class="muted">Press play, or drag the timeline forward.</p>';
-    }
-
-    // Keep the DOM bounded during a fast replay.
-    // The OFFICIAL declaration note is never trimmed (and is sticky in CSS).
-    while (feedEl.children.length > 120) {
-      const victim = [...feedEl.children].reverse().find(n => !n.classList.contains('decl'));
-      if (!victim) break;
-      victim.remove();
-    }
-    if (!rebuild) feedEl.scrollTop = 0;
   }
 
   // Plain words for why a unit is at Watch (export field watch_reason).
@@ -968,76 +856,117 @@
   };
   const watchWords = row => (row && row.level === 1 && WATCH_WORDS[row.watch_reason]) || null;
 
-  function buildNote(e, animate) {
-    if (e.kind === 'declaration') {
-      const li = el('li', 'note decl' + (animate ? ' is-new' : ''));
-      li.style.setProperty('--lvl', ENGINE.LEVELS[3].color);
-      const top = el('div', 'n-top');
-      top.append(el('span', 'chip', 'OFFICIAL'), el('span', 'n-county', active.name));
-      top.append(el('span', 'n-date', fmtDate(e.date)));
-      li.append(top);
-      li.append(el('div', 'n-line', e.label + '. Compare with when the model first warned.'));
-      li.querySelector('.chip').style.background = ENGINE.LEVELS[3].color;
-      li.addEventListener('click', () => setTime(e.t));
-      return li;
-    }
-    const L = ENGINE.LEVELS[e.to];
-    const li = el('li', 'note' + (animate ? ' is-new' : '') + (e.escalation ? '' : ' deesc'));
-    li.style.setProperty('--lvl', L.color);
-    li.dataset.county = e.county;
-    li.dataset.t = e.t;
+  // =========================================================================
+  //  Alert log (right panel): level changes up to the slider month, newest first
+  // =========================================================================
+  const LOG_CAP = 300;
+  let logFilter = 'all', logStored = new Map(), logFetched = 0, logIso = null, logSig = '';
+  const REASON = { climate_readiness: 'climate readiness', fews_outlook: 'FEWS NET outlook', ipc_outlook: 'FEWS NET outlook', district_evidence: 'district evidence' };
+  const unitById = id => MODEL.units.find(x => x.id === id);
 
-    const top = el('div', 'n-top');
-    const chip = el('span', 'chip', `${L.glyph} L${e.to} ${L.label.toUpperCase()}`);
-    top.append(chip, el('span', 'n-county', e.county));
-    if (e.escalation && ENGINE.EVENTS[e.event]) top.append(el('span', 'evt', ENGINE.EVENTS[e.event]));
-    top.append(el('span', 'n-date', ENGINE.dateAt(e.t).label));
-    li.append(top);
-
-    li.append(el('div', 'n-move',
-      e.escalation
-        ? `escalated from L${e.from} ${ENGINE.LEVELS[e.from].label}`
-        : `stood down from L${e.from} ${ENGINE.LEVELS[e.from].label}`));
-
-    const evRow = (MODEL.units.find(x => x.id === e.id) || { series: [] }).series[e.t];
-    const ww = e.escalation && e.to === 1 ? watchWords(evRow) : null;
-    if (ww) li.append(el('div', 'n-line', ww));
-
-    if (e.escalation) {
-      const line = el('div', 'n-line');
-      line.innerHTML =
-        `Shortage risk <b>${e.p == null ? '—' : Math.round(e.p * 100) + '%'}</b> at <b>${e.horizon} weeks</b> · ` +
-        `<b>${e.agreeing}/${ENGINE.N_FAMILIES}</b> source families agree · confidence ${e.confidence}` +
-        (e.pop != null ? ` · population <b>${fmtPop(e.pop)}</b>` : '');
-      li.append(line);
-
-      const ul = el('ul', 'n-drivers');
-      e.drivers.forEach(d => ul.append(el('li', null, d)));
-      li.append(ul);
-
-      const nf = el('div', 'n-notify');
-      nf.append(el('span', 'lab', 'Notify'));
-      e.audiences.forEach(a => nf.append(el('span', 'aud', ENGINE.AUDIENCES[a].label)));
-      li.append(nf);
-    } else {
-      li.append(el('div', 'n-line', 'Conditions improved. No new alerts sent.'));
-    }
-
-    li.addEventListener('click', () => {
-      setTime(e.t);
-      const poly = FEATURES.find(f => (e.id != null ? f.properties.id === e.id : f.properties.name === e.county));
-      if (poly) {
-        selected = poly;
-        smsAudience = null;
-        world.pointOfView(
-          { lat: poly.properties.lat, lng: poly.properties.lng, altitude: 0.55 }, 900);
-        paintGlobe();
-        renderDetail();
-      }
-    });
-
-    return li;
+  function logReason(e) {
+    if (e.kind === 'declaration') return 'declaration';
+    if (!e.escalation) return 'conditions improved';
+    const row = (unitById(e.id) || { series: [] }).series[e.t];
+    if (e.to === 1 && row && REASON[row.watch_reason]) return REASON[row.watch_reason];
+    return 'district evidence';
   }
+  async function fetchStored() {
+    if (!window.LIVE || !LIVE.online || !active || !active.live) return;
+    if (logIso === active.iso3 && Date.now() - logFetched < 10000) return;
+    logIso = active.iso3; logFetched = Date.now();
+    try {
+      const d = await LIVE.log(active.iso3);
+      logStored = new Map((d.events || []).map(r => [`${r.unit_id}|${r.t}|${r.level}`, r]));
+      logSig = '';
+      renderFeed({});
+    } catch (_) { /* offline: status stays "—" */ }
+  }
+  function statusCell(e) {
+    const td = el('span', 'a-st', '—');
+    const r = logStored.get(`${e.id}|${e.t}|${e.to}`);
+    if (!r) return td;
+    if (r.send_status === 'pending') {
+      td.textContent = '';
+      if (r.level >= 1) {
+        const b = el('button', 'approve', 'Approve & send');
+        b.type = 'button';
+        b.addEventListener('click', async ev => {
+          ev.stopPropagation(); b.disabled = true; b.textContent = 'Sending…';
+          try { await LIVE.approve(r.id); logFetched = 0; fetchStored(); }
+          catch (err) { b.disabled = false; b.textContent = 'Approve & send'; LIVE.toast(err.message); }
+        });
+        td.append(b);
+      }
+    } else {
+      td.textContent = r.send_status === 'sent' ? `sent ${r.sent_count}` +
+        (r.failed_count ? ` · failed ${r.failed_count}` : '') : r.send_status;
+    }
+    return td;
+  }
+
+  function renderFeed() {
+    const list = $('#alog-list');
+    let evs = MODEL.events.filter(e => e.t <= now);
+    if (logFilter === 'warn') evs = evs.filter(e => e.kind === 'declaration' || e.to >= 2);
+    if (logFilter === 'month') evs = evs.filter(e => e.t === now);
+    evs.sort((a, b) => b.t - a.t);
+    $('#feed-count').textContent = String(evs.length);
+    evs = evs.slice(0, LOG_CAP);
+    const sig = [logFilter, now, active && active.iso3, evs.length, logStored.size,
+      [...logStored.values()].map(r => r.send_status + r.sent_count).join()].join('|');
+    if (sig === logSig) return;
+    logSig = sig;
+    list.innerHTML = '';
+    $('#alog-empty').hidden = evs.length > 0;
+    const frag = document.createDocumentFragment();
+    for (const e of evs) {
+      const li = el('li', 'alog-row');
+      li.tabIndex = 0;
+      const d = ENGINE.dateAt(e.t);
+      li.append(el('span', 'a-date', d.label));
+      if (e.kind === 'declaration') {
+        li.append(el('span', 'a-dist', active.name));
+        const c = el('span', 'a-chg');
+        const chip = el('span', 'chip', 'OFFICIAL');
+        chip.style.background = ENGINE.LEVELS[3].color;
+        c.append(chip);
+        li.append(c);
+      } else {
+        li.append(el('span', 'a-dist', e.county));
+        const c = el('span', 'a-chg');
+        const f = ENGINE.LEVELS[e.from], t = ENGINE.LEVELS[e.to];
+        const c1 = el('span', 'chip', `L${e.from}`), c2 = el('span', 'chip', `${t.glyph} L${e.to} ${t.label}`);
+        c1.style.background = f.color; c2.style.background = t.color;
+        c.append(c1, '→', c2);
+        li.append(c);
+      }
+      li.append(el('span', 'a-why', logReason(e)));
+      li.append(e.kind === 'declaration' ? el('span', 'a-st', '—') : statusCell(e));
+      const go = () => {
+        setTime(e.t);
+        const poly = e.id != null || e.county ? FEATURES.find(f => (e.id != null ? f.properties.id === e.id : f.properties.name === e.county)) : null;
+        if (poly && e.kind !== 'declaration') {
+          selected = poly; smsAudience = null;
+          world.pointOfView({ lat: poly.properties.lat, lng: poly.properties.lng, altitude: 0.55 }, 900);
+          paintGlobe(); renderDetail();
+        }
+      };
+      li.addEventListener('click', go);
+      li.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
+      frag.append(li);
+    }
+    list.append(frag);
+    fetchStored();
+  }
+  $('#alog-chips').addEventListener('click', ev => {
+    const b = ev.target.closest('button');
+    if (!b) return;
+    logFilter = b.dataset.f;
+    [...$('#alog-chips').children].forEach(x => x.classList.toggle('on', x === b));
+    logSig = '';
+    renderFeed({});
+  });
 
   // =========================================================================
   //  County detail
@@ -1063,7 +992,6 @@
     selected = null;
     $('#detail').hidden = true;
     paintGlobe();
-    renderTop10();
   }
 
   // Forecast block of the unit panel: "Chance of Crisis by <target>: NN%",
@@ -1235,10 +1163,7 @@
     leg.append(el('span', 'solid', 'past 6 months (issued)'), el('span', 'dotted', `our model +1 to +${MAX_LEAD}`), el('span', 'steps', 'FEWS NET phase (steps)'));
     sect.append(leg);
     const yr0 = yearOf(pts.find(p => p.t >= 0)?.label), yr1 = yearOf(pts[pts.length - 1].label);
-    sect.append(el('div', 'fc-confs', `${yr0 && yr1 && yr0 !== yr1 ? `${yr0} → ${yr1} · ` : yr1 ? `${yr1} · ` : ''}${confLine()}`));
-    if (lead >= 3) sect.append(el('div', 'fc-note', noteSeason(lead)));
     if (liveGaps(now)) sect.append(el('div', 'fc-note', liveNote()));
-    sect.append(el('div', 'fc-read', NOTE_READ));
     const pend = pendingText(lead);
     if (pend) sect.append(el('div', 'fc-pending', pend[0].toUpperCase() + pend.slice(1) + '.'));
     else if (f.derived && !f.pending) sect.append(el('div', 'fc-pending', "Forecast fields pending: dotted values are the model's p_crisis for the 1–3 month window."));
@@ -1392,16 +1317,11 @@
   COUNTRIES.sort((a, b) => rank(b) - rank(a));
   {
     const hint = $('#empty-hint').querySelector('.muted');
-    const btns = list => list.map(c => `<button class="linkish" data-demo="${c.name}">${c.name}</button>`).join(', ');
-    const live = COUNTRIES.filter(c => c.live), wip = COUNTRIES.filter(c => c.inProgress);
-    hint.innerHTML = (live.length ? `Live: ${btns(live)}. ` : 'No country has real model output yet. ') +
-      (wip.length ? `Data in progress: ${wip.map(c => c.name).join(', ')}.` : '');
+    const live = COUNTRIES.filter(c => c.live);
+    hint.innerHTML = live.map(c => `<button class="linkish" data-demo="${c.name}">${c.name}</button>`).join(', ');
   }
 
   setTime(0);
-
-  // Top-10 list starts collapsed on phones so the feed keeps room.
-  if (window.matchMedia && window.matchMedia('(max-width: 720px)').matches) $('#top10').open = false;
 
   // Deep link: ?country=Zimbabwe&t=63&county=Mbire&view=f3&layer=both jumps
   // straight to a moment (view = now | f1..f8, layer = model | fews | both). Insurance for the pitch — if live
@@ -1425,8 +1345,7 @@
       smsAudience = null;
       paintGlobe();
       renderDetail();
-      renderTop10();
-    }
+      }
   } else {
     searchInput.focus();
   }

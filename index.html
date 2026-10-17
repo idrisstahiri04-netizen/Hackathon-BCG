@@ -15,8 +15,7 @@
 <nav id="tabs" role="tablist" aria-label="Views">
   <button role="tab" data-page="map" class="on" aria-selected="true">Map</button>
   <button role="tab" data-page="alerts" aria-selected="false">Alert feed <span class="tab-badge" id="badge-alerts" hidden>0</span></button>
-  <button role="tab" data-page="users" aria-selected="false">Users joining</button>
-  <button role="tab" data-page="phone" aria-selected="false">Phone</button>
+  <button role="tab" data-page="users" aria-selected="false">Users</button>
   <span id="be-status" title="SMS backend status"><i class="dot"></i><span class="be-lab">backend …</span></span>
 </nav>
 
@@ -90,32 +89,24 @@
 
     <div id="empty-hint">
       <p>Search for a country to begin.</p>
-      <p class="muted">Try <button class="linkish" data-demo="Zimbabwe">Zimbabwe</button>.</p>
+      <p class="muted"></p>
     </div>
   </section>
 
   <!-- ===== Notification feed (right 1/3) ===== -->
   <aside id="feed-col">
     <header id="feed-head">
-      <div>
-        <h2>Alert feed</h2>
-        <span id="feed-sub">No country selected</span>
-      </div>
+      <h2>Alert log</h2>
       <span id="feed-count">0</span>
     </header>
-    <!-- Forecast ranking for the issue month on the timeline (js/app.js). -->
-    <details id="top10" open hidden>
-      <summary>
-        <span class="t10-title">Top 10 districts most at risk, next 3 months</span>
-        <span id="top10-sub"></span>
-      </summary>
-      <ol id="top10-list"></ol>
-      <div id="top10-note" hidden></div>
-    </details>
-    <ol id="feed" aria-live="polite"></ol>
-    <div id="feed-empty">
-      <p>Alerts appear here when a county changes risk level.</p>
-      <p class="muted">Each one states the emergency level and who to inform.</p>
+    <div id="alog">
+      <div id="alog-chips" role="group" aria-label="Filter">
+        <button type="button" data-f="all" class="on">All</button>
+        <button type="button" data-f="warn">Warning+</button>
+        <button type="button" data-f="month">This month</button>
+      </div>
+      <ol id="alog-list"></ol>
+      <div id="alog-empty">No alerts yet.</div>
     </div>
   </aside>
 
@@ -142,8 +133,6 @@
 
   <button id="go-today" type="button" hidden title="Jump to the latest issued month (meta.live_t)">Go to today</button>
 
-  <button id="run-alerts" type="button" hidden title="Create SMS alert events for this month (POST /alerts/run)">Run alerts for this month</button>
-
   <div id="speeds" role="group" aria-label="Playback speed">
     <button data-speed="1" class="on">1×</button>
     <button data-speed="2">2×</button>
@@ -151,67 +140,39 @@
   </div>
 </footer>
 
-<div id="disclaimer" hidden></div>
-
 <!-- ===== Live SMS pages (js/live.js) ===== -->
 <section class="live-page" id="page-alerts" role="tabpanel" hidden>
   <header class="lp-head">
-    <div><h2>Alert feed</h2><span class="lp-sub">Risk events from the model. Warning and above wait for a human to approve before any SMS goes out.</span></div>
+    <div><h2>Alert feed</h2></div>
     <span class="lp-count" id="alerts-count">0</span>
   </header>
   <div class="lp-offline" hidden>Backend offline. Start it on localhost:8000; the map still works.</div>
-  <div class="lp-empty" id="alerts-empty">No alert events yet. On the Map, open a live country, pick a month and press <b>Run alerts for this month</b>.</div>
+  <div class="lp-empty" id="alerts-empty">No alert events yet.</div>
   <ol id="alerts-list" class="lp-list" aria-live="polite"></ol>
 </section>
 
 <section class="live-page" id="page-users" role="tabpanel" hidden>
   <header class="lp-head">
-    <div><h2>Users joining by SMS</h2><span class="lp-sub">People text the number in their own words. Claude reads it and saves district, role and language.</span></div>
+    <div><h2>Users</h2></div>
+    <span class="lp-count" id="users-count">0</span>
   </header>
   <div class="lp-offline" hidden>Backend offline. Start it on localhost:8000; the map still works.</div>
-  <div id="counters">
-    <div class="ctr big"><span class="ctr-val" id="ctr-total">0</span><span class="ctr-lab">subscribers</span></div>
-    <div class="ctr"><span class="ctr-val" id="ctr-today">0</span><span class="ctr-lab">joined today</span></div>
-    <div class="ctr-roles" id="ctr-roles"></div>
-  </div>
+  <form id="user-form" class="user-form">
+    <input id="u-name" type="text" placeholder="Name" maxlength="60" aria-label="Name" autocomplete="off">
+    <input id="u-phone" type="tel" placeholder="+263771000001" required aria-label="Phone (E.164)" autocomplete="off">
+    <select id="u-country" aria-label="Country"></select>
+    <select id="u-district" aria-label="District" required></select>
+    <select id="u-role" aria-label="Role"><option>farmer</option><option>herder</option><option>resident</option><option>ngo</option><option>officer</option></select>
+    <select id="u-lang" aria-label="Language"><option value="en">English</option><option value="sn">Shona</option><option value="nd">Ndebele</option><option value="fr">French</option></select>
+    <button type="submit" id="u-add">Add user</button>
+    <span id="u-err" class="u-err" role="alert"></span>
+  </form>
   <div class="tbl-wrap">
-    <table id="join-table">
-      <thead><tr><th>Time</th><th>SMS received</th><th>Claude understood</th><th>Saved as</th></tr></thead>
-      <tbody id="join-body"></tbody>
+    <table id="users-table">
+      <thead><tr><th>Name</th><th>Phone</th><th>District</th><th>Role</th><th>Language</th><th>Status</th><th>Created</th><th></th></tr></thead>
+      <tbody id="users-body"></tbody>
     </table>
-    <div class="lp-empty" id="users-empty">Waiting for the first SMS. Text <b>JOIN Mbire farmer</b> to the demo phone, or use the Phone tab.</div>
-  </div>
-</section>
-
-<section class="live-page" id="page-phone" role="tabpanel" hidden>
-  <header class="lp-head">
-    <div><h2>Phone simulator</h2><span class="lp-sub">Backup for the real Android phone. Messages go through the same router (POST /sim/inbound).</span></div>
-  </header>
-  <div class="lp-offline" hidden>Backend offline. Start it on localhost:8000; the map still works.</div>
-  <div id="phone-wrap">
-    <div id="phone">
-      <div class="ph-top">
-        <label for="ph-number">From</label>
-        <input id="ph-number" type="tel" value="+263770000001" autocomplete="off" spellcheck="false">
-        <button id="ph-new" type="button" title="New random number">New</button>
-      </div>
-      <div id="ph-thread" aria-live="polite"><div class="ph-hint">Try: JOIN Mbire farmer · 2 · STOP</div></div>
-      <form id="ph-form">
-        <input id="ph-text" type="text" maxlength="160" autocomplete="off" placeholder="Type an SMS…" aria-label="SMS text">
-        <span id="ph-len">0/160</span>
-        <button id="ph-send" type="submit">Send</button>
-      </form>
-    </div>
-    <div class="ph-quick" id="ph-quick">
-      <span class="d-lab">Quick messages</span>
-      <button type="button">JOIN Mbire farmer</button>
-      <button type="button">Ndiri murimi ku Binga</button>
-      <button type="button">JOIN Gwanda herder</button>
-      <button type="button">2</button>
-      <button type="button">What should I plant?</button>
-      <button type="button">We need food help</button>
-      <button type="button">STOP</button>
-    </div>
+    <div class="lp-empty" id="users-empty">No users yet.</div>
   </div>
 </section>
 

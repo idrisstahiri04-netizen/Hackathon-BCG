@@ -180,6 +180,13 @@ CREATE INDEX IF NOT EXISTS ix_messages_gw ON messages(gateway_id);
 -- one live alert SMS per (user, event); failed rows do not block a retry
 CREATE UNIQUE INDEX IF NOT EXISTS ux_alert_once ON messages(user_id, event_id)
   WHERE direction='out' AND event_id IS NOT NULL AND status NOT LIKE 'failed%';
+CREATE TABLE IF NOT EXISTS processed_runs (
+  iso3 TEXT NOT NULL,
+  t INTEGER NOT NULL,
+  processed_at TEXT NOT NULL,
+  created INTEGER,
+  PRIMARY KEY (iso3, t)
+);
 CREATE TABLE IF NOT EXISTS help_requests (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   created_at TEXT NOT NULL,

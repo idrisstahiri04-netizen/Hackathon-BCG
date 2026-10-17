@@ -136,3 +136,7 @@ Back to sim: set `GATEWAY=sim` and restart. The on-screen phone (`POST /sim/inbo
 /home/looooo/bcg/.venv/bin/python -m pytest -c backend/pytest.ini backend/tests -m "not live" -q   # mocked Claude
 /home/looooo/bcg/.venv/bin/python -m pytest -c backend/pytest.ini backend/tests -m live -s          # 1 real Haiku call set
 ```
+
+## Users and automatic alert generation
+Users are added by an operator: `POST /users` (E.164 phone, known `district_id`, role, language), `PATCH /users/{id}` (`opted_out` too), `DELETE /users/{id}`. All need `X-API-Key`. SMS "JOIN" from an unknown number only gets "To register, please contact your local officer."
+A scheduler stores alerts for each country's latest live month (`meta.live_t`) once (table `processed_runs`); it does not send. `GET /alerts/log?iso3=&since=` lists stored alerts with `send_status`.

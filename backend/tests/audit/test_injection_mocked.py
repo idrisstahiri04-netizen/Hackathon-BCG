@@ -51,16 +51,12 @@ def test_hijacked_subscribe_cannot_bypass_consent_or_gazetteer(fake_llm, sms):
     assert reply_is_approved(r["reply"])
 
 
-def test_hijacked_name_is_bounded_and_district_is_gazetteer_id(fake_llm):
+def test_hijacked_subscribe_yes_never_creates_user(fake_llm):
     fake_llm.set(lambda *a: llm_result(intent="subscribe", confidence=1.0, role="farmer", district="binga",
                                        name="A" * 500))
     router.handle_inbound(ATTACKER, "I am a farmer in binga " + "A" * 500)
     router.handle_inbound(ATTACKER, "YES")
-    u = db.get_user(ATTACKER)
-    assert u and len(u["name"]) <= 60
-    assert u["district_id"] in {x["id"] for x in db.geo_units("ZWE")}
-    assert u["district_name"] == "Binga"
-    assert u["consent_at"]
+    assert db.get_user(ATTACKER) is None
 
 
 def test_unknown_intent_from_model_is_dropped(fake_llm):

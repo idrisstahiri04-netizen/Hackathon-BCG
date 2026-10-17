@@ -26,42 +26,27 @@ def test_report_fast_path(fake_llm):
     assert m["intent"] == "report"
 
 
-def test_signup_full_flow_with_llm(fake_llm):
+REG = "To register, please contact your local officer."
+
+
+def test_join_from_unknown_number_gets_polite_reply(fake_llm):
+    fake_llm.set(lambda *a: (_ for _ in ()).throw(AssertionError("LLM must not be called")))
+    r = router.handle_inbound("+3", "JOIN")
+    assert r["reply"] == REG and db.get_user("+3") is None and not db.get_session("+3")
+
+
+def test_join_with_details_and_llm_subscribe_create_no_user(fake_llm):
+    r = router.handle_inbound("+23", "JOIN Mbire farmer")
+    assert r["reply"] == REG and db.get_user("+23") is None
     fake_llm.set(lambda *a: llm_result(intent="subscribe", district="binga", role="farmer", name="Tendai"))
     r = router.handle_inbound("+2", "Hi I am Tendai, I grow maize in binga, want alerts")
-    assert "Binga" in r["reply"] and "YES" in r["reply"]
-    assert db.get_user("+2") is None  # no consent yet
-    r = router.handle_inbound("+2", "yes")
-    u = db.get_user("+2")
-    assert u["district_name"] == "Binga" and u["role"] == "farmer" and u["consent_at"] and u["name"] == "Tendai"
-    assert u["district_id"] == db.geo_units("ZWE")[[x["name"] for x in db.geo_units("ZWE")].index("Binga")]["id"]
+    assert r["reply"] == REG and db.get_user("+2") is None and not db.get_session("+2")
 
 
-def test_join_keyword_asks_district_then_role_then_confirm():
-    r = router.handle_inbound("+3", "JOIN")
-    assert "district" in r["reply"].lower()
-    r = router.handle_inbound("+3", "Hwange")
-    assert "farmer" in r["reply"].lower()  # asks role
-    r = router.handle_inbound("+3", "herder")
-    assert "YES" in r["reply"]
-    router.handle_inbound("+3", "YES")
-    assert db.get_user("+3")["role"] == "herder"
-
-
-def test_ambiguous_district_asks_back():
-    router.handle_inbound("+4", "JOIN")
-    r = router.handle_inbound("+4", "Gokwe")
-    assert "Gokwe North" in r["reply"] and "Gokwe South" in r["reply"]
-    r = router.handle_inbound("+4", "1")  # pick option 1, NOT a crop report
-    assert r["intent"] == "subscribe"
-    assert "Are you" in r["reply"]
-
-
-def test_unknown_district_not_free_text(fake_llm):
-    fake_llm.set(lambda *a: llm_result(intent="subscribe", district="Atlantis", role="farmer"))
-    r = router.handle_inbound("+5", "join me, farmer in Atlantis")
-    assert "do not know" in r["reply"]
-    assert db.get_user("+5") is None
+def test_bare_district_from_unknown_number_gets_polite_reply(fake_llm):
+    fake_llm.set(lambda *a: (_ for _ in ()).throw(AssertionError("LLM must not be called")))
+    r = router.handle_inbound("+46", "Binga")
+    assert r["reply"] == REG and db.get_user("+46") is None
 
 
 def test_low_confidence_clarifies(fake_llm):
@@ -167,25 +152,12 @@ def test_grain_question_gets_crop_advice_without_llm():
     assert r["reply"] == next(e["text"] for e in router.load_advice() if e["id"] == "crop_store_safely")
 
 
-def test_join_district_role_fast_path(fake_llm):
-    fake_llm.set(lambda *a: (_ for _ in ()).throw(AssertionError("LLM must not be called")))
-    r = router.handle_inbound("+23", "JOIN Mbire farmer")
-    assert r["parsed"]["source"] == "keyword" and "Mbire" in r["reply"] and "YES" in r["reply"]
-    router.handle_inbound("+23", "YES")
-    assert db.get_user("+23")["role"] == "farmer"
-
-
 import pytest  # noqa: E402
 
 
-@pytest.mark.parametrize("role,report_word,join_word", [
-    ("farmer", "Crop", "crops"), ("herder", "Grazing", "grazing"), ("resident", "Food and water", "food and water")])
-def test_role_aware_report_and_join(role, report_word, join_word):
-    router.handle_inbound("+30", f"JOIN Binga {role}")
-    r = router.handle_inbound("+30", "YES")
-    assert join_word in r["reply"], r["reply"]
-    if role != "farmer":
-        assert "crops" not in r["reply"]
+@pytest.mark.parametrize("role,report_word", [("farmer", "Crop"), ("herder", "Grazing"), ("resident", "Food and water")])
+def test_role_aware_report(role, report_word):
+    db.upsert_user("+30", role=role, district_name="Binga", consent_at=db.now_iso())
     r = router.handle_inbound("+30", "3")
     assert r["reply"].startswith(f"Thank you. {report_word}"), r["reply"]
     if role == "herder":
@@ -254,19 +226,6 @@ def test_confidence_at_threshold_is_low(fake_llm):
     assert r["parsed"].get("clarify") is True
 
 
-def test_bare_district_starts_signup(fake_llm):
-    fake_llm.set(lambda *a: (_ for _ in ()).throw(AssertionError("LLM must not be called")))
-    r = router.handle_inbound("+46", "Binga")
-    assert r["intent"] == "subscribe" and "farmer, herder" in r["reply"]
-    assert db.get_session("+46")["draft"]["district_name"] == "Binga"
-
-
-def test_bare_district_via_llm_unknown(fake_llm):
-    fake_llm.set(lambda *a: llm_result(intent="unknown", confidence=0.4, district="Hwange"))
-    r = router.handle_inbound("+47", "hwange pls")
-    assert r["intent"] == "subscribe" and "farmer, herder" in r["reply"]
-
-
 def test_bare_district_registered_user_not_resubscribed(fake_llm):
     fake_llm.set(lambda *a: llm_result(intent="unknown", confidence=0.4, district="Binga"))
     db.upsert_user("+48", role="farmer", district_name="Binga", consent_at=db.now_iso())
@@ -313,7 +272,7 @@ def test_help_very_low_confidence_clarifies(fake_llm):
 
 
 def test_help_beats_signup_session_and_rate_limit(monkeypatch):
-    router.handle_inbound("+63", "JOIN")  # now in sign-up (district step)
+    db.set_session("+63", {"step": "district", "draft": {}})  # stale sign-up state
     r = router.handle_inbound("+63", "we have no food, please help")
     assert r["intent"] == "ask_help"
     monkeypatch.setattr(router, "PER_MIN", 0)

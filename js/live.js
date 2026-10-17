@@ -1,6 +1,6 @@
 /* ============================================================================
-   live.js — the live SMS pages: Alert feed, Users joining, Phone simulator,
-   the "Run alerts for this month" button and the backend status dot.
+   live.js — the live SMS pages: Alert feed, Users (manual add/delete)
+   and the backend status dot. Exposes window.LIVE for the Map alert log.
 
    Talks only to the SMS backend (backend/API.md), default http://localhost:8000,
    override with ?api=http://host:port. If the backend is down the globe keeps
@@ -40,12 +40,12 @@
   // ---- HTTP -----------------------------------------------------------------
   // Feeds are quick; the router may call Claude (cold start, advice answers)
   // and approve may send many SMS, so those get a long timeout.
-  const TIMEOUT = { '/sim/inbound': 20000, '/alerts/run': 30000, approve: 30000 };
-  async function api(path, body) {
+  const TIMEOUT = { approve: 30000 };
+  async function api(path, body, method) {
     const headers = {};
     if (API_KEY) headers['X-API-Key'] = API_KEY;
-    const opt = body === undefined ? { headers } : {
-      method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    const opt = body === undefined ? (method ? { method, headers } : { headers }) : {
+      method: method || 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     };
     const ctl = new AbortController();
     const ms = TIMEOUT[path] || (path.endsWith('/approve') ? TIMEOUT.approve : 5000);
@@ -153,6 +153,7 @@
     });
     $$('.live-page').forEach(s => { s.hidden = s.id !== `page-${p}`; });
     document.body.classList.toggle('on-live', p !== 'map');
+    if (p === 'users') initUserForm();
     if (p === 'alerts') { seenAlerts = maxAlertId; updateBadge(); }
     if (history.replaceState) {
       const q = new URLSearchParams(location.search);
@@ -167,36 +168,8 @@
     if (b) show(b.dataset.page);
   });
 
-  // ---- Globe link: Run alerts for this month --------------------------------
   let mapState = { live: false };
-  window.addEventListener('app:state', ev => { mapState = ev.detail || { live: false }; updateRunButton(); });
-  const runBtn = $('#run-alerts');
-  function updateRunButton() {
-    runBtn.hidden = !mapState.live;
-    runBtn.disabled = !online || runBtn.classList.contains('busy');
-    runBtn.title = online
-      ? `Create SMS alert events for ${mapState.country || ''} ${mapState.label || ''}`
-      : 'SMS backend offline';
-  }
-  runBtn.addEventListener('click', async () => {
-    if (!mapState.live) return;
-    runBtn.classList.add('busy');
-    updateRunButton();
-    const label = runBtn.textContent;
-    try {
-      const r = await api('/alerts/run', { iso3: mapState.iso3, t: mapState.t });
-      const n = r.created ?? rowsOf(r, 'events').length;
-      toast(n ? `${n} alert event${n > 1 ? 's' : ''} for ${mapState.label}. See Alert feed.` : `No district changed level in ${mapState.label}.`,
-        n ? () => show('alerts') : null);
-      poll();
-    } catch (err) {
-      toast(err.auth ? err.message : `Run alerts failed: ${err.message}`);
-    } finally {
-      runBtn.classList.remove('busy');
-      runBtn.textContent = label;
-      updateRunButton();
-    }
-  });
+  window.addEventListener('app:state', ev => { mapState = ev.detail || { live: false }; });
 
   let toastTimer = null;
   function toast(msg, onClick) {
@@ -314,217 +287,92 @@
     updateBadge();
   }
 
-  // ---- Users joining --------------------------------------------------------
+  // ---- Users (added by an operator; no SMS self-signup) ---------------------
   const ROLE_ORDER = ['farmer', 'herder', 'resident', 'ngo', 'officer'];
-  const ROLE_LABEL = { farmer: 'Farmers', herder: 'Herders', resident: 'Residents', ngo: 'NGOs', officer: 'Officers' };
-  const LANG = { en: 'English', sn: 'Shona', nd: 'Ndebele', ny: 'Chichewa', bem: 'Bemba', fr: 'French', ar: 'Arabic' };
-  let users = new Map();       // id -> user
-  let usersByPhone = new Map();
-  let messages = new Map();    // id -> message
-  let joinLoaded = false;
+  const LANG = { en: 'English', sn: 'Shona', nd: 'Ndebele', fr: 'French' };
+  const usersBody = $('#users-body');
+  let userSig = null;
 
-  function bump(node, val) {
-    const v = String(val);
-    if (node.textContent !== v) {
-      node.textContent = v;
-      node.classList.remove('bump');
-      void node.offsetWidth;
-      node.classList.add('bump');
-    }
+  function geoOf(iso3) {
+    const g = (window.GEO_DATA || {})[iso3];
+    return g && g.features ? g.features.map(f => f.properties).sort((a, b) => String(a.name).localeCompare(b.name)) : [];
+  }
+  function fillDistricts() {
+    const sel = $('#u-district'), iso = $('#u-country').value;
+    sel.innerHTML = '';
+    geoOf(iso).forEach(p => { const o = el('option', null, p.name); o.value = p.id; sel.append(o); });
+  }
+  function initUserForm() {
+    const cs = $('#u-country');
+    if (cs.options.length) return;
+    const isos = Object.keys(window.GEO_DATA || {});
+    const want = (mapState.iso3 && isos.includes(mapState.iso3)) ? mapState.iso3 : (isos.includes('ZWE') ? 'ZWE' : isos[0]);
+    isos.sort().forEach(i => { const o = el('option', null, ((window.REAL && REAL.COUNTRIES && REAL.COUNTRIES[i] && REAL.COUNTRIES[i].name) || i)); o.value = i; cs.append(o); });
+    if (want) cs.value = want;
+    fillDistricts();
   }
 
+  function userStatus(u) { return u.opted_out_at ? 'opted out' : u.consent_at ? 'active' : 'pending'; }
   async function pollUsers() {
-    const [du, dm] = await Promise.all([api('/feed/users'), api('/feed/messages')]);
-    rowsOf(du, 'users').forEach(u => { users.set(u.id, u); if (u.phone) usersByPhone.set(u.phone, u); });
-    rowsOf(dm, 'messages').forEach(m => messages.set(m.id, m));
-    if (page === 'phone' && phNum.value.trim()) {
-      const dp = await api('/feed/messages?phone=' + encodeURIComponent(phNum.value.trim()));
-      rowsOf(dp, 'messages').forEach(m => messages.set(m.id, m));
-    }
-
-    const c = (du && du.counters) || {};
-    const active = [...users.values()].filter(u => !u.opted_out_at);
-    const byRole = c.by_role || active.reduce((a, u) => ((a[u.role] = (a[u.role] || 0) + 1), a), {});
-    bump($('#ctr-total'), c.total ?? active.length);
-    const today = new Date().toISOString().slice(0, 10);
-    bump($('#ctr-today'), c.today ?? active.filter(u => String(u.created_at).startsWith(today)).length);
-    const roles = $('#ctr-roles');
-    const keys = [...ROLE_ORDER, ...Object.keys(byRole).filter(k => !ROLE_ORDER.includes(k))];
-    keys.forEach(k => {
-      let box = roles.querySelector(`[data-role="${k}"]`);
-      if (!box) {
-        box = el('div', 'ctr role');
-        box.dataset.role = k;
-        box.append(el('span', 'ctr-val', '0'), el('span', 'ctr-lab', ROLE_LABEL[k] || k));
-        roles.append(box);
-      }
-      bump(box.querySelector('.ctr-val'), byRole[k] || 0);
-    });
-
-    renderJoinTable();
-    if (page === 'phone') renderPhone();
-  }
-
-  function renderJoinTable() {
-    const body = $('#join-body');
-    const inbound = [...messages.values()].filter(m => m.direction === 'in').sort((a, b) => a.id - b.id);
-    for (const m of inbound) {
-      // The first sign-up SMS often has no user_id yet (user is only saved
-      // after YES), so also match the user by phone. Masked numbers
-      // (+263****001, no admin key) are not unique, so they never match.
-      const byPhone = m.phone && !/\*/.test(m.phone) ? usersByPhone.get(m.phone) : null;
-      const u = (m.user_id != null && users.get(m.user_id)) || byPhone || null;
-      const saved = !!(u && (!('consent_at' in u) || u.consent_at) && !u.opted_out_at);
-      const key = `${m.id}|${u ? u.id : ''}|${saved}|${u ? u.district_name + u.role + u.language : ''}|${m.intent || ''}`;
-      const prev = body.querySelector(`tr[data-id="${m.id}"]`);
-      if (prev && prev.dataset.key === key) continue;
+    const d = await api('/feed/users?limit=500');
+    const rows = rowsOf(d, 'users').sort((a, b) => b.id - a.id);
+    const sig = rows.map(u => `${u.id}|${u.name}|${u.district_name}|${u.role}|${u.language}|${userStatus(u)}`).join(';');
+    $('#users-count').textContent = String(rows.filter(u => !u.opted_out_at).length);
+    $('#users-empty').hidden = rows.length > 0;
+    if (sig === userSig) return;
+    userSig = sig;
+    usersBody.innerHTML = '';
+    for (const u of rows) {
       const tr = el('tr');
-      tr.dataset.id = m.id;
-      tr.dataset.key = key;
-
-      const tdT = el('td', 'c-time');
-      tdT.append(el('span', null, fmtTime(m.created_at)), el('span', 'c-phone', maskPhone(m.phone)));
-      const tdS = el('td', 'c-sms');
-      tdS.append(el('span', 'bubble', m.text || ''));
-      const tdI = el('td', 'c-intent');
-      if (m.intent) {
-        const conf = m.intent_confidence == null ? null : Math.round(+m.intent_confidence * 100);
-        const it = el('span', `intent i-${m.intent}`, m.intent.replace(/_/g, ' '));
-        tdI.append(it);
-        if (conf != null) {
-          const bar = el('span', 'conf');
-          const fill = el('i');
-          fill.style.width = `${Math.max(0, Math.min(100, conf))}%`;
-          bar.append(fill);
-          tdI.append(bar, el('span', 'conf-n', `${conf}%`));
-        }
-      } else tdI.append(el('span', 'muted', '…'));
-      const tdU = el('td', 'c-saved');
-      if (saved && (m.intent === 'subscribe' || m.intent === 'change_info' || !m.intent)) {
-        tdU.append(el('b', null, u.district_name || u.district_id || '?'),
-          el('span', null, ` · ${u.role || '?'} · ${LANG[u.language] || u.language || '?'}`));
-      } else if (u && u.opted_out_at && m.intent === 'subscribe') {
-        tdU.append(el('span', 'muted', 'opted out since'));
-      } else if (m.intent === 'subscribe') {
-        tdU.append(el('span', 'muted', 'not saved yet (asked to confirm)'));
-      } else tdU.append(el('span', 'muted', '—'));
-      tr.append(tdT, tdS, tdI, tdU);
-
-      if (prev) {
-        prev.replaceWith(tr);
-        if (saved && !prev.dataset.key.split('|')[2].startsWith('true')) tr.classList.add('is-new');
-      } else {
-        if (joinLoaded) tr.classList.add('is-new');
-        body.prepend(tr);
-      }
+      tr.append(el('td', null, u.name || '—'), el('td', 'c-phone', maskPhone(u.phone) || u.phone_masked || ''),
+        el('td', null, u.district_name || u.district_id || '—'), el('td', null, u.role || '—'),
+        el('td', null, LANG[u.language] || u.language || '—'), el('td', null, userStatus(u)),
+        el('td', null, String(u.created_at || '').slice(0, 10)));
+      const act = el('td', 'c-act');
+      const opt = el('button', 'row-btn', u.opted_out_at ? 'Restore' : 'Opt out');
+      opt.type = 'button';
+      opt.addEventListener('click', () => userAction(() => api(`/users/${u.id}`, { opted_out: !u.opted_out_at }, 'PATCH')));
+      const del = el('button', 'row-btn danger', 'Delete');
+      del.type = 'button';
+      del.addEventListener('click', () => { if (confirm(`Delete ${u.name || 'this user'}?`)) userAction(() => api(`/users/${u.id}`, undefined, 'DELETE')); });
+      act.append(opt, del);
+      tr.append(act);
+      usersBody.append(tr);
     }
-    while (body.children.length > 200) body.lastChild.remove();
-    joinLoaded = true;
-    $('#users-empty').hidden = inbound.length > 0;
   }
-
-  // ---- Phone simulator ------------------------------------------------------
-  const phNum = $('#ph-number'), phText = $('#ph-text'), phThread = $('#ph-thread');
-  const pending = [];  // optimistic outgoing bubbles not yet seen in the feed
-  let phoneSig = '';
-  let thinking = 0;    // requests waiting for the router (Claude)
-  let lastFrom = '';
-
-  function renderPhone() {
-    const me = phNum.value.trim();
-    // Without the key the backend masks numbers (+263****001), so match that.
-    const meMasked = me.length > 7 ? me.slice(0, 4) + '****' + me.slice(-3) : '****';
-    const mine = [...messages.values()]
-      .filter(m => m.phone === me || (!API_KEY && m.phone === meMasked))
-      .sort((a, b) => a.id - b.id);
-    const left = pending.filter(p => p.phone === me &&
-      !mine.some(m => m.direction === 'in' && m.text === p.text && m.id > p.after));
-    const sig = me + '|' + mine.map(m => `${m.id}:${m.status}`).join(',') + '|' +
-      left.map(p => p.state).join(',') + '|' + thinking;
-    if (sig === phoneSig) return;
-    phoneSig = sig;
-    phThread.innerHTML = '';
-    if (!mine.length && !left.length) {
-      phThread.append(el('div', 'ph-hint', 'Try: JOIN Mbire farmer · 2 · STOP'));
-    }
-    for (const m of mine) {
-      const b = el('div', `ph-msg ${m.direction === 'in' ? 'me' : 'them'}`);
-      b.append(el('span', 'ph-txt', m.text || ''));
-      const meta = el('span', 'ph-meta', fmtTime(m.created_at) + (m.direction === 'in' && m.intent ? ` · ${m.intent}` : ''));
-      if (m.direction === 'out' && m.status) {
-        const d = deliveryLabel(m.status);
-        meta.append(' · ', el('span', `dl ${d.cls}`, d.txt));
-        if (d.cls === 'failed') b.classList.add('failed');
-      }
-      b.append(meta);
-      phThread.append(b);
-    }
-    for (const p of left) {
-      const b = el('div', `ph-msg me ${p.state === 'failed' ? 'failed' : 'sending'}`);
-      const meta = el('span', 'ph-meta');
-      meta.append(p.state === 'failed' ? el('span', 'dl failed', `not delivered: ${p.err}`) : 'sending…');
-      b.append(el('span', 'ph-txt', p.text), meta);
-      phThread.append(b);
-    }
-    if (thinking > 0 && me === lastFrom) {
-      const b = el('div', 'ph-msg them thinking');
-      b.append(el('span', 'ph-txt', 'Claude is thinking…'));
-      phThread.append(b);
-    }
-    phThread.scrollTop = phThread.scrollHeight;
+  async function userAction(fn) {
+    try { await fn(); userSig = null; await pollUsers(); }
+    catch (err) { toast(err.auth ? err.message : err.message); }
   }
-
-  async function sendSms(text) {
-    text = text.trim();
-    const from = phNum.value.trim();
-    if (!text || !from) return;
-    const after = Math.max(0, ...messages.keys());
-    const p = { phone: from, text, after, state: 'sending' };
-    pending.push(p);
-    lastFrom = from;
-    thinking++;
-    renderPhone();
-    let ok = true;
-    try {
-      await api('/sim/inbound', { from, text });
-    } catch (err) {
-      // A timeout is not a failure: the router may still answer, and the
-      // reply will appear through polling. Only a real error marks it failed.
-      if (!err.timeout) { ok = false; p.state = 'failed'; p.err = err.message; if (err.auth) toast(err.message); }
-      else toast('Still waiting for the reply. It will appear here when ready.');
-    } finally {
-      thinking--;
-    }
-    try { await pollUsers(); } catch (_) {}
-    if (ok) pending.splice(pending.indexOf(p), 1);
-    phoneSig = '';
-    renderPhone();
-  }
-
-  $('#ph-form').addEventListener('submit', ev => {
+  $('#user-form').addEventListener('submit', async ev => {
     ev.preventDefault();
-    const t = phText.value;
-    phText.value = '';
-    phLen();
-    sendSms(t);
+    const f = ev.target, err = $('#u-err');
+    err.textContent = '';
+    try {
+      await api('/users', {
+        phone: $('#u-phone').value.trim(), district_id: $('#u-district').value, iso3: $('#u-country').value,
+        role: $('#u-role').value, language: $('#u-lang').value, name: $('#u-name').value.trim() || null,
+      });
+      $('#u-phone').value = ''; $('#u-name').value = '';
+      userSig = null;
+      await pollUsers();
+    } catch (e) {
+      const m = e.message;
+      err.textContent = /phone/i.test(m) ? 'Phone must look like +263771000001' : m;
+    }
   });
-  $('#ph-quick').addEventListener('click', ev => {
-    const b = ev.target.closest('button');
-    if (b) sendSms(b.textContent);
-  });
-  $('#ph-new').addEventListener('click', () => {
-    phNum.value = '+26377' + String(Math.floor(1e6 + Math.random() * 9e6));
-    phoneSig = '';
-    renderPhone();
-  });
-  phNum.addEventListener('input', () => { phoneSig = ''; renderPhone(); });
-  function phLen() {
-    const n = phText.value.length;
-    $('#ph-len').textContent = `${n}/160`;
-  }
-  phText.addEventListener('input', phLen);
+  $('#u-country').addEventListener('change', fillDistricts);
+
   // Keys typed in the phone or pages must not drive the globe timeline.
   $$('.live-page').forEach(p => p.addEventListener('keydown', ev => ev.stopPropagation()));
+
+  // ---- Map alert log hooks ------------------------------------------------
+  window.LIVE = {
+    get online() { return online; },
+    log: iso3 => api('/alerts/log?iso3=' + encodeURIComponent(iso3)),
+    approve: async id => { await api(`/events/${id}/approve`, {}); poll(); },
+    toast,
+  };
 
   // ---- Crowd signal (spec crowd_crop_status) --------------------------------
   // GET /feed/crowd?iso3=.. every CROWD_MS: per district, share of inbound
@@ -701,7 +549,7 @@
       if (online) {
         // Alerts are always polled so the tab badge counts pending approvals.
         const jobs = [pollAlerts()];
-        if (page === 'users' || page === 'phone') jobs.push(pollUsers());
+        if (page === 'users') jobs.push(pollUsers());
         if (!crowdLoaded) jobs.push(pollCrowd());   // first load right away, then every CROWD_MS
         await Promise.all(jobs);
       } else if (crowd.size) applyCrowd([]);
@@ -714,7 +562,7 @@
   setInterval(() => { if (online) pollCrowd(); }, CROWD_MS);
 
   const start = new URLSearchParams(location.search).get('page');
-  if (start && ['alerts', 'users', 'phone'].includes(start)) show(start);
+  if (start && ['alerts', 'users'].includes(start)) show(start);
   else poll();
   setInterval(() => poll(true), POLL_MS);
 })();

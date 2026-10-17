@@ -62,7 +62,7 @@ def test_android_webhook_inbound_and_status():
     r = client.post("/sms/inbound", json=body)
     assert r.json()["queued"] == 1
     out = db.q("SELECT * FROM messages WHERE phone='+212600000099' ORDER BY id")
-    assert [m["direction"] for m in out] == ["in", "out"] and "district" in out[1]["text"].lower()
+    assert [m["direction"] for m in out] == ["in", "out"] and "local officer" in out[1]["text"].lower()
     db.ex("UPDATE messages SET gateway_id='g1' WHERE id=?", (out[1]["id"],))
     client.post("/sms/inbound", json={"event": "sms:delivered", "payload": {"messageId": "g1"}})
     assert db.q1("SELECT status FROM messages WHERE gateway_id='g1'")["status"] == "delivered"
@@ -140,3 +140,54 @@ def test_inbound_rate_limit(monkeypatch):
     replies = [client.post("/sim/inbound", json={"from": "+212600000005", "text": f"hello {i}"}).json()["reply"] for i in range(6)]
     assert sum(r is not None for r in replies) == 3
     assert client.post("/sim/inbound", json={"from": "+212600000005", "text": "STOP"}).json()["intent"] == "stop"
+
+
+# ------------------------------------------------------------------ admin user management
+def _binga():
+    return next(u["id"] for u in db.geo_units("ZWE") if u["name"] == "Binga")
+
+
+def test_users_crud_admin_only():
+    body = {"phone": "+263771000111", "district_id": _binga(), "role": "farmer", "name": "Rudo", "language": "en"}
+    anon = TestClient(appmod.app)
+    assert anon.post("/users", json=body, headers={"X-API-Key": "x"}).status_code == 401
+    assert anon.post("/users", json=body).status_code == 401
+    r = client.post("/users", json=body, headers=AUTH)
+    assert r.status_code == 201
+    u = r.json()
+    assert u["district_name"] == "Binga" and u["iso3"] == "ZWE" and u["consent_at"] and u["role"] == "farmer"
+    assert client.post("/users", json=body, headers=AUTH).status_code == 409
+    assert anon.patch(f"/users/{u['id']}", json={"role": "herder"}).status_code == 401
+    p = client.patch(f"/users/{u['id']}", json={"role": "herder", "opted_out": True}, headers=AUTH).json()
+    assert p["role"] == "herder" and p["opted_out_at"]
+    assert client.patch(f"/users/{u['id']}", json={"opted_out": False}, headers=AUTH).json()["opted_out_at"] is None
+    assert anon.delete(f"/users/{u['id']}").status_code == 401
+    assert client.delete(f"/users/{u['id']}", headers=AUTH).json()["ok"]
+    assert client.delete(f"/users/{u['id']}", headers=AUTH).status_code == 404
+    assert db.get_user("+263771000111") is None
+
+
+def test_users_validation():
+    ok = {"phone": "+263771000112", "district_id": _binga(), "role": "farmer"}
+    for bad in ({"phone": "0771000112"}, {"phone": "+12; DROP"}, {"district_id": "ZWE.NOPE"},
+                {"role": "king"}, {"language": "xx"}):
+        r = client.post("/users", json={**ok, **bad}, headers=AUTH)
+        assert r.status_code == 422, (bad, r.text)
+    assert client.patch("/users/999", json={"role": "ngo"}, headers=AUTH).status_code == 404
+    assert client.patch("/users/999", json={"role": "king"}, headers=AUTH).status_code in (404, 422)
+    assert db.q1("SELECT COUNT(*) n FROM users")["n"] == 0
+
+
+def test_scheduler_stores_new_live_month_once_without_sending(isolated):
+    risk = make_risk({"Binga": {59: (0, "none"), 60: (2, "crop_failure")}})
+    risk["meta"]["live_t"] = 60
+    write_risk(isolated, risk)
+    db.upsert_user("+263771000200", role="farmer", district_id=_binga(), district_name="Binga",
+                   iso3="ZWE", consent_at=db.now_iso())
+    assert appmod.process_live_months() == [{"iso3": "ZWE", "t": 60, "created": 1}]
+    assert appmod.process_live_months() == []  # idempotent
+    ev = db.q("SELECT * FROM events")
+    assert len(ev) == 1 and ev[0]["status"] == "pending_approval"
+    assert db.q1("SELECT COUNT(*) n FROM messages WHERE direction='out'")["n"] == 0
+    log = client.get("/alerts/log?iso3=ZWE").json()["events"]
+    assert log[0]["send_status"] == "pending" and "phone" not in log[0]
